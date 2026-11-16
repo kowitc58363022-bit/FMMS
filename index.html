@@ -192,7 +192,7 @@ dd{margin:0;white-space:pre-wrap;word-break:break-word}
 :root{--rail:72px}
 body.gated{--rail:0px}
 body.gated .nav{display:none}
-.nav{position:fixed;top:0;left:0;bottom:0;width:var(--rail);background:#fff;border-right:1px solid var(--line);z-index:45;padding:12px 12px;display:flex;flex-direction:column;gap:4px;overflow:hidden;transition:width .22s cubic-bezier(0.32, 0.72, 0, 1), transform .22s cubic-bezier(0.32, 0.72, 0, 1), box-shadow .22s ease}
+.nav{position:fixed;top:0;left:0;bottom:0;width:var(--rail);background:linear-gradient(180deg,#FFFFFF 0%,#EEF2F8 100%);border-right:1px solid var(--line);z-index:45;padding:12px 12px;display:flex;flex-direction:column;gap:4px;overflow:hidden;transition:width .22s cubic-bezier(0.32, 0.72, 0, 1), transform .22s cubic-bezier(0.32, 0.72, 0, 1), box-shadow .22s ease}
 body.wide .nav{width:248px;box-shadow:4px 0 28px rgba(0,0,0,0.14);z-index:55}
 .menubtn{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:none;border-radius:12px;color:var(--navy);margin-bottom:10px}
 .menubtn:hover{background:var(--navy-bg)}
@@ -226,6 +226,15 @@ body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
 .nav a{height:46px}
 .nav a.rmnav svg{stroke:#D3141C}
 .nav a.pmnav svg{stroke:var(--navy)}
+.nav a:hover{background:#E9EEF5}
+/* the open page: a bar in its group colour (RM red · PM navy · admin slate), white text and icon */
+.nav a[aria-current="page"]{color:#fff!important;background:linear-gradient(90deg,#0E2F7A,#3D6FD8)!important;box-shadow:0 4px 12px -6px rgba(14,47,122,.55)}
+.nav a.rmnav[aria-current="page"]{background:linear-gradient(90deg,#E31B23,#FF5A5F)!important;box-shadow:0 4px 12px -6px rgba(227,27,35,.55)}
+.nav a.adnav[aria-current="page"]{background:linear-gradient(90deg,#3A4757,#6B7A90)!important;box-shadow:0 4px 12px -6px rgba(58,71,87,.55)}
+.nav a[aria-current="page"] svg{stroke:#fff!important}
+.nav a[aria-current="page"]::before{display:none}
+.nav a[aria-current="page"] .nbadge{background:#fff;color:#C4141B;box-shadow:0 0 0 2px #E31B23}
+.nav .navgrp.g-pm,.nav .navgrp.g-ad{border-top-color:#DDE3EC}   /* grey menu panel: hover and group lines one step darker */
 .navgrp.g-ad{color:#3A4757;border-top:1px solid var(--line);height:38px;padding-top:12px}
 .nav a.adnav svg{stroke:#3A4757}
 .nav a.adnav[aria-current="page"]{color:#1F2A37;background:#EEF1F4}
@@ -860,11 +869,12 @@ body[data-role="engineer"] .userchip .user-avatar{border-color:var(--red)}
 .todo-x svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transform:rotate(180deg)}
 .todo.folded .todo-x svg{transform:none}
 .todo.folded{padding-top:10px;padding-bottom:10px}
-.todo-l{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;max-height:168px;overflow:auto}
-.todo-i{display:flex;align-items:center;gap:8px;border:1px solid var(--field);border-radius:10px;background:var(--field-bg);padding:7px 12px;font-size:13.5px;max-width:420px;text-align:left}
+.todo-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px;margin-top:12px;max-height:168px;overflow:auto}   /* even columns: label · id · problem line up */
+.todo-i{display:flex;align-items:center;gap:8px;border:1px solid var(--field);border-radius:10px;background:var(--field-bg);padding:7px 12px;font-size:13.5px;min-width:0;text-align:left}
 .todo-i:hover{border-color:var(--navy-2);background:var(--navy-bg)}
-.todo-i .tk{font-weight:700;white-space:nowrap}
-.todo-i .tid{color:var(--muted);white-space:nowrap}
+.todo-i .tk{font-weight:700;white-space:nowrap;flex:none}
+.todo-i.k-hot .tk{display:flex;align-items:center}.todo-i.k-hot .tk .ico-bolt{margin-right:0}   /* High attention: the bolt alone (name and job no. in the tooltip) */
+.todo-i .tid{color:var(--muted);white-space:nowrap;flex:none;min-width:72px}
 .todo-i .tt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
 .todo-i.k-ack .tk,.todo-i.k-back .tk{color:var(--red)}.todo-i.k-new .tk,.todo-i.k-assign .tk{color:#A35F00}.todo-i.k-review .tk{color:#7B2FA0}
 .todo-0{margin:10px 0 0;color:var(--muted);font-size:13.5px}
@@ -5113,7 +5123,7 @@ function renderTodo() {
   const folded = store.get('ct_todoFold') === '1';   // hidden with the ซ่อน button (this device remembers it)
   el.classList.toggle('folded', folded);
   el.innerHTML = `<div class="todo-h"><b>แจ้งเตือน</b><span class="cnt">${items.length}</span>${canAsk ? '<button class="link" id="askNotify"><svg class="ico-inline"><use href="#i-bell"/></svg>เปิดเสียงและป๊อปอัปแจ้งเตือน</button>' : ''}<button type="button" class="todo-x" id="todoToggle" aria-expanded="${!folded}" aria-controls="todoList">${folded ? 'แสดง' : 'ซ่อน'}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>`
-    + (folded ? '' : items.length ? `<div class="todo-l" id="todoList">${items.map(i => `<button class="todo-i k-${i.kind}" data-goto-job="${esc(i.id)}"><span class="tk">${i.kind === 'hot' ? BOLT : ''}${esc(i.label)}</span><span class="tid">${esc(i.id)}</span><span class="tt">${esc(i.title)}</span></button>`).join('')}</div>` : '<p class="todo-0">ไม่มีงานค้าง เยี่ยมมาก</p>');
+    + (folded ? '' : items.length ? `<div class="todo-l" id="todoList">${items.map(i => `<button class="todo-i k-${i.kind}" data-goto-job="${esc(i.id)}" title="${esc(i.label + ' · ' + i.id)}">${i.kind === 'hot' ? `<span class="tk" role="img" aria-label="${esc(i.label)}">${BOLT}</span>` : `<span class="tk">${esc(i.label)}</span>`}<span class="tt">${esc(i.title)}</span></button>`).join('')}</div>` : '<p class="todo-0">ไม่มีงานค้าง เยี่ยมมาก</p>');
 }
 $('todo').addEventListener('click', async e => {
   if (e.target.closest('#todoToggle')) { store.set('ct_todoFold', store.get('ct_todoFold') === '1' ? '' : '1'); renderTodo(); $('todoToggle').focus(); return; }

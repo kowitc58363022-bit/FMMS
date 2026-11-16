@@ -4385,6 +4385,8 @@ function openPM(id) {
         <label class="full">หมายเหตุ<textarea name="remark" rows="2" maxlength="2000" placeholder="ไม่บังคับ เช่น เกจวัดอุณหภูมิเสีย">${esc(o.Remark && !/^ส่งกลับ:/.test(o.Remark) ? o.Remark : '')}</textarea></label>
         <div class="btns"><button type="button" class="btn solid" data-pmdo="submit">ส่งให้วิศวะอนุมัติ</button>${CONFIG.PM_ONLY ? "" : '<button type="button" class="btn" data-pmdo="report">พบปัญหา · แจ้งซ่อม</button>'}</div></div>`;
   }
+  // engineers set the day a job is done (technicians no longer do); empty = no day yet
+  if (eng && x.st !== 'done') f += `<div class="pmsec pm-sched"><h3>นัดวันทำ</h3><label>วันที่<input type="date" name="pdate" value="${x.plan ? isoDay(x.plan) : ''}"></label><div class="btns" style="grid-column:auto;align-self:end"><button type="button" class="btn" data-pmdo="schedule">${x.plan ? 'เปลี่ยนวันนัด' : 'บันทึกวันนัด'}</button></div></div>`;
   if (eng && x.st === 'review') f += `<div class="pmsec"><h3>ตรวจงาน PM</h3><label class="full">หมายเหตุ (ต้องใส่เมื่อส่งกลับ)<textarea name="note" rows="2" maxlength="2000"></textarea></label>
       <div class="btns"><button type="button" class="btn solid" data-pmdo="approve">อนุมัติ</button><button type="button" class="btn" data-pmdo="sendBack">ส่งกลับให้ช่างแก้</button></div></div>`;
   if (eng && x.st !== 'done') {

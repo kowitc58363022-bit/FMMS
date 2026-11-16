@@ -322,7 +322,8 @@ body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
 .lwmen{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}.lwmen input{width:72px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;font:inherit;font-size:16px;font-weight:700;color:var(--ink)}
 .lwsum b.neg{color:#C4141B}.lwsum b.pos{color:#1E9152}
 .lwchart svg{width:100%;height:auto;display:block}.lwchart svg text{font-family:inherit;fill:#5F6675;font-size:12px}
-.lwchart .lg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:0 0 6px}.lwchart .lg .sw{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:-8px}.lwchart .lg .ln{display:inline-block;width:22px;border-top:2px dashed #E31B23;margin-right:-8px}.lwchart h3{margin:0 0 6px;font-size:16px}
+.lwchart .lg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:0 0 6px}.lwchart .lg .sw{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:-8px}.lwchart .lg .ln{display:inline-block;width:22px;border-top:2px dashed #E31B23;margin-right:-8px}
+.lwchart .lg span::before{display:none}   /* the PM dashboard legend draws a line before every span: not here */.lwchart h3{margin:0 0 6px;font-size:16px}
 .lwb.lo{border-top-color:#1E9152}.lwb.lo .lwt b{color:var(--navy)}
 .lwcap{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
 .lwcap>div{display:flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--ink-2)}.lwcap>div span{flex:1}.lwcap>div b{font-family:var(--head-font);font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}

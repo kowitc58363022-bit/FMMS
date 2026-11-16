@@ -237,6 +237,9 @@ body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
 .nav .navgrp.g-pm,.nav .navgrp.g-ad{border-top-color:#DDE3EC}   /* grey menu panel: hover and group lines one step darker */
 .navgrp.g-ad{color:#3A4757;border-top:1px solid var(--line);height:38px;padding-top:12px}
 .nav a.adnav svg{stroke:#3A4757}
+.ldby{display:flex;flex-wrap:wrap;gap:8px}
+.ldby button{min-height:38px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:4px 16px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.ldby button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
 .nav a.adnav[aria-current="page"]{color:#1F2A37;background:#EEF1F4}
 .nav a.adnav[aria-current="page"]::before{background:#3A4757}
 .nav a.rmnav[aria-current="page"]{color:#B3121A;background:#FDECEC}
@@ -1628,6 +1631,11 @@ body.sheet-open{overflow:hidden}
   <div class="head"><h1 id="techTitle">งานของช่าง</h1><p class="sub" id="techSub"></p></div>
   <div id="techBody"></div>
 </section>
+<section class="mon fin" id="loadView" hidden aria-labelledby="loadTitle">
+  <span id="load" class="sr"></span>
+  <div class="head"><h1 id="loadTitle">ภาระงานตามแผน</h1><p class="sub" id="loadSub"></p></div>
+  <div id="loadBody"></div>
+</section>
 <section class="mon pmv" id="pmView" hidden aria-labelledby="pmTitle">
   <span id="pm" class="sr"></span>
   <div class="pmhead"><h1 id="pmTitle">แผน PM</h1><p class="sub" id="pmSub"></p><div class="pmtabs" id="pmTabs" role="group" aria-label="มุมมอง"></div></div>
@@ -1658,6 +1666,7 @@ body.sheet-open{overflow:hidden}
   <a class="adnav" href="#follow" data-view="follow" id="followNav" hidden><span class="nbadge" id="followBadge" hidden></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span class="lbl">งานที่ติดตาม<small>แอดมิน · วันที่คาดว่าจะเสร็จ</small></span></a>
   <a class="adnav" href="#cal" data-view="cal" id="calNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">ปฏิทินงาน<small>แอดมิน · งานตามวัน Due date</small></span></a>
   <a class="adnav" href="#techs" data-view="techs" id="techNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18 14.4c1.8.8 3 2.7 3 5.6"/></svg><span class="lbl">งานของช่าง<small>ช่างแต่ละคนทำถึงไหน · Export Excel</small></span></a>
+  <a class="adnav" href="#load" data-view="load" id="loadNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5" y="11" width="3.5" height="7" rx="1"/><rect x="10.25" y="6" width="3.5" height="12" rx="1"/><rect x="15.5" y="9" width="3.5" height="9" rx="1"/></svg><span class="lbl">ภาระงาน<small>ชั่วโมงคนต่อเดือนตามแผน</small></span></a>
 </nav>
 <nav class="pnav" id="phoneNav" aria-label="เมนูมือถือ">
   <a href="#request" data-pn="request"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.3-.5-.5-2.3z"/></svg>แจ้งซ่อม</a>
@@ -1705,6 +1714,7 @@ body.sheet-open{overflow:hidden}
 <datalist id="picList"></datalist>
 
 <script src="Inspection/forms.js"></script>
+<script src="workload.js"></script>
 <script>
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -1818,7 +1828,7 @@ document.addEventListener('click', e => {
   state.fac = b.dataset.fac; state.page = 1; state.selected = '';
   render();
 });
-function viewOf(hash) { return hash === '#monitor' ? 'monitor' : hash === '#request' ? 'request' : hash === '#finance' ? 'finance' : hash === '#techs' ? 'techs' : hash === '#track' ? 'track' : hash === '#follow' ? 'follow' : hash === '#cal' ? 'cal' : hash === '#pm' ? 'pm' : 'list'; }
+function viewOf(hash) { return hash === '#monitor' ? 'monitor' : hash === '#request' ? 'request' : hash === '#finance' ? 'finance' : hash === '#techs' ? 'techs' : hash === '#load' ? 'load' : hash === '#track' ? 'track' : hash === '#follow' ? 'follow' : hash === '#cal' ? 'cal' : hash === '#pm' ? 'pm' : 'list'; }
 const hashOf = v => v === 'list' ? '' : '#' + v;
 const store = {
   get(k) { try { return localStorage.getItem(skey(k)) || ''; } catch { return ''; } },
@@ -2050,6 +2060,7 @@ const HERO_ICON = {
   request: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.3-.5-.5-2.3z"/>',
   list: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6V3H9zM8.5 10l1.5 1.5 3-3M8.5 16l1.5 1.5 3-3M15 10.5h1M15 16.5h1"/>',
   monitor: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
+  load: '<path d="M4 20h16"/><rect x="5" y="11" width="3.5" height="7" rx="1"/><rect x="10.25" y="6" width="3.5" height="12" rx="1"/><rect x="15.5" y="9" width="3.5" height="9" rx="1"/>',
   techs: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18 14.4c1.8.8 3 2.7 3 5.6"/>',
   follow: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
   cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
@@ -2061,6 +2072,7 @@ const HERO = {
   request: { chip: 'แจ้งซ่อม · Report', th: 'แจ้งซ่อมเครื่องจักร', en: 'Report a <b>Breakdown</b>', bubble: 'แจ้งได้เลย ทีมช่างพร้อม!' },
   list: { chip: 'รายการงาน · Work orders', th: 'รายการงานซ่อม', en: 'Track every <b>Work Order</b>', bubble: 'ติดตามทุกงานที่นี่' },
   monitor: { chip: 'ภาพรวม · Monitoring', th: 'ภาพรวมงานซ่อม', en: 'Maintenance <b>Pipeline</b>', bubble: 'งานไหนติดขั้นไหน ดูได้เลย' },
+  load: { chip: 'ภาระงาน · Workload', th: 'ภาระงานตามแผน', en: 'Team <b>Workload</b> by Month', bubble: 'เดือนไหนงานหนัก ดูได้เลย' },
   techs: { chip: 'งานของช่าง · Technicians', th: 'งานของช่าง', en: 'Technician <b>Workload</b>', bubble: 'ใครทำถึงไหน ดูได้ที่นี่' },
   cal: { chip: 'ปฏิทินงาน · Admin', th: 'ปฏิทินงานซ่อม', en: 'Due date <b>Calendar</b>', bubble: 'งานไหนครบกำหนดวันไหน ดูได้เลย' },
   follow: { chip: 'ติดตามงาน · Admin', th: 'งานที่ติดตาม', en: 'Follow-up <b>Tracker</b>', bubble: 'งานไหนใกล้ครบกำหนด ดูได้ที่นี่' },
@@ -2095,9 +2107,10 @@ function render() {
   if (state.view === 'finance' && state.user && !canCost()) { state.view = 'list'; history.replaceState(null, '', location.pathname + location.search); }   // this role has no cost tab
   if (state.view === 'cal' && state.user && !canFollow()) { state.view = 'list'; history.replaceState(null, '', location.pathname + location.search); }   // admin only
   if (state.view === 'follow' && state.user && !canFollow()) { state.view = 'list'; history.replaceState(null, '', location.pathname + location.search); }   // admin only
+  if (state.view === 'load' && state.user && !canTechs()) { state.view = 'list'; history.replaceState(null, '', location.pathname + location.search); }   // admin only
   if (state.view === 'techs' && state.user && !canTechs()) { state.view = 'list'; history.replaceState(null, '', location.pathname + location.search); }   // admin only
-  const mon = state.view === 'monitor', req = state.view === 'request', fin = state.view === 'finance', tec = state.view === 'techs', trk = state.view === 'track', fol = state.view === 'follow', dcal = state.view === 'cal', pmo = state.view === 'pm';
-  $('main').hidden = gate || mon || req || fin || tec || trk || fol || dcal || pmo;
+  const mon = state.view === 'monitor', req = state.view === 'request', fin = state.view === 'finance', tec = state.view === 'techs', trk = state.view === 'track', fol = state.view === 'follow', dcal = state.view === 'cal', pmo = state.view === 'pm', lod = state.view === 'load';
+  $('main').hidden = gate || mon || req || fin || tec || trk || fol || dcal || pmo || lod;
   $('calView').hidden = gate || !dcal;
   if (!dcal && $('calDlg').open) calClose();   // the panel belongs to the calendar
   $('calNav').hidden = !canFollow();
@@ -2115,9 +2128,11 @@ function render() {
   document.querySelectorAll('#phoneNav [data-pn]').forEach(a => a.dataset.pn === state.view ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   $('financeView').hidden = gate || !fin;
   $('techView').hidden = gate || !tec;
+  $('loadView').hidden = gate || !lod;
   $('finNav').hidden = !canCost();
   $('techNav').hidden = !canTechs();
-  $('adGrp').hidden = ['finNav', 'followNav', 'calNav', 'techNav'].every(k => $(k).hidden);   // the admin header only when one of its menus shows
+  $('loadNav').hidden = !canTechs();
+  $('adGrp').hidden = ['finNav', 'followNav', 'calNav', 'techNav', 'loadNav'].every(k => $(k).hidden);   // the admin header only when one of its menus shows
   $('requestView').hidden = gate || !req;
   $('monitorView').hidden = gate || !mon;
   document.body.classList.toggle('gated', gate);
@@ -2152,6 +2167,7 @@ function render() {
   if (mon) { renderMonitor(); return; }
   if (fin) { loadCosts(); renderFinance(); return; }
   if (tec) { renderTechs(); return; }
+  if (lod) { renderLoad(); return; }
   if (fol) { renderFollow(); return; }
   if (dcal) { renderDueCal(); return; }
   if (trk) { renderTrack(); return; }
@@ -2983,6 +2999,69 @@ $('techView').addEventListener('click', e => {
   if (tr) { state.view = 'list'; state.status = ''; state.q = ''; $('search').value = ''; state.selected = state.jumpTo = tr.dataset.goto; history.replaceState(null, '', location.pathname); syncUrl(); render(); [...document.querySelectorAll('[data-row]')].find(r => r.dataset.row === state.selected)?.scrollIntoView({ block: 'center' }); }
 });
 $('techView').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('tr[data-twho],tr[data-goto]')) e.target.click(); });
+
+// ---------- ภาระงาน (Workload): man-hours per month from the maintenance master plan (workload.js, made by tools/workload.js) ----------
+// MC-OPERATED = done on workdays, MC-STOPPED = machine stopped, done on holidays · capacity line = technicians × 176 h (22 days × 8 h)
+const LOAD_THEMES = ['CHECK DAILY', 'PM MONTHLY', 'PM BI-MONTHLY', 'PM QUARTERLY', 'PM SEMI-ANNUALLY', 'PM ANNUALLY'];
+try { state.loadStaff = store.get('ct_loadStaff') || ''; } catch { state.loadStaff = ''; }
+function renderLoad() {
+  const W = window.WORKLOAD, box = $('loadBody');
+  if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลแผนงาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
+  const by = state.loadBy === undefined ? 'MT1800' : state.loadBy;
+  const R = W.rows.filter(r => !by || r[4] === by);
+  const hrs = f => W.months.map((_, i) => R.filter(r => r[0] === i && f(r)).reduce((s, r) => s + r[5], 0) / 60);
+  const work = hrs(r => r[2] !== 'MC-STOPPED'), hol = hrs(r => r[2] === 'MC-STOPPED'), tot = work.map((v, i) => v + hol[i]);
+  const lab = W.months.map(k => MON3[+k.slice(5) - 1] + ' ' + k.slice(2, 4));
+  const staff = Math.max(0, parseInt(state.loadStaff, 10) || 0), cap = staff * 176;
+  const sum = tot.reduce((a, b) => a + b, 0), peak = tot.indexOf(Math.max(...tot)), over = cap ? work.filter(v => v > cap).length : null;
+  const f0 = v => Math.round(v).toLocaleString();
+  $('loadSub').textContent = `แผน ${W.period} · ${W.issuer} · ${W.jobs.toLocaleString()} งาน · จากไฟล์ ${W.source}`;
+  const kpi = (n, l, cls) => `<div class="tkpi ${cls || ''}"><b>${n}</b><span>${l}</span></div>`;
+  // the chart: workday hours at the bottom, holiday hours on top, the capacity line against the workday part
+  const CW = 760, CH = 270, L = 48, Rr = 10, Tt = 14, B = 30, cw = (CW - L - Rr) / 12;
+  const max = niceMax(Math.max(1, ...tot, cap)), y = v => Tt + (CH - Tt - B) * (1 - v / max), bw = Math.min(40, cw * 0.62);
+  let g = '';
+  for (let i = 0; i <= 5; i++) { const v = max * i / 5; g += `<line x1="${L}" x2="${CW - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#E6EAF0"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${f0(v)}</text>`; }
+  W.months.forEach((_, i) => {
+    const x = L + cw * i + (cw - bw) / 2, yw = y(work[i]), yt = y(tot[i]), hot = cap && work[i] > cap;
+    g += `<rect x="${x}" y="${yw}" width="${bw}" height="${CH - B - yw}" rx="3" fill="${hot ? '#E31B23' : '#0E2F7A'}" data-tip="${esc(lab[i])} · วันทำงาน ${f0(work[i])} ชม.คน${hot ? ' · เกินกำลังคน' : ''}"/>`
+      + `<rect x="${x}" y="${yt}" width="${bw}" height="${Math.max(0, yw - yt - 2)}" rx="3" fill="#8FB0EA" data-tip="${esc(lab[i])} · วันหยุด (หยุดเครื่อง) ${f0(hol[i])} ชม.คน"/>`
+      + `<text x="${x + bw / 2}" y="${yt - 5}" text-anchor="middle" style="font-weight:600;fill:#1A2233">${f0(tot[i])}</text>`
+      + `<text x="${L + cw * i + cw / 2}" y="${CH - 10}" text-anchor="middle"${i === peak ? ' style="font-weight:700;fill:#0E2F7A"' : ''}>${esc(lab[i])}</text>`;
+  });
+  if (cap) g += `<line x1="${L}" x2="${CW - Rr}" y1="${y(cap)}" y2="${y(cap)}" stroke="#E31B23" stroke-width="2" stroke-dasharray="6 4"/><text x="${CW - Rr}" y="${y(cap) - 6}" text-anchor="end" style="fill:#C4141B;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:4px">กำลังคน ${staff} คน × 176 = ${f0(cap)}</text>`;
+  const chart = `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="ชั่วโมงคนต่อเดือนตามแผน" style="width:100%;height:auto;display:block;font-size:11px">${g}</svg>`;
+  // month × job theme, then month × PIC (the load of the area each PIC looks after)
+  const cell = (v, mx) => `<td class="num" style="background:rgba(14,47,122,${mx ? (v / mx * 0.32).toFixed(3) : 0})">${v ? f0(v) : '<span class="muted">—</span>'}</td>`;
+  const table = (keys, keyOf, name) => {
+    const m = keys.map(k => hrs(r => keyOf(r) === k)), mx = Math.max(1, ...m.flat());
+    return `<div class="tscroll"><table class="oldest ftable ttable"><thead><tr><th>${name}</th>${lab.map(l => `<th class="num">${esc(l)}</th>`).join('')}<th class="num">รวม</th></tr></thead><tbody>`
+      + keys.map((k, i) => `<tr><td><b>${esc(k || 'ไม่ระบุ')}</b></td>${m[i].map(v => cell(v, mx)).join('')}<td class="num"><b>${f0(m[i].reduce((a, b) => a + b, 0))}</b></td></tr>`).join('')
+      + `<tr><td><b>รวม</b></td>${tot.map(v => `<td class="num"><b>${f0(v)}</b></td>`).join('')}<td class="num"><b>${f0(sum)}</b></td></tr></tbody></table></div>`;
+  };
+  const themes = LOAD_THEMES.filter(t => R.some(r => r[1] === t)).concat(uniq(R.map(r => r[1])).filter(t => !LOAD_THEMES.includes(t)));
+  const pics = uniq(R.map(r => r[3])).sort((a, b) => hrs(r => r[3] === b).reduce((s, v) => s + v, 0) - hrs(r => r[3] === a).reduce((s, v) => s + v, 0));
+  const noTime = Object.values(W.noTime || {}).reduce((a, b) => a + b, 0);
+  const pick = [['MT1800', 'ทีมช่าง (MT1800)'], ['VENDOR', 'Vendor'], ['', 'ทั้งหมด']].map(([v, l]) => `<button type="button" data-loadby="${v}" aria-pressed="${by === v}">${l}</button>`).join('');
+  box.innerHTML = `<div class="td">
+    <section class="card t-filter"><h2>เลือกข้อมูล</h2><div class="tfil"><div class="ldby" role="group" aria-label="ผู้ทำงาน">${pick}</div>
+      <label class="tsel"><span>จำนวนช่าง (คน)</span><input type="number" id="loadStaff" min="0" max="999" inputmode="numeric" placeholder="เช่น 12" value="${staff || ''}"></label></div>
+      <p class="fnote">ใส่จำนวนช่างเพื่อดูเส้นกำลังคนวันทำงาน (คน × 22 วัน × 8 ชม.) เดือนที่งานวันทำงานเกินเส้นจะเป็นแท่งสีแดง</p></section>
+    <section class="card t-kpis">${kpi(f0(sum), 'ชม.คน ทั้งปี')}${kpi(f0(sum / 12), 'เฉลี่ยต่อเดือน')}${kpi(esc(lab[peak]), 'เดือนหนักสุด · ' + f0(tot[peak]) + ' ชม.')}${kpi(f0(hol.reduce((a, b) => a + b, 0)), 'ชม.คน วันหยุด (หยุดเครื่อง)')}${over === null ? '' : kpi(over, 'เดือนที่เกินกำลังคน', over ? 'bad' : 'good')}</section>
+    <section class="card"><h2>ภาระงานรายเดือน <small>ชั่วโมงคน</small></h2><p class="cap"><span style="color:#0E2F7A">■</span> วันทำงาน (เครื่องเดิน) · <span style="color:#8FB0EA">■</span> วันหยุด (ต้องหยุดเครื่อง) · ชี้ที่แท่งเพื่อดูตัวเลข</p>${chart}</section>
+    <section class="card"><h2>แยกตามประเภทงาน <small>ชั่วโมงคน</small></h2>${table(themes, r => r[1], 'ประเภทงาน')}</section>
+    <section class="card"><h2>แยกตาม PIC <small>ชั่วโมงคนของพื้นที่ที่ PIC ดูแล ไม่ใช่ของคนเดียว</small></h2>${table(pics, r => r[3], 'PIC')}</section>
+    ${noTime ? `<p class="fnote">${noTime} งานในแผนไม่มีเวลาทำงาน (WORKING TIME เป็น "-") จึงไม่ถูกนับชั่วโมง</p>` : ''}
+  </div>`;
+}
+$('loadView').addEventListener('click', e => {
+  const b = e.target.closest('[data-loadby]'); if (b) { state.loadBy = b.dataset.loadby; renderLoad(); }
+});
+$('loadView').addEventListener('change', e => {
+  if (e.target.id !== 'loadStaff') return;
+  state.loadStaff = e.target.value; try { store.set('ct_loadStaff', state.loadStaff); } catch {}
+  renderLoad();
+});
 
 function exportTechs() {
   const list = techFilter(techJobs()).sort((a, b) => natural(a.tech || '~', b.tech || '~') || (a.done - b.done) || natural(a.id, b.id));

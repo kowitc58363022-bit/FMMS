@@ -211,6 +211,23 @@ body:not(.wide) .nav{overflow:visible}
 body:not(.wide) .nav a .lbl{position:absolute;left:58px;top:50%;transform:translateY(-50%);background:var(--navy);color:#fff;padding:6px 12px;border-radius:8px;font-size:13.5px;font-weight:500;pointer-events:none;opacity:0}
 body:not(.wide) .nav a .lbl small{display:none}
 body:not(.wide) .nav a:hover .lbl,body:not(.wide) .nav a:focus-visible .lbl{opacity:1}
+/* menu groups: RM (repair) in Murata red, PM (preventive) in navy · a header when the menu is open, a thin line when it is folded */
+.navgrp{display:flex;align-items:center;gap:8px;flex:none;height:26px;margin:12px 0 2px;padding:0 12px;font-size:12px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.navgrp.g-rm{color:#C4141B;margin-top:0}
+.navgrp.g-pm{color:var(--navy);border-top:1px solid var(--line);height:38px;padding-top:12px}
+.navgrp::before{content:"";width:10px;height:10px;border-radius:3px;flex:none;background:currentColor}
+.navgrp span{opacity:0;transition:opacity .15s}
+body.wide .navgrp span{opacity:1;transition:opacity .2s .08s}
+body:not(.wide) .navgrp{height:0;margin:6px 4px;padding:0}
+body:not(.wide) .navgrp.g-rm{display:none}
+body:not(.wide) .navgrp::before{display:none}
+body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
+.nav a.rmnav svg{stroke:#D3141C}
+.nav a.pmnav svg{stroke:var(--navy)}
+.nav a.rmnav[aria-current="page"]{color:#B3121A;background:#FDECEC}
+.nav a.rmnav[aria-current="page"]::before{background:#E31B23}
+.nav a.pmnav[aria-current="page"]::before{background:var(--navy)}
+body:not(.wide) .nav a.rmnav .lbl{background:#B3121A}
 .shell{margin-left:var(--rail);transition:margin-left .22s cubic-bezier(0.32, 0.72, 0, 1)}
 @media (max-width: 768px){
   :root{--rail:0px}
@@ -1612,16 +1629,18 @@ body.sheet-open{overflow:hidden}
 
 <nav class="nav" id="nav" aria-label="เมนูหลัก">
   <button class="menubtn" id="menuBtn" aria-label="ขยายเมนู" aria-expanded="false" aria-controls="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-  <a href="#request" data-view="request"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.3-.5-.5-2.3z"/></svg><span class="lbl">[RM] แจ้งซ่อม<small>ส่งใบแจ้งซ่อมเครื่องจักร</small></span></a>
-  <a href="#list" data-view="list"><span class="nbadge" hidden></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="3"/></svg><span class="lbl">[RM] รายการงาน<small>ตารางงานซ่อมทั้งหมด</small></span></a>
-  <a href="#monitor" data-view="monitor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span class="lbl">[RM] ภาพรวม (Monitoring)<small>กราฟและตัวเลขสรุป</small></span></a>
-  <a href="#finance" data-view="finance" id="finNav"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 7.5v9M9.5 7.5h3.2a2 2 0 0 1 0 4.2H9.5m0 0h3.6a2.2 2.2 0 0 1 0 4.4H9.5M11 6v1.5M11 16.5V18"/></svg><span class="lbl">[RM] ค่าใช้จ่าย<small>สรุปเงินตามโรงงาน / เครื่องจักร</small></span></a>
-  <a href="#follow" data-view="follow" id="followNav" hidden><span class="nbadge" id="followBadge" hidden></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span class="lbl">[RM] งานที่ติดตาม<small>แอดมิน · วันที่คาดว่าจะเสร็จ</small></span></a>
-  <a href="#cal" data-view="cal" id="calNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">[RM] ปฏิทินงาน<small>แอดมิน · งานตามวัน Due date</small></span></a>
-  <a href="#techs" data-view="techs" id="techNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18 14.4c1.8.8 3 2.7 3 5.6"/></svg><span class="lbl">[RM] งานของช่าง<small>ช่างแต่ละคนทำถึงไหน · Export Excel</small></span></a>
-  <a href="#pm" data-view="pm" data-pmtab="list" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="3"/></svg><span class="lbl">[PM] รายการ<small>งาน PM ตามแผน · บันทึกผล · Inspection</small></span></a>
-  <a href="#pm" data-view="pm" data-pmtab="cal" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg><span class="lbl">[PM] ปฏิทิน<small>วัน / สัปดาห์ / เดือน</small></span></a>
-  <a href="#pm" data-view="pm" data-pmtab="dash" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span class="lbl">[PM] Dashboard<small>Plan · Result · Performance</small></span></a>
+  <div class="navgrp g-rm"><span>งานซ่อม · RM</span></div>
+  <a class="rmnav" href="#request" data-view="request"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.3-.5-.5-2.3z"/></svg><span class="lbl">แจ้งซ่อม<small>ส่งใบแจ้งซ่อมเครื่องจักร</small></span></a>
+  <a class="rmnav" href="#list" data-view="list"><span class="nbadge" hidden></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="3"/></svg><span class="lbl">รายการงาน<small>ตารางงานซ่อมทั้งหมด</small></span></a>
+  <a class="rmnav" href="#monitor" data-view="monitor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span class="lbl">ภาพรวม (Monitoring)<small>กราฟและตัวเลขสรุป</small></span></a>
+  <a class="rmnav" href="#finance" data-view="finance" id="finNav"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 7.5v9M9.5 7.5h3.2a2 2 0 0 1 0 4.2H9.5m0 0h3.6a2.2 2.2 0 0 1 0 4.4H9.5M11 6v1.5M11 16.5V18"/></svg><span class="lbl">ค่าใช้จ่าย<small>สรุปเงินตามโรงงาน / เครื่องจักร</small></span></a>
+  <a class="rmnav" href="#follow" data-view="follow" id="followNav" hidden><span class="nbadge" id="followBadge" hidden></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span class="lbl">งานที่ติดตาม<small>แอดมิน · วันที่คาดว่าจะเสร็จ</small></span></a>
+  <a class="rmnav" href="#cal" data-view="cal" id="calNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="lbl">ปฏิทินงาน<small>แอดมิน · งานตามวัน Due date</small></span></a>
+  <a class="rmnav" href="#techs" data-view="techs" id="techNav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18 14.4c1.8.8 3 2.7 3 5.6"/></svg><span class="lbl">งานของช่าง<small>ช่างแต่ละคนทำถึงไหน · Export Excel</small></span></a>
+  <div class="navgrp g-pm" id="pmGrp" hidden><span>บำรุงรักษา · PM</span></div>
+  <a href="#pm" data-view="pm" data-pmtab="list" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="3"/></svg><span class="lbl">รายการ<small>งาน PM ตามแผน · บันทึกผล · Inspection</small></span></a>
+  <a href="#pm" data-view="pm" data-pmtab="cal" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg><span class="lbl">ปฏิทิน<small>วัน / สัปดาห์ / เดือน</small></span></a>
+  <a href="#pm" data-view="pm" data-pmtab="dash" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span class="lbl">Dashboard<small>Plan · Result · Performance</small></span></a>
 </nav>
 <nav class="pnav" id="phoneNav" aria-label="เมนูมือถือ">
   <a href="#request" data-pn="request"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.3-.5-.5-2.3z"/></svg>แจ้งซ่อม</a>
@@ -2072,6 +2091,7 @@ function render() {
   followBadge();
   $('pmView').hidden = gate || !pmo;
   document.querySelectorAll('.pmnav').forEach(a => { a.hidden = !canPM(); });
+  $('pmGrp').hidden = !canPM();
   if (!pmo && $('pmDlg').open) pmClose();
   $('trackView').hidden = gate || !trk;
   if (!trk && !$('trackSheet').hidden) { $('trackSheet').hidden = true; document.body.classList.remove('sheet-open'); }

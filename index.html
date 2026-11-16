@@ -253,6 +253,45 @@ body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
 .lverd.over{background:#FDE7E8;border-color:#C4141B}.lverd.over b{color:#C4141B}
 .lst{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:700}
 .lcur>td{background:#FFF6DE!important}.lnow{display:inline-block;margin-left:6px;border-radius:999px;padding:0 8px;background:#F59E0B;color:#fff;font-size:11.5px;font-weight:700}
+.lmgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:6px}
+.lmo{border:1px solid var(--line);border-top:4px solid;border-radius:14px;padding:12px 14px;background:#fff;min-width:0}
+.lmo.ok{border-top-color:#1E9152}.lmo.tight{border-top-color:#F59E0B}.lmo.over{border-top-color:#E31B23;background:linear-gradient(180deg,#FFF5F5,#fff 60%)}
+.lmo.now{box-shadow:0 0 0 2px #F59E0B inset}
+.lmt{display:flex;align-items:center;gap:6px}.lmt b{font-family:var(--head-font);font-size:17px;color:var(--ink)}.lmt .lst{margin-left:auto}.lmt .lnow{margin-left:0}
+.lmbig{font-family:var(--head-font);font-size:34px;font-weight:700;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}.lmbig small{font-size:16px;margin-left:2px}
+.lmbig.ok{color:#1E9152}.lmbig.tight{color:#B45309}.lmbig.over{color:#C4141B}
+.lmsub{margin:0 0 8px;font-size:12.5px;color:var(--muted)}
+.lmp{margin-top:8px}.lmh{display:flex;align-items:baseline;justify-content:space-between;font-size:13px;color:var(--ink-2)}.lmh small{color:var(--muted)}
+.lmh b{font-size:13px}.lmh b.ok{color:#1E9152}.lmh b.tight{color:#B45309}.lmh b.over{color:#C4141B}
+.lmb{display:block;height:7px;border-radius:99px;background:#EEF1F5;overflow:hidden;margin:3px 0}.lmb i{display:block;height:100%;border-radius:99px}
+.lmb i.ok{background:#1E9152}.lmb i.tight{background:#F59E0B}.lmb i.over{background:#E31B23}
+.lmp>small{font-size:12px;color:var(--muted)}.lmp>small b{color:var(--ink)}.lmp em{font-style:normal;font-weight:600}.lmp em.neg{color:#C4141B}.lmp em.pos{color:#1E9152}
+.lmp.hol .lmh span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:#F59E0B;margin-right:6px}
+.lmp.wrk .lmh span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:#0E2F7A;margin-right:6px}
+.lmtab{margin-top:12px}
+.lmo{cursor:pointer;transition:transform .12s,box-shadow .15s}.lmo:hover{box-shadow:0 6px 16px -10px rgba(14,47,122,.5)}.lmo.sel{outline:2px solid var(--navy);outline-offset:2px}
+.lmdet{margin-top:14px;border:1px solid #C9D6EE;border-radius:14px;background:#F8FAFE;padding:14px 16px}
+.lmdh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}.lmdh h3{margin:0;font-size:17px;color:var(--navy)}.lmdh span{font-size:13px;color:var(--ink-2)}.lmdh .btn{margin-left:auto}
+.lmteam{width:100%;min-width:640px;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.lmteam th,.lmteam td{padding:8px 10px;border-bottom:1px solid #EEF1F5;vertical-align:middle}
+.lmteam thead th{font-size:12.5px;font-weight:700;color:var(--ink-2);background:#F6F8FB;white-space:nowrap}
+.lmteam thead tr.g th{text-align:center;font-size:12px;letter-spacing:.02em;border-bottom:1px solid #E3E8F0}
+.lmteam .num{text-align:right;font-variant-numeric:tabular-nums}
+.lmteam thead .gS,.lmteam td.gS{background:#FFF8EC}.lmteam thead .gO,.lmteam td.gO{background:#F2F6FD}.lmteam thead .gT,.lmteam td.gT{background:#F4F5F8}
+.lmteam thead .gP,.lmteam td.gP{background:#F5F1FD}.lmteam thead .gH,.lmteam td.gH{background:#FFF8EC}
+.lmteam td.gS{border-left:2px solid #fff}.lmteam td.gP:first-of-type{border-left:2px solid #fff}
+.lmteam td.bad{color:#C4141B;font-weight:700}
+.lmteam td.tm b{display:block;font-family:var(--head-font);font-size:15px;color:var(--navy)}.lmteam td.tm small{display:block;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmteam .st{text-align:center}.lmteam td.st .lst{white-space:nowrap}
+.lmteam tbody tr:last-child td{border-bottom:0}.lmteam tbody tr:hover td{filter:brightness(.98)}
+.lmteam tbody tr.over td.tm{box-shadow:inset 3px 0 0 #E31B23}.lmteam tbody tr.tight td.tm{box-shadow:inset 3px 0 0 #F59E0B}.lmteam tbody tr.ok td.tm{box-shadow:inset 3px 0 0 #1E9152}
+.lmdg{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;margin-top:10px}.lmdg h4{margin:0 0 6px;font-size:14px;color:var(--ink)}
+@media (max-width:1100px){.lmdg{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1100px){.lmgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:760px){.lmgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lmon th{white-space:nowrap}.lmon thead tr:first-child th{text-align:center;font-size:13px}
+.lmon .lgS{background:#FEF3E2;color:#B45309}.lmon .lgO{background:#EEF3FC;color:#0E2F7A}.lmon .lgT{background:#F1F3F6;color:#1A2233}
+.lmon .ltot td{border-top:2px solid var(--line);background:#F8FAFC}
+.lbar{min-width:130px}.lbar span{display:inline-block;width:70px;height:8px;border-radius:99px;background:#EEF1F5;overflow:hidden;vertical-align:middle;margin-right:8px}.lbar i{display:block;height:100%;border-radius:99px}
 .lst.ok{color:#1E9152;background:#E8F6EE}.lst.tight{color:#B45309;background:#FEF3E2}.lst.over{color:#C4141B;background:#FDE7E8}
 .ltool{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;margin:0 0 16px}
 .ltool .lset{flex-direction:row;align-items:center;gap:8px}.ltool>.lset .lin input{width:110px}
@@ -276,6 +315,41 @@ body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
 .lteam button{border:0;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font:inherit;font-size:13px;padding:4px 10px;cursor:pointer}
 .pmc.ltm svg{height:64px}
 @media (max-width:1100px){.pmc.ltm{grid-column:span 6}}@media (max-width:700px){.pmc.ltm{grid-column:1/-1}}
+.lwtop{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin:0 0 14px}
+.lwyear{display:inline-flex;align-items:center;gap:6px}.lwyear b{font-family:var(--head-font);font-size:22px;color:var(--navy);min-width:64px;text-align:center}
+.lwyear button{width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:20px;color:var(--navy);cursor:pointer}
+.lwsum{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--ink-2)}.lwsum b{font-family:var(--head-font);font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.lwmen{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}.lwmen input{width:72px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;font:inherit;font-size:16px;font-weight:700;color:var(--ink)}
+.lwsum b.neg{color:#C4141B}.lwsum b.pos{color:#1E9152}
+.lwchart svg{width:100%;height:auto;display:block}.lwchart svg text{font-family:inherit;fill:#5F6675;font-size:12px}
+.lwchart .lg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:0 0 6px}.lwchart .lg .sw{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:-8px}
+.lwb.lo{border-top-color:#1E9152}.lwb.lo .lwt b{color:var(--navy)}
+.lwcap{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.lwcap>div{display:flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--ink-2)}.lwcap>div span{flex:1}.lwcap>div b{font-family:var(--head-font);font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+.lwuse{display:block;height:8px;border-radius:99px;background:#EEF1F5;overflow:hidden;margin:5px 0 3px}.lwuse i{display:block;height:100%;border-radius:99px;background:#1E9152}
+.lwcap.md .lwuse i{background:#F59E0B}.lwcap.hi .lwuse i{background:#E31B23}
+.lwcap small{font-size:12.5px;font-weight:600}.lwcap.lo small{color:#1E9152}.lwcap.md small{color:#B45309}.lwcap.hi small{color:#C4141B}
+.lwteams{margin:0 0 16px}.lwteams h3{margin:0 0 2px;font-size:16px}.lwteams .sub{margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+.lwteams tbody tr{cursor:pointer}.lwteams tbody tr.on td{background:#EAF0FB!important}.lwteams input{width:56px;min-height:32px;border:1px solid var(--line);border-radius:8px;padding:2px 6px;font:inherit;font-weight:700;text-align:right}
+.lmteam td.lo{color:#1E9152;font-weight:700}.lmteam td.md{color:#B45309;font-weight:700}.lmteam td.hi{color:#C4141B;font-weight:700}.lmteam td small{color:var(--muted);font-size:11px;font-weight:400}
+.lwmh{margin:4px 0 10px;font-size:16px;color:var(--ink)}.lwmen b{font-family:var(--head-font);font-size:17px;color:var(--ink)}
+.lwp{margin-top:9px}.lwp>div{display:flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--ink-2)}.lwp>div span{flex:1}.lwp>div span small{color:var(--muted)}.lwp>div b{font-size:14px}
+.lwp.lo>div b{color:#1E9152}.lwp.md>div b{color:#B45309}.lwp.hi>div b{color:#C4141B}.lwp.md .lwuse i{background:#F59E0B}.lwp.hi .lwuse i{background:#E31B23}
+.lwp>small{font-size:12px;color:var(--muted)}.lwp>small b{color:var(--ink)}
+.lwgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.lwb{background:#fff;border:1px solid var(--line);border-top:5px solid #3D6FD8;border-radius:16px;padding:14px 16px;box-shadow:0 6px 18px -14px rgba(14,47,122,.4);min-width:0}
+.lwb.md{border-top-color:#F59E0B}.lwb.hi{border-top-color:#E31B23}.lwb.now{box-shadow:0 0 0 2px #F59E0B}
+.lwh{display:flex;align-items:center;gap:6px}.lwh b{font-family:var(--head-font);font-size:18px;color:var(--ink)}.lwh .lnow{margin-left:0}
+.lwpk{border-radius:999px;padding:0 8px;background:#FDE7E8;color:#C4141B;font-size:11.5px;font-weight:700}
+.lwt{margin:8px 0 6px}.lwt small{display:block;font-size:12.5px;color:var(--muted)}.lwt b{font-family:var(--head-font);font-size:34px;line-height:1.1;color:var(--navy);font-variant-numeric:tabular-nums}.lwt em{font-style:normal;font-size:14px;color:var(--muted);margin-left:4px}
+.lwb.hi .lwt b{color:#C4141B}.lwb.md .lwt b{color:#B45309}
+.lwbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:#EEF1F5;margin-bottom:8px}.lwbar i{display:block;height:100%}.lwbar i.o{background:#0E2F7A}.lwbar i.s{background:#F59E0B}
+.lwr{display:flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0}.lwr span{flex:1}.lwr b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.lwr span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}.lwr.o span::before{background:#0E2F7A}.lwr.s span::before{background:#F59E0B}
+@media (max-width:1100px){.lwgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media (max-width:760px){.lwgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lper{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--ink-2)}
+.lper input{min-height:38px;border:1px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit;font-size:14px;color:var(--ink)}
+.lper button{min-height:38px;border:1px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);padding:4px 14px;font:inherit;font-size:13.5px;cursor:pointer}
 .ldl{display:flex;align-items:center;gap:8px;min-height:30px;font-size:13.5px;color:var(--ink)}
 .ldl i{width:12px;height:12px;border-radius:4px;flex:none}.ldl b{margin-left:auto;font-variant-numeric:tabular-nums}
 .ldet>summary h3::after{content:" ▾";color:var(--muted)}.ldet[open]>summary h3::after{content:" ▴"}
@@ -3070,13 +3144,19 @@ async function loadPMYear(y, force) {
 // PM jobs: the live plan × the standard man-minutes of that machine (or the machine type) · CHECK DAILY: not in the PM plan, the same month of the master plan
 function loadLive(W) {
   const now = new Date(), sy = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
-  const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(sy, 3 + i, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); });
-  const cur = months.indexOf(now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
-  const want = [sy, sy + 1].filter(y => !pmv.data[y]);
+  const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  // the range picked on the page (state.loadFrom / loadTo, 'YYYY-MM'), else this plan year Apr–Mar
+  const def = [sy + '-04', (sy + 1) + '-03'];
+  let from = /^\d{4}-\d{2}$/.test(state.loadFrom || '') ? state.loadFrom : def[0], to = /^\d{4}-\d{2}$/.test(state.loadTo || '') ? state.loadTo : def[1];
+  if (to < from) [from, to] = [to, from];
+  const months = [];
+  for (let d = new Date(+from.slice(0, 4), +from.slice(5) - 1, 1); ym(d) <= to && months.length < 36; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) months.push(ym(d));   // shortcut: 36 months at most, enough for a plan
+  const cur = months.indexOf(ym(now)), years = [...new Set(months.map(m => +m.slice(0, 4)))];
+  const want = years.filter(y => !pmv.data[y]);
   if (want.length) { if (!pmv.wlErr) want.forEach(y => loadPMYear(y)); return { wait: true }; }
   const U = s => String(s || '').trim().toUpperCase(), rows = [];
   let miss = 0, pmJobs = 0;
-  [sy, sy + 1].forEach(y => pmItems(y).forEach(x => {
+  years.forEach(y => pmItems(y).forEach(x => {
     const k = months.indexOf(x.y + '-' + String(x.m).padStart(2, '0'));
     if (k < 0) return;
     const th = U(x.o.JobTheme), mm = W.std[U(x.o.MachineID) + '|' + th] ?? W.stdType[U(x.o.MachineType) + '|' + th];
@@ -3085,13 +3165,80 @@ function loadLive(W) {
     rows.push([k, th, /STOP/i.test(x.o.MachineState) ? 'MC-STOPPED' : 'MC-OPERATED', x.pic, /vendor/i.test(x.o.Owner) ? 'VENDOR' : 'MT1800', mm || 0, 1, U(x.o.TeamCode), x.st]);
   }));
   W.rows.filter(r => r[1] === 'CHECK DAILY').forEach(r => { const k = months.findIndex(m => m.slice(5) === W.months[r[0]].slice(5)); if (k >= 0) rows.push([k, r[1], r[2], r[3], r[4], r[5], r[6], r[7], k < cur ? 'done' : 'todo']); });
-  return { sy, months, cur, rows, miss, pmJobs };
+  return { sy, months, cur, rows, miss, pmJobs, from, to, isDef: from === def[0] && to === def[1] };
+}
+// the page now: Jan–Dec of a year, work hours of our team (MT1800) from the live PM plan × each job's standard man-minutes, plus CHECK DAILY.
+// Machine-running jobs (MC-OPERATED) are done Mon–Fri, machine-stop jobs (MC-STOPPED) on Sat–Sun, each against the people we have on those days:
+// the whole team, or one team M1–M6 (its own jobs by TeamCode, its own size). The older dashboard below is kept unused (LOAD_OFF) to reuse its parts.
+const LOAD_OFF = true;
+function renderLoadMonths() {
+  const W = window.WORKLOAD, box = $('loadBody');
+  if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลเวลามาตรฐาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
+  const now = new Date(), Y = state.loadYear || now.getFullYear();
+  state.loadFrom = Y + '-01'; state.loadTo = Y + '-12';
+  const LV = loadLive(W);
+  if (LV.wait) { $('loadSub').textContent = ''; box.innerHTML = pmv.wlErr ? `<p class="mempty">${esc(pmv.wlErr)} <button type="button" class="btn" data-loadretry>ลองใหม่</button></p>` : '<p class="loading">กำลังโหลดแผน PM…</p>'; return; }
+  const f0 = v => Math.round(v).toLocaleString(), f1 = v => (Math.round(v * 10) / 10).toLocaleString(), sumOf = a => a.reduce((x, y) => x + y, 0);
+  const hpd = +loadCfg.hpd || 8, TM = W.teams || [], tSize = t => { const v = parseInt((loadCfg.tsize || {})[t.code], 10); return v >= 0 ? v : t.size; };
+  // Mon–Fri and Sat–Sun of each month of the year (calendar; public holidays are not taken off)
+  const wd = [], we = [];
+  for (let i = 0; i < 12; i++) { let a = 0, b = 0; for (let d = 1, n = new Date(Y, i + 1, 0).getDate(); d <= n; d++) { const k = new Date(Y, i, d).getDay(); k === 0 || k === 6 ? b++ : a++; } wd.push(a); we.push(b); }
+  const RB = LV.rows.filter(r => r[4] === 'MT1800');
+  const hrsOf = rows => { const o = Array(12).fill(0), s = Array(12).fill(0); rows.forEach(r => { (r[2] === 'MC-STOPPED' ? s : o)[r[0]] += r[5] / 60; }); return { o, s }; };
+  const lvl = p => p > 100 ? 'hi' : p >= 85 ? 'md' : 'lo';
+  // one team (or everybody): its hours, the people, the % used on weekdays and on weekends
+  const calc = (rows, men) => {
+    const { o, s } = hrsOf(rows), cO = wd.map(d => d * men * hpd), cS = we.map(d => d * men * hpd);
+    const pO = o.map((h, i) => cO[i] ? h / cO[i] * 100 : (h ? Infinity : 0)), pS = s.map((h, i) => cS[i] ? h / cS[i] * 100 : (h ? Infinity : 0));
+    return { o, s, cO, cS, pO, pS, men, needO: o.map((h, i) => h / (wd[i] * hpd || 1)), needS: s.map((h, i) => h / (we[i] * hpd || 1)) };
+  };
+  const allMen = Math.max(0, parseInt(loadCfg.men, 10) || TM.reduce((a, t) => a + tSize(t), 0) || 11);
+  const sel = TM.some(t => t.code === state.loadTeam) ? state.loadTeam : '';
+  const selT = TM.find(t => t.code === sel), cur = sel ? calc(RB.filter(r => r[7] === sel), tSize(selT)) : calc(RB, allMen);
+  $('loadSub').textContent = `${sel ? 'ทีม ' + sel + (selT.lead ? ' · ' + selT.lead : '') : 'ทั้งแผนก'} · ทีมช่าง (MT1800) · งาน PM จากแผนในระบบ × เวลามาตรฐาน + CHECK DAILY`;
+  const pct = p => p === Infinity ? 'ไม่มีคน' : f0(p) + '%';
+  // team table: a row per team for the year, the row picks the team
+  const teamRows = TM.map(t => {
+    const c = calc(RB.filter(r => r[7] === t.code), tSize(t)), yO = sumOf(c.o), yS = sumOf(c.s), aO = sumOf(c.cO), aS = sumOf(c.cS);
+    const oO = c.pO.filter(p => p > 100).length, oS = c.pS.filter(p => p > 100).length, k = oO || oS ? 'hi' : Math.max(...c.pO, ...c.pS) >= 85 ? 'md' : 'lo';
+    const mO = c.pO.indexOf(Math.max(...c.pO)), mS = c.pS.indexOf(Math.max(...c.pS));
+    return `<tr class="${k}${sel === t.code ? ' on' : ''}" data-loadteam="${t.code}" tabindex="0"><td class="tm"><b>${esc(t.code)}</b><small>${esc(t.lead || '')}</small></td>
+      <td class="num"><input type="number" min="0" max="99" data-tsize="${t.code}" value="${tSize(t)}" aria-label="จำนวนคนทีม ${esc(t.code)}"></td>
+      <td class="num gO">${f0(yO)}</td><td class="num gO ${lvl(aO ? yO / aO * 100 : 0)}">${aO ? f0(yO / aO * 100) + '%' : '—'}</td><td class="num gO${oO ? ' bad' : ''}">${oO}</td><td class="num gO">${f1(c.needO[mO])} <small>${MON3[mO]}</small></td>
+      <td class="num gS">${f0(yS)}</td><td class="num gS ${lvl(aS ? yS / aS * 100 : 0)}">${aS ? f0(yS / aS * 100) + '%' : '—'}</td><td class="num gS${oS ? ' bad' : ''}">${oS}</td><td class="num gS">${f1(c.needS[mS])} <small>${MON3[mS]}</small></td>
+      <td class="st"><span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></td></tr>`;
+  }).join('');
+  const teams = TM.length ? `<div class="pmc lwteams"><h3>แยกตามทีม · ทั้งปี ${Y}</h3><p class="sub">จ.–ศ. = งานเครื่องเดิน · ส.–อา. = งานหยุดเครื่อง · กำลังคน = วัน × คนในทีม × ${hpd} ชม. · กดแถวเพื่อดูรายเดือนของทีมนั้น · แก้จำนวนคนได้</p>
+    <div class="tscroll"><table class="lmteam"><colgroup><col style="width:14%"><col style="width:7%"><col span="8" style="width:9%"><col style="width:7%"></colgroup>
+    <thead><tr class="g"><th rowspan="2">ทีม</th><th rowspan="2" class="num">คน</th><th colspan="4" class="gO">จ.–ศ. · งานเครื่องเดิน</th><th colspan="4" class="gS">ส.–อา. · งานหยุดเครื่อง</th><th rowspan="2" class="st">สถานะ</th></tr>
+    <tr><th class="num gO">ชม.งาน</th><th class="num gO">ใช้กำลังคน</th><th class="num gO">เดือนที่เกิน</th><th class="num gO">ต้องใช้สูงสุด (คน)</th><th class="num gS">ชม.งาน</th><th class="num gS">ใช้กำลังคน</th><th class="num gS">เดือนที่เกิน</th><th class="num gS">ต้องใช้สูงสุด (คน)</th></tr></thead>
+    <tbody>${teamRows}</tbody></table></div></div>` : '';
+  // month blocks of the team picked (or everybody)
+  const c = cur, tt = c.o.map((h, i) => h + c.s[i]);
+  const part = (name, d, h, cap, p) => `<div class="lwp ${lvl(p)}"><div><span>${name} <small>${d} วัน</small></span><b>${pct(p)}</b></div><span class="lwuse"><i style="width:${Math.min(100, p === Infinity ? 100 : p).toFixed(0)}%"></i></span><small>งาน <b>${f0(h)}</b> / มี ${f0(cap)} ชม. · ${h > cap ? 'ขาด' : 'เหลือ'} ${f0(Math.abs(cap - h))}</small></div>`;
+  const blocks = LV.months.map((_, i) => {
+    const k = lvl(Math.max(c.pO[i], c.pS[i]));
+    return `<div class="lwb ${k}${i === LV.cur ? ' now' : ''}"><div class="lwh"><b>${MON3[i]}</b>${i === LV.cur ? '<span class="lnow">เดือนนี้</span>' : ''}<span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}" style="margin-left:auto">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></div>
+      <div class="lwt"><small>เวลาทั้งหมด</small><b>${f0(tt[i])}</b><em>ชม. / มี ${f0(c.cO[i] + c.cS[i])}</em></div>
+      ${part('เวลาทำงาน จ.–ศ.', wd[i], c.o[i], c.cO[i], c.pO[i])}${part('เวลาวันหยุด ส.–อา.', we[i], c.s[i], c.cS[i], c.pS[i])}</div>`;
+  }).join('');
+  const overO = c.pO.filter(p => p > 100).length, overS = c.pS.filter(p => p > 100).length;
+  box.innerHTML = `<div class="lwtop"><div class="lwyear" role="group" aria-label="ปี"><button type="button" data-loadyear="-1" aria-label="ปีก่อน">‹</button><b>${Y}</b><button type="button" data-loadyear="1" aria-label="ปีถัดไป">›</button></div>
+    <div class="ldby" role="group" aria-label="ทีม"><button type="button" data-loadteam="" aria-pressed="${!sel}">ทั้งแผนก</button>${TM.map(t => `<button type="button" data-loadteam="${t.code}" aria-pressed="${sel === t.code}">${esc(t.code)}</button>`).join('')}</div>
+    ${sel ? `<span class="lwmen">ทีม ${esc(sel)} มี <b>${c.men}</b> คน</span>` : `<label class="lwmen">กำลังคนทั้งแผนก <input type="number" min="0" max="999" data-lset="men" value="${allMen}" aria-label="จำนวนคนทั้งแผนก"> คน</label>`}
+    <div class="lwsum"><span>งานทั้งปี <b>${f0(sumOf(tt))}</b> ชม.</span><span>จ.–ศ. เกิน <b class="${overO ? 'neg' : 'pos'}">${overO}</b> เดือน</span><span>ส.–อา. เกิน <b class="${overS ? 'neg' : 'pos'}">${overS}</b> เดือน</span></div></div>
+    ${teams}
+    <h3 class="lwmh">รายเดือน · ${sel ? 'ทีม ' + esc(sel) : 'ทั้งแผนก'}</h3>
+    <div class="lwgrid">${blocks}</div>
+    <p class="fnote">ชั่วโมงงาน = งาน PM ในแผน × เวลามาตรฐานของงานนั้น (คน × นาที ÷ 60) + CHECK DAILY · งานเครื่องเดิน (MC-OPERATED) ทำ จ.–ศ. · งานหยุดเครื่อง (MC-STOPPED) ทำ ส.–อา. · กำลังคน = จำนวนวันตามปฏิทิน × คน × ${hpd} ชม. (ไม่หักวันนักขัตฤกษ์ วันลา และงานซ่อม) · ทีมดูจาก TeamCode ในแผน PM · ขอบสี: เขียว ใช้ไม่ถึง 85%, ส้ม 85–100%, แดง เกิน${LV.miss ? ` · ${LV.miss} งานไม่มีเวลามาตรฐาน นับ 0 ชม.` : ''}</p>`;
 }
 function renderLoad() {
+  if (LOAD_OFF) { renderLoadMonths(); return; }
   const W = window.WORKLOAD, box = $('loadBody');
   if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลแผนงาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
   const LV = loadLive(W);
   if (LV.wait) { $('loadSub').textContent = ''; box.innerHTML = pmv.wlErr ? `<p class="mempty">${esc(pmv.wlErr)} <button type="button" class="btn" data-loadretry>ลองใหม่</button></p>` : '<p class="loading">กำลังโหลดแผน PM…</p>'; return; }
+  const NM = LV.months.length || 1;   // months in the range picked
   const left = !!state.loadLeft;   // only what is still to do: late jobs count in this month
   const by = state.loadBy === undefined ? 'MT1800' : state.loadBy;
   const TM = W.teams || [], sel = TM.some(t => t.code === state.loadTeam) ? state.loadTeam : '';
@@ -3105,11 +3252,11 @@ function renderLoad() {
   const f0 = v => Math.round(v).toLocaleString(), f1 = v => (Math.round(v * 10) / 10).toLocaleString(), sumOf = a => a.reduce((x, y) => x + y, 0);
   const need = work.map(v => perHead ? v / perHead : 0), holMD = hol.map(v => hpd ? v / hpd : 0), holTeam = hol.map(v => staff && hpd ? v / (staff * hpd) : 0);
   const peak = need.indexOf(Math.max(...need)), sumAll = sumOf(tot);
-  $('loadSub').textContent = `ปีแผน Apr ${LV.sy}–Mar ${LV.sy + 1} · งาน PM ${LV.pmJobs.toLocaleString()} งานจากแผน PM ในระบบ (อัปเดตตามแผน) + CHECK DAILY จากไฟล์แผน`;
+  $('loadSub').textContent = `ช่วงแผน ${lab[0]} – ${lab[NM - 1]} (${NM} เดือน)${LV.isDef ? ' · ปีแผนนี้' : ''} · งาน PM ${LV.pmJobs.toLocaleString()} งานจากแผน PM ในระบบ (อัปเดตตามแผน) + CHECK DAILY จากไฟล์แผน`;
   // toolbar: whose jobs · team size · the rest of the settings folded away
   const inp = (k, l, attrs, unit) => `<label class="lset"><span>${l}</span><span class="lin"><input type="number" data-lset="${k}" value="${esc(String(c[k]))}" ${attrs}><em>${unit}</em></span></label>`;
   const pick = [['MT1800', 'ทีมช่าง (MT1800)'], ['VENDOR', 'Vendor'], ['', 'ทั้งหมด']].map(([v, l]) => `<button type="button" data-loadby="${v}" aria-pressed="${by === v}">${l}</button>`).join('');
-  const tools = `<div class="ltool"><div class="ldby" role="group" aria-label="ช่วงงาน"><button type="button" data-loadleft="" aria-pressed="${!left}">ทั้งแผน</button><button type="button" data-loadleft="1" aria-pressed="${left}">เหลือทำ (รวมงานค้าง)</button></div><div class="ldby" role="group" aria-label="งานของใคร">${pick}</div>
+  const tools = `<div class="ltool"><div class="lper" role="group" aria-label="ช่วงแผน"><span>ช่วงแผน</span><input type="month" data-lper="from" value="${LV.from}" aria-label="ตั้งแต่เดือน"><span>ถึง</span><input type="month" data-lper="to" value="${LV.to}" aria-label="ถึงเดือน">${LV.isDef ? '' : '<button type="button" data-lperreset>ปีแผนนี้</button>'}</div><div class="ldby" role="group" aria-label="ช่วงงาน"><button type="button" data-loadleft="" aria-pressed="${!left}">ทั้งแผน</button><button type="button" data-loadleft="1" aria-pressed="${left}">เหลือทำ (รวมงานค้าง)</button></div><div class="ldby" role="group" aria-label="งานของใคร">${pick}</div>
     ${selT ? `<span class="lteam">ทีม ${esc(sel)} · ${staff} คน <button type="button" data-loadteam="">ดูทุกทีม ✕</button></span>` : inp('staff', 'ช่างที่มี', 'min="0" max="999" placeholder="ไม่บังคับ" inputmode="numeric"', 'คน')}
     <details class="lmore"><summary>ตั้งค่า</summary><div class="lsets">${inp('days', 'วันทำงาน/เดือน', 'min="1" max="31"', 'วัน')}${inp('hpd', 'ชั่วโมง/วัน', 'min="1" max="24" step="0.5"', 'ชม.')}${inp('rm', 'เผื่องานซ่อม (RM)', 'min="0" max="90"', '%')}${inp('ot', 'วันหยุดที่มาทำได้/เดือน', 'min="0" max="15"', 'วัน')}</div>
       <p class="fnote">ช่าง 1 คนมีเวลาให้งานตามแผน ${f1(perHead)} ชม./เดือน (${days} วัน × ${hpd} ชม. หักเผื่องานซ่อม ${rm}%)</p></details></div>`;
@@ -3134,13 +3281,13 @@ function renderLoad() {
       const tw = mh(r => r[2] !== 'MC-STOPPED'), thol = mh(r => r[2] === 'MC-STOPPED'), n = tw.map(v => perHead ? v / perHead : 0), size = tSize(t);
       const pk = n.indexOf(Math.max(...n)), hd = thol.map(v => size && hpd ? v / (size * hpd) : 0), overN = n.filter(v => v > size).length, hmax = Math.max(...hd);
       const st = !RT.length ? '' : overN || hmax > ot ? 'over' : n[pk] >= size * 0.85 ? 'tight' : 'ok';
-      const top = Math.max(1, n[pk], size) * 1.15, bw = 300 / 12, yy = v => 64 * (1 - v / top) + 4;
+      const top = Math.max(1, n[pk], size) * 1.15, bw = 300 / NM, yy = v => 64 * (1 - v / top) + 4;
       const bars = n.map((v, i) => `<rect x="${i * bw + 3}" y="${yy(v)}" width="${bw - 6}" height="${68 - yy(v)}" rx="2" fill="${v > size ? '#E31B23' : v >= size * 0.85 ? '#F59E0B' : '#3D6FD8'}"${i === cur ? ' stroke="#B45309" stroke-width="1.5"' : ''} data-tip="${esc(t.code)} · ${esc(lab[i])} · ต้องใช้ ${f1(v)} คน (มี ${size})"/>`).join('')
         + `<line x1="0" x2="300" y1="${yy(size)}" y2="${yy(size)}" stroke="#E31B23" stroke-width="1.5" stroke-dasharray="4 3"/>`;
       const note = !RT.length ? 'ไม่มีงานในแผนนี้' : [overN ? `เกินกำลัง ${overN} เดือน · เพิ่มอีก ${Math.max(0, Math.ceil(n[pk]) - size)} คน` : 'วันทำงานพอทุกเดือน', `วันหยุดต้องมาสูงสุด ${f1(hmax)} วัน`].join(' · ');
       return `<div class="pmc ltm${sel === t.code ? ' on' : ''}" data-loadteam="${t.code}" role="button" tabindex="0" aria-pressed="${sel === t.code}">
         <div class="lth"><b>${esc(t.code)}</b><span>${esc(t.lead)}</span>${st ? `<span class="lst ${st}">${{ ok: 'ทัน', tight: 'ตึง', over: 'ไม่ทัน' }[st]}</span>` : ''}</div>
-        <div class="ltn"><div><b>${f1(sumOf(n) / 12)}</b><small>คนที่ต้องใช้เฉลี่ย</small></div><div><b>${f1(n[pk])}</b><small>สูงสุด ${esc(lab[pk])}</small></div>
+        <div class="ltn"><div><b>${f1(sumOf(n) / NM)}</b><small>คนที่ต้องใช้เฉลี่ย</small></div><div><b>${f1(n[pk])}</b><small>สูงสุด ${esc(lab[pk])}</small></div>
           <label><input type="number" min="0" max="99" data-tsize="${t.code}" value="${size}" aria-label="จำนวนคนในทีม ${esc(t.code)}"><small>คนที่มี</small></label></div>
         <svg viewBox="0 0 300 72" preserveAspectRatio="none" role="img" aria-label="ช่างที่ต้องใช้ทีม ${esc(t.code)} รายเดือน">${bars}</svg><p class="ltf">${note}</p></div>`;
     }).join('');
@@ -3150,12 +3297,12 @@ function renderLoad() {
   const tile = (cls, label, big, sub) => `<div class="pmk ${cls}"><small>${label}</small><b>${big}</b><span>${sub}</span></div>`;
   // total = workdays + holidays (hours); the average people needed is for the workday part
   const pct = v => sumAll ? f0(v / sumAll * 100) + '%' : '—';
-  const tiles = tile('nv', left ? 'ชั่วโมงรวมที่เหลือทำ' : 'ชั่วโมงรวม', f0(sumAll) + ' ชม.', `เฉลี่ย ${f0(sumAll / 12)} ชม./เดือน`)
-    + tile('pu', 'วันทำงาน (เครื่องเดิน)', f0(sumOf(work)) + ' ชม.', `${pct(sumOf(work))} ของทั้งหมด · เฉลี่ย ${f0(sumOf(work) / 12)} ชม./เดือน`)
+  const tiles = tile('nv', left ? 'ชั่วโมงรวมที่เหลือทำ' : 'ชั่วโมงรวม', f0(sumAll) + ' ชม.', `เฉลี่ย ${f0(sumAll / NM)} ชม./เดือน`)
+    + tile('pu', 'วันทำงาน (เครื่องเดิน)', f0(sumOf(work)) + ' ชม.', `${pct(sumOf(work))} ของทั้งหมด · เฉลี่ย ${f0(sumOf(work) / NM)} ชม./เดือน`)
     + tile('am', 'วันหยุด (หยุดเครื่อง)', f0(sumOf(hol)) + ' ชม.', `${pct(sumOf(hol))} ของทั้งหมด · สูงสุด ${f0(Math.max(...holMD))} วันคน/เดือน`)
-    + tile('rd', 'จำนวนคนเฉลี่ย', f1(sumOf(need) / 12) + ' คน', `สูงสุด ${f1(need[peak])} คน (${esc(lab[peak])})${staff ? ` · มี ${staff} คน` : ''}`);
+    + tile('rd', 'จำนวนคนเฉลี่ย', f1(sumOf(need) / NM) + ' คน', `สูงสุด ${f1(need[peak])} คน (${esc(lab[peak])})${staff ? ` · มี ${staff} คน` : ''}`);
   // chart: technicians needed per month (bars) with the team size as a line
-  const CW = 760, CH = 290, L = 40, Rr = 12, Tt = 40, B = 30, cw = (CW - L - Rr) / 12, bw = Math.min(38, cw * 0.6);
+  const CW = 760, CH = 290, L = 40, Rr = 12, Tt = 40, B = 30, cw = (CW - L - Rr) / NM, bw = Math.min(38, cw * 0.6);
   const top = niceMax(Math.max(1, ...need, staff) * 1.1), y = v => Tt + (CH - Tt - B) * (1 - v / top);
   let g = '<defs><linearGradient id="lg-ok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3D6FD8"/><stop offset="1" stop-color="#0E2F7A"/></linearGradient><linearGradient id="lg-over" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5A5F"/><stop offset="1" stop-color="#C4141B"/></linearGradient><linearGradient id="lg-tight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset="1" stop-color="#B45309"/></linearGradient></defs>';
   for (let i = 0; i <= 5; i++) { const v = top * i / 5; g += `<line x1="${L}" x2="${CW - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF1F5"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${f0(v)}</text>`; }
@@ -3178,7 +3325,7 @@ function renderLoad() {
   dg += `<text x="70" y="66" text-anchor="middle" style="font-size:20px;font-weight:700;fill:#1A2233">${f0(sumAll / 1000)}k</text><text x="70" y="86" text-anchor="middle">ชม.คน</text>`;
   const donut = `<div class="pmc w4"><h3>ชั่วโมงแยกตามประเภทงาน</h3><p class="sub">งาน PM ประจำปีใช้เวลามากสุด แม้จำนวนงานน้อย</p><div class="pmdonut"><svg viewBox="0 0 140 140" role="img" aria-label="ชั่วโมงแยกตามประเภทงาน">${dg}</svg><div>${th.map(x => `<span class="ldl"><i style="background:${LOAD_COL[x.t] || '#8A97B0'}"></i>${esc(x.t.replace(/^PM /, ''))}<b>${f0(x.h / sumAll * 100)}%</b></span>`).join('')}</div></div></div>`;
   // workdays vs holidays per month (stacked hours)
-  const SW = 640, SH = 250, sl = 40, sb = 26, st = 10, scw = (SW - sl - 6) / 12, sbw = scw * 0.62, smax = niceMax(Math.max(1, ...tot)), sy = v => st + (SH - st - sb) * (1 - v / smax);
+  const SW = 640, SH = 250, sl = 40, sb = 26, st = 10, scw = (SW - sl - 6) / NM, sbw = scw * 0.62, smax = niceMax(Math.max(1, ...tot)), sy = v => st + (SH - st - sb) * (1 - v / smax);
   let sg = '';
   for (let i = 0; i <= 4; i++) { const v = smax * i / 4; sg += `<line x1="${sl}" x2="${SW - 6}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEF1F5"/><text x="${sl - 4}" y="${sy(v) + 4}" text-anchor="end">${f0(v / 1000)}k</text>`; }
   if (cur >= 0) sg += `<rect x="${sl + scw * cur + 1}" y="2" width="${scw - 2}" height="${SH - 4}" rx="8" fill="#FFF6DE" stroke="#F59E0B" stroke-dasharray="4 3"/>`;
@@ -3187,24 +3334,81 @@ function renderLoad() {
   const split = `<div class="pmc w6"><h3>วันทำงาน กับ วันหยุด</h3><p class="sub">ชั่วโมงคนต่อเดือน</p><div class="lg"><span class="sw" style="background:#0E2F7A"></span>วันทำงาน (เครื่องเดิน) <span class="sw" style="background:#F59E0B"></span>วันหยุด (ต้องหยุดเครื่อง)</div><svg viewBox="0 0 ${SW} ${SH}" role="img" aria-label="ชั่วโมงวันทำงานกับวันหยุด">${sg}</svg></div>`;
   // job theme: hours a year, jobs, and the technicians it takes on average (th is sorted by hours)
   const pmax = Math.max(1, ...th.map(x => x.h));
-  const pics = `<div class="pmc w6"><h3>ภาระตามประเภทงาน</h3><p class="sub">ชั่วโมงคนทั้งปี · จำนวนงาน · ช่างที่ต้องใช้เฉลี่ยต่อเดือน</p><div class="pmtech">${th.map(x => `<div class="pmtr" style="cursor:default;grid-template-columns:minmax(110px,1fr) 2fr 60px 140px"><span class="nm">${esc(x.t)}</span><span class="br"><i style="width:${(x.h / pmax * 100).toFixed(1)}%;background:${LOAD_COL[x.t] || '#8A97B0'}"></i></span><span class="pc">${f0(x.h)}</span><span class="nn">${x.n.toLocaleString()} งาน · ≈ ${f1(x.h / 12 / (perHead || 1))} คน</span></div>`).join('')}</div></div>`;
+  const pics = `<div class="pmc w6"><h3>ภาระตามประเภทงาน</h3><p class="sub">ชั่วโมงคนทั้งปี · จำนวนงาน · ช่างที่ต้องใช้เฉลี่ยต่อเดือน</p><div class="pmtech">${th.map(x => `<div class="pmtr" style="cursor:default;grid-template-columns:minmax(110px,1fr) 2fr 60px 140px"><span class="nm">${esc(x.t)}</span><span class="br"><i style="width:${(x.h / pmax * 100).toFixed(1)}%;background:${LOAD_COL[x.t] || '#8A97B0'}"></i></span><span class="pc">${f0(x.h)}</span><span class="nn">${x.n.toLocaleString()} งาน · ≈ ${f1(x.h / NM / (perHead || 1))} คน</span></div>`).join('')}</div></div>`;
   // month table, folded
   const rows = LV.months.map((_, i) => { const k = staff ? (need[i] > staff || holTeam[i] > ot ? 'over' : need[i] >= staff * 0.85 ? 'tight' : 'ok') : '';
     return `<tr${i === cur ? ' class="lcur"' : ''}><td><b>${esc(lab[i])}</b>${i === cur ? ' <span class="lnow">เดือนนี้</span>' : ''}</td><td class="num">${f0(work[i])}</td><td class="num"${i === peak ? ' style="color:#C4141B;font-weight:700"' : ''}>${f1(need[i])}</td><td class="num">${f0(hol[i])}</td><td class="num">${f0(holMD[i])}</td><td class="num"><b>${f0(tot[i])}</b></td>`
       + (staff ? `<td class="num">${f0(need[i] / staff * 100)}%</td><td class="num" style="color:${need[i] > staff ? '#C4141B' : '#1E9152'}">${need[i] > staff ? '+' + Math.ceil(need[i] - staff) : '—'}</td><td class="num"${holTeam[i] > ot ? ' style="color:#C4141B;font-weight:700"' : ''}>${f1(holTeam[i])}</td><td><span class="lst ${k}">${{ ok: 'ทัน', tight: 'ตึง', over: 'ไม่ทัน' }[k]}</span></td>` : '') + '</tr>'; }).join('');
   const table = `<details class="pmc ldet" style="grid-column:1/-1"><summary><h3>ตารางรายเดือน</h3></summary><div class="tscroll"><table class="oldest ftable ttable"><thead><tr><th>เดือน</th><th class="num">งานวันทำงาน (ชม.)</th><th class="num">ช่างที่ต้องใช้</th><th class="num">งานหยุดเครื่อง (ชม.)</th><th class="num">วันคน วันหยุด</th><th class="num">รวม (ชม.)</th>${staff ? '<th class="num">ใช้กำลังคน</th><th class="num">ต้องเพิ่มช่าง</th><th class="num">วันหยุดที่ทีมต้องมา</th><th>สถานะ</th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
-  box.innerHTML = `${tools}<div class="pmdash ldash">${verdict}${tiles}${teams}${chart}${donut}${split}${pics}${table}</div>`
+  // monthly overview like DATA_man: man-minutes the PM plan needs (standard minutes × people per job) against days × men × minutes a day
+  let monthly = '';
+  const D = W.days || {};
+  if (Object.keys(D).length) {
+    const men = selT ? staff : staff || (D[1] || {}).man || 0, mpd = hpd * 60;
+    const mm = f => LV.months.map((_, i) => R.filter(r => r[0] === i && f(r)).reduce((s, r) => s + r[5], 0));
+    const needS = mm(r => r[2] === 'MC-STOPPED'), needO = mm(r => r[2] !== 'MC-STOPPED');
+    const dd = LV.months.map(k => D[+k.slice(5)] || { hol: 0, work: 0 }), capS = dd.map(d => d.hol * men * mpd), capO = dd.map(d => d.work * men * mpd);
+    const diff = v => `<td class="num" style="color:${v < 0 ? '#C4141B' : '#1E9152'};font-weight:600">${v < 0 ? '−' : '+'}${f0(Math.abs(v))}</td>`;
+    const use = (n, cp) => { const p = cp ? n / cp * 100 : 0, col = p > 100 ? '#E31B23' : p >= 85 ? '#F59E0B' : '#1E9152'; return `<td class="lbar"><span><i style="width:${Math.min(100, p).toFixed(0)}%;background:${col}"></i></span><b style="color:${col}">${cp ? f0(p) + '%' : '—'}</b></td>`; };
+    const sum = a => a.reduce((x, y) => x + y, 0);
+    const line = (i, lab2, nS, dS, cS, nO, dO, cO, cls) => `<tr${cls ? ` class="${cls}"` : ''}><td><b>${lab2}</b>${i === cur ? ' <span class="lnow">เดือนนี้</span>' : ''}</td><td class="num">${f0(nS)}</td><td class="num">${dS}</td><td class="num">${f0(cS)}</td>${diff(cS - nS)}<td class="num">${f0(nO)}</td><td class="num">${dO}</td><td class="num">${f0(cO)}</td>${diff(cO - nO)}<td class="num"><b>${f0(nS + nO)}</b></td><td class="num">${f0(cS + cO)}</td>${diff(cS + cO - nS - nO)}${use(nS + nO, cS + cO)}</tr>`;
+    const body = LV.months.map((_, i) => line(i, esc(lab[i]), needS[i], dd[i].hol, capS[i], needO[i], dd[i].work, capO[i], i === cur ? 'lcur' : '')).join('')
+      + line(-1, 'รวม', sum(needS), sum(dd.map(d => d.hol)), sum(capS), sum(needO), sum(dd.map(d => d.work)), sum(capO), 'ltot');
+    // one block per month: % of the capacity used, then holidays and workdays as need / have (hours), the exact table folded below
+    const hh = v => f0(v / 60), K = { ok: 'ทัน', tight: 'ตึง', over: 'เกินกำลัง' };
+    const part = (name, n, c, d, cls) => { const p = c ? n / c * 100 : 0, k = p > 100 ? 'over' : p >= 85 ? 'tight' : 'ok';
+      return `<div class="lmp ${cls}"><div class="lmh"><span>${name} <small>${d} วัน</small></span><b class="${k}">${c ? f0(p) + '%' : '—'}</b></div><span class="lmb"><i class="${k}" style="width:${Math.min(100, p).toFixed(0)}%"></i></span><small>ต้องใช้ <b>${hh(n)}</b> / มี ${hh(c)} ชม. · <em class="${c - n < 0 ? 'neg' : 'pos'}">${c - n < 0 ? 'ขาด' : 'เหลือ'} ${hh(Math.abs(c - n))}</em></small></div>`; };
+    const blocks = LV.months.map((_, i) => {
+      const n = needS[i] + needO[i], c = capS[i] + capO[i], p = c ? n / c * 100 : 0, k = p > 100 ? 'over' : p >= 85 ? 'tight' : 'ok';
+      return `<div class="lmo ${k}${i === cur ? ' now' : ''}${i === state.loadMonth ? ' sel' : ''}" data-loadmonth="${i}" role="button" tabindex="0" aria-pressed="${i === state.loadMonth}" title="กดเพื่อดูรายละเอียดเดือนนี้"><div class="lmt"><b>${esc(lab[i])}</b>${i === cur ? '<span class="lnow">เดือนนี้</span>' : ''}<span class="lst ${k}">${K[k]}</span></div>
+        <div class="lmbig ${k}">${c ? f0(p) : '—'}<small>%</small></div><p class="lmsub">ใช้กำลังคน · ${n > c ? 'ขาด' : 'เหลือ'} ${hh(Math.abs(c - n))} ชม.คน</p>
+        ${part('วันหยุด', needS[i], capS[i], dd[i].hol, 'hol')}${part('วันทำงาน', needO[i], capO[i], dd[i].work, 'wrk')}</div>`;
+    }).join('');
+    // the month picked: its jobs by team and by PM type
+    let detail = '';
+    const mi = state.loadMonth;
+    if (mi >= 0 && mi < LV.months.length) {
+      const RM = R.filter(r => r[0] === mi), d = dd[mi], jobsN = sumOf(RM.map(r => r[6]));
+      const grp = key => { const m = {}; RM.forEach(r => { const g = m[key(r)] = m[key(r)] || { s: 0, o: 0, n: 0 }; r[2] === 'MC-STOPPED' ? g.s += r[5] : g.o += r[5]; g.n += r[6]; }); return m; };
+      const byT = grp(r => r[7] || '-'), codes = TM.map(t => t.code).filter(cd => byT[cd]).concat(Object.keys(byT).filter(cd => !TM.some(t => t.code === cd)).sort(natural));
+      const trows = codes.map(cd => { const g = byT[cd], t = TM.find(x => x.code === cd), size = t ? tSize(t) : 0;
+        const needP = d.work && mpd ? g.o / (d.work * mpd) : 0, holD = size && mpd ? g.s / (size * mpd) : 0, k = !t ? '' : needP > size || holD > d.hol ? 'over' : needP >= size * 0.85 ? 'tight' : 'ok';
+        return `<tr class="${k}"><td class="tm"><b>${esc(cd === '-' ? 'ไม่มีทีม' : cd)}</b><small>${t && t.lead ? esc(t.lead) : '&nbsp;'}</small></td><td class="num">${g.n.toLocaleString()}</td>`
+          + `<td class="num gS">${hh(g.s)}</td><td class="num gO">${hh(g.o)}</td><td class="num gT"><b>${hh(g.s + g.o)}</b></td>`
+          + `<td class="num gP${t && needP > size ? ' bad' : ''}">${f1(needP)}</td><td class="num gP">${t ? size : '—'}</td><td class="num gH${t && holD > d.hol ? ' bad' : ''}">${t ? f1(holD) : '—'}</td>`
+          + `<td class="st">${k ? `<span class="lst ${k}">${K[k]}</span>` : ''}</td></tr>`; }).join('');
+      const byTh = grp(r => r[1]), thMax = Math.max(1, ...Object.values(byTh).map(g => g.s + g.o));
+      const thRows = Object.entries(byTh).sort((a, b) => (b[1].s + b[1].o) - (a[1].s + a[1].o)).map(([th, g]) => `<div class="pmtr" style="cursor:default;grid-template-columns:minmax(110px,1fr) 2fr 60px 110px"><span class="nm">${esc(th)}</span><span class="br"><i style="width:${((g.s + g.o) / thMax * 100).toFixed(1)}%;background:${LOAD_COL[th] || '#8A97B0'}"></i></span><span class="pc">${hh(g.s + g.o)}</span><span class="nn">${g.n.toLocaleString()} งาน</span></div>`).join('');
+      detail = `<div class="lmdet"><div class="lmdh"><h3>รายละเอียด ${esc(lab[mi])}</h3><span>${jobsN.toLocaleString()} งาน · ต้องใช้ ${hh(needS[mi] + needO[mi])} / มี ${hh(capS[mi] + capO[mi])} ชม.คน · วันหยุด ${d.hol} วัน · วันทำงาน ${d.work} วัน</span><button type="button" class="btn" data-loadmonth="-1">ปิด ✕</button></div>
+        <div class="lmdg"><div><h4>แยกตามทีม</h4><div class="tscroll"><table class="lmteam"><colgroup><col style="width:17%"><col style="width:8%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:15%"></colgroup>
+          <thead><tr class="g"><th rowspan="2">ทีม</th><th rowspan="2" class="num">งาน</th><th colspan="3" class="gT">ชั่วโมงคน</th><th colspan="2" class="gP">คน (วันทำงาน)</th><th class="gH">วันหยุด</th><th rowspan="2" class="st">สถานะ</th></tr>
+          <tr><th class="num gS">วันหยุด</th><th class="num gO">วันทำงาน</th><th class="num gT">รวม</th><th class="num gP">ต้องใช้</th><th class="num gP">มี</th><th class="num gH">ทีมต้องมา (วัน)</th></tr></thead>
+          <tbody>${trows || '<tr><td colspan="9" class="muted">ไม่มีงาน</td></tr>'}</tbody></table></div></div>
+        <div><h4>แยกตามประเภทงาน</h4><div class="pmtech">${thRows || '<p class="pmnone">ไม่มีงาน</p>'}</div></div></div></div>`;
+    }
+    monthly = `<div class="pmc" style="grid-column:1/-1"><h3>ภาพรวมรายเดือน <small>งานจากแผน PM × เวลามาตรฐาน (คน × นาที) ในไฟล์แผน · กดเดือนเพื่อดูรายละเอียด</small></h3>
+      <p class="sub">กำลังคน = วัน × ${men} คน × ${f0(mpd)} นาที · วันหยุด / วันทำงานของแต่ละเดือนจากแท็บ DATA_man · ไม่หักเผื่องานซ่อม · ${left ? 'เฉพาะงานที่เหลือทำ งานค้างรวมในเดือนนี้' : 'ทั้งแผน'}</p>
+      <div class="lmgrid">${blocks}</div>${detail}
+      <details class="ldet lmtab"><summary><h3>ดูเป็นตาราง (man-min)</h3></summary><div class="tscroll"><table class="oldest ftable ttable lmon"><thead><tr><th rowspan="2">เดือน</th><th colspan="4" class="lgS">วันหยุด · MC-Stop</th><th colspan="4" class="lgO">วันทำงาน · MC-Operate</th><th colspan="4" class="lgT">รวม</th></tr>
+      <tr><th class="num">ต้องใช้</th><th class="num">วัน</th><th class="num">กำลังคน</th><th class="num">เหลือ / ขาด</th><th class="num">ต้องใช้</th><th class="num">วัน</th><th class="num">กำลังคน</th><th class="num">เหลือ / ขาด</th><th class="num">ต้องใช้</th><th class="num">กำลังคน</th><th class="num">เหลือ / ขาด</th><th>ใช้กำลังคน</th></tr></thead><tbody>${body}</tbody></table></div></details></div>`;
+  }
+  box.innerHTML = `${tools}<div class="pmdash ldash">${verdict}${tiles}${monthly}${teams}${chart}${donut}${split}${pics}${table}</div>`
     + `<p class="fnote">เวลามาตรฐานต่องาน (นาที × คน) จากไฟล์ ${esc(W.source)}${LV.miss ? ` · ${LV.miss} งาน PM ไม่มีเวลามาตรฐานในไฟล์ จึงนับ 0 ชม.` : ''}${left ? ' · งานค้างจากเดือนก่อนนับรวมในเดือนนี้' : ''}</p>`;
 }
 $('loadView').addEventListener('click', e => {
   const b = e.target.closest('[data-loadby]'); if (b) { state.loadBy = b.dataset.loadby; renderLoad(); return; }
   const lf = e.target.closest('[data-loadleft]'); if (lf) { state.loadLeft = !!lf.dataset.loadleft; renderLoad(); return; }
+  const lm = e.target.closest('[data-loadmonth]'); if (lm) { const v = +lm.dataset.loadmonth; state.loadMonth = v === state.loadMonth ? -1 : v; renderLoad(); if (state.loadMonth >= 0) $('loadBody').querySelector('.lmdet')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
   if (e.target.closest('[data-loadretry]')) { pmv.wlErr = ''; renderLoad(); return; }
+  const ly = e.target.closest('[data-loadyear]'); if (ly) { state.loadYear = (state.loadYear || new Date().getFullYear()) + +ly.dataset.loadyear; renderLoad(); return; }
+  if (e.target.closest('[data-lperreset]')) { state.loadFrom = state.loadTo = ''; state.loadMonth = -1; renderLoad(); return; }
   if (e.target.closest('input')) return;
   const t = e.target.closest('[data-loadteam]'); if (t) { state.loadTeam = state.loadTeam === t.dataset.loadteam ? '' : t.dataset.loadteam; renderLoad(); $('loadView').scrollIntoView({ block: 'start' }); }
 });
-$('loadView').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.ltm')) { e.preventDefault(); e.target.click(); } });
+$('loadView').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.ltm, .lmo, tr[data-loadteam]')) { e.preventDefault(); e.target.click(); } });
 $('loadView').addEventListener('change', e => {
+  const lp = e.target.dataset && e.target.dataset.lper;
+  if (lp) { if (e.target.value) { state[lp === 'from' ? 'loadFrom' : 'loadTo'] = e.target.value; state.loadMonth = -1; renderLoad(); } return; }
   const ts = e.target.dataset && e.target.dataset.tsize;
   if (ts) { loadCfg.tsize = Object.assign({}, loadCfg.tsize, { [ts]: e.target.value }); try { store.set('ct_loadCfg', JSON.stringify(loadCfg)); } catch {} renderLoad(); return; }
   const k = e.target.dataset && e.target.dataset.lset; if (!k) return;

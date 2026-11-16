@@ -4150,12 +4150,10 @@ function openPM(id) {
     const fm = pmForm(x);
     if (fm) f += `<div class="pmsec"><h3>ทำ Inspection</h3><div class="full pminsp"><a class="btn solid" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ (มีร่าง ' + esc(pmDraftTime(pmDraft(x, fm))) + ')' : 'เปิดฟอร์ม'} ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
       <p>กรอกค่าวัดที่เครื่องบนมือถือ กดบันทึกแล้วผลส่งเข้าแผนนี้ งานเป็น "รออนุมัติ" เอง ไม่ต้องกดส่งด้านล่าง</p></div></div>`;
-    f += `<div class="pmsec pm-sched"><h3>นัดวันทำ</h3><label>วันที่<input type="date" name="pdate" value="${x.plan ? isoDay(x.plan) : ''}"></label><div class="btns" style="grid-column:auto;align-self:end"><button type="button" class="btn" data-pmdo="schedule">บันทึกวันนัด</button></div></div>
-      <div class="pmsec pm-done${fm ? ' pm-hasform' : ''}"><h3>บันทึกว่าทำ PM เสร็จ</h3>
-        <label>วันที่ทำ *<input type="date" name="adate" value="${isoDay(new Date())}" max="${isoDay(new Date())}"></label>
-        <label class="pmchk"><input type="checkbox" name="abnormal"> พบสิ่งผิดปกติ</label>
-        <div class="full"><label class="abtn"><svg class="ico-inline"><use href="#i-cam"/></svg>แนบ Inspection (PDF หรือรูป ไม่บังคับ สูงสุด ${CONFIG.MAX_PHOTOS} ไฟล์)<input type="file" id="pmFiles" accept="application/pdf,image/jpeg,image/png,image/webp" multiple hidden></label><div class="pmflist" id="pmFileList"></div></div>
-        <label class="full">Remark<textarea name="remark" rows="2" maxlength="2000" placeholder="ไม่บังคับ เช่น เกจวัดอุณหภูมิเสีย">${esc(o.Remark && !/^ส่งกลับ:/.test(o.Remark) ? o.Remark : '')}</textarea></label>
+    // no plan-date / done-date / abnormal fields: the date sent is today, abnormal comes from the Inspection sheet
+    f += `<div class="pmsec pm-done${fm ? ' pm-hasform' : ''}"><h3>แนบไฟล์และรูป</h3>
+        <div class="full"><label class="abtn"><svg class="ico-inline"><use href="#i-cam"/></svg>แนบไฟล์หรือรูป (PDF หรือรูป ไม่บังคับ สูงสุด ${CONFIG.MAX_PHOTOS} ไฟล์)<input type="file" id="pmFiles" accept="application/pdf,image/jpeg,image/png,image/webp" multiple hidden></label><div class="pmflist" id="pmFileList"></div></div>
+        <label class="full">หมายเหตุ<textarea name="remark" rows="2" maxlength="2000" placeholder="ไม่บังคับ เช่น เกจวัดอุณหภูมิเสีย">${esc(o.Remark && !/^ส่งกลับ:/.test(o.Remark) ? o.Remark : '')}</textarea></label>
         <div class="btns"><button type="button" class="btn solid" data-pmdo="submit">ส่งให้วิศวะอนุมัติ</button>${CONFIG.PM_ONLY ? "" : '<button type="button" class="btn" data-pmdo="report">พบปัญหา · แจ้งซ่อม</button>'}</div></div>`;
   }
   if (eng && x.st === 'review') f += `<div class="pmsec"><h3>ตรวจงาน PM</h3><label class="full">หมายเหตุ (ต้องใส่เมื่อส่งกลับ)<textarea name="note" rows="2" maxlength="2000"></textarea></label>
@@ -4263,8 +4261,7 @@ async function pmDo(op) {
   const p = { op: { schedule: 'pmSchedule', submit: 'pmSubmit', approve: 'pmApprove', sendBack: 'pmSendBack', edit: 'pmEdit' }[op], id };
   if (op === 'schedule') p.date = v('pdate');
   if (op === 'submit') {
-    if (!v('adate')) return msg('กรุณาใส่วันที่ทำ PM');
-    Object.assign(p, { date: v('adate'), remark: v('remark').trim(), abnormal: !!(box.querySelector('[name="abnormal"]') || {}).checked, files: pmv.files.map(f => f.data) });
+    Object.assign(p, { date: isoDay(new Date()), remark: v('remark').trim(), abnormal: false, files: pmv.files.map(f => f.data) });
   }
   if (op === 'approve' || op === 'sendBack') { p.note = v('note').trim(); if (op === 'sendBack' && !p.note) return msg('กรุณาบอกเหตุผลที่ส่งกลับ'); }
   if (op === 'edit') {

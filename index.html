@@ -3148,10 +3148,12 @@ function renderLoad() {
   }
   // KPI tiles
   const tile = (cls, label, big, sub) => `<div class="pmk ${cls}"><small>${label}</small><b>${big}</b><span>${sub}</span></div>`;
-  const tiles = tile('nv', left ? 'ชั่วโมงคนที่เหลือทำ' : 'ชั่วโมงคนตามแผนทั้งปี', f0(sumAll), `เฉลี่ย ${f0(sumAll / 12)} ชม./เดือน`)
-    + tile('rd', 'ช่างที่ต้องใช้สูงสุด', f1(need[peak]) + ' คน', esc(lab[peak]) + (staff ? ` · มี ${staff} คน` : ''))
-    + tile('pu', 'ช่างที่ต้องใช้เฉลี่ย', f1(sumOf(need) / 12) + ' คน', `วันทำงาน · ${f1(perHead)} ชม./คน/เดือน`)
-    + tile('am', 'งานหยุดเครื่อง (ทำวันหยุด)', f0(sumOf(hol)) + ' ชม.', `${f0(sumOf(hol) / sumAll * 100)}% ของทั้งหมด · สูงสุด ${f0(Math.max(...holMD))} วันคน/เดือน`);
+  // total = workdays + holidays (hours); the average people needed is for the workday part
+  const pct = v => sumAll ? f0(v / sumAll * 100) + '%' : '—';
+  const tiles = tile('nv', left ? 'ชั่วโมงรวมที่เหลือทำ' : 'ชั่วโมงรวม', f0(sumAll) + ' ชม.', `เฉลี่ย ${f0(sumAll / 12)} ชม./เดือน`)
+    + tile('pu', 'วันทำงาน (เครื่องเดิน)', f0(sumOf(work)) + ' ชม.', `${pct(sumOf(work))} ของทั้งหมด · เฉลี่ย ${f0(sumOf(work) / 12)} ชม./เดือน`)
+    + tile('am', 'วันหยุด (หยุดเครื่อง)', f0(sumOf(hol)) + ' ชม.', `${pct(sumOf(hol))} ของทั้งหมด · สูงสุด ${f0(Math.max(...holMD))} วันคน/เดือน`)
+    + tile('rd', 'จำนวนคนเฉลี่ย', f1(sumOf(need) / 12) + ' คน', `สูงสุด ${f1(need[peak])} คน (${esc(lab[peak])})${staff ? ` · มี ${staff} คน` : ''}`);
   // chart: technicians needed per month (bars) with the team size as a line
   const CW = 760, CH = 290, L = 40, Rr = 12, Tt = 40, B = 30, cw = (CW - L - Rr) / 12, bw = Math.min(38, cw * 0.6);
   const top = niceMax(Math.max(1, ...need, staff) * 1.1), y = v => Tt + (CH - Tt - B) * (1 - v / top);

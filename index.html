@@ -1939,7 +1939,8 @@ async function load() {
   }
   state.loading = false;
   render();
-  if (state.view === 'pm' && state.ok && Date.now() - (pmv.at || 0) > 60e3) loadPM(true);   // on the [PM] page the plan refreshes too, at most once a minute
+  if (state.view === 'pm' && state.ok && Date.now() - (pmv.at || 0) > 60e3) loadPM(true);
+  if (state.view === 'load' && state.ok) Object.entries(pmv.wl || {}).forEach(([y, t]) => { if (typeof t === 'number' && t && Date.now() - t > 60e3) loadPMYear(+y, true); });   // the workload page follows the PM plan   // on the [PM] page the plan refreshes too, at most once a minute
   if (state.again) { state.again = false; return load(); }
 }
 
@@ -3052,26 +3053,63 @@ const LOAD_COL = { 'CHECK DAILY': '#94A3B8', 'PM MONTHLY': '#3D6FD8', 'PM BI-MON
 const LOAD_DEF = { staff: '', days: 22, hpd: 8, rm: 20, ot: 4 };
 let loadCfg = Object.assign({}, LOAD_DEF);
 try { Object.assign(loadCfg, JSON.parse(store.get('ct_loadCfg') || '{}')); } catch {}
+// the PM plan of one year for the workload page (both years of the Apr–Mar plan year are needed, so not loadPM, which keeps one)
+async function loadPMYear(y, force) {
+  pmv.wl = pmv.wl || {};
+  if (pmv.wl[y] === 'loading' || (pmv.data[y] && !force)) return;
+  pmv.wl[y] = 'loading';
+  try {
+    const r = await api({ op: 'pm', year: y });
+    if (r.token) { state.token = r.token; try { store.set('ct_token', r.token); } catch {} }
+    pmv.data[y] = { cols: r.cols, rows: r.rows, years: r.years || {}, technicians: r.technicians || [] };
+    pmv.wl[y] = Date.now(); pmv.wlErr = '';
+  } catch (e) { pmv.wl[y] = 0; pmv.wlErr = e.handled ? 'โหลดแผน PM ไม่สำเร็จ' : friendly(e); }
+  if (state.view === 'load') renderLoad();
+}
+// rows like workload.js: [month, theme, MC-STOPPED/OPERATED, PIC, MT1800/VENDOR, man-minutes, jobs, team, status] for the plan year Apr–Mar around today
+// PM jobs: the live plan × the standard man-minutes of that machine (or the machine type) · CHECK DAILY: not in the PM plan, the same month of the master plan
+function loadLive(W) {
+  const now = new Date(), sy = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(sy, 3 + i, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); });
+  const cur = months.indexOf(now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+  const want = [sy, sy + 1].filter(y => !pmv.data[y]);
+  if (want.length) { if (!pmv.wlErr) want.forEach(y => loadPMYear(y)); return { wait: true }; }
+  const U = s => String(s || '').trim().toUpperCase(), rows = [];
+  let miss = 0, pmJobs = 0;
+  [sy, sy + 1].forEach(y => pmItems(y).forEach(x => {
+    const k = months.indexOf(x.y + '-' + String(x.m).padStart(2, '0'));
+    if (k < 0) return;
+    const th = U(x.o.JobTheme), mm = W.std[U(x.o.MachineID) + '|' + th] ?? W.stdType[U(x.o.MachineType) + '|' + th];
+    if (mm == null) miss++;
+    pmJobs++;
+    rows.push([k, th, /STOP/i.test(x.o.MachineState) ? 'MC-STOPPED' : 'MC-OPERATED', x.pic, /vendor/i.test(x.o.Owner) ? 'VENDOR' : 'MT1800', mm || 0, 1, U(x.o.TeamCode), x.st]);
+  }));
+  W.rows.filter(r => r[1] === 'CHECK DAILY').forEach(r => { const k = months.findIndex(m => m.slice(5) === W.months[r[0]].slice(5)); if (k >= 0) rows.push([k, r[1], r[2], r[3], r[4], r[5], r[6], r[7], k < cur ? 'done' : 'todo']); });
+  return { sy, months, cur, rows, miss, pmJobs };
+}
 function renderLoad() {
   const W = window.WORKLOAD, box = $('loadBody');
   if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลแผนงาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
+  const LV = loadLive(W);
+  if (LV.wait) { $('loadSub').textContent = ''; box.innerHTML = pmv.wlErr ? `<p class="mempty">${esc(pmv.wlErr)} <button type="button" class="btn" data-loadretry>ลองใหม่</button></p>` : '<p class="loading">กำลังโหลดแผน PM…</p>'; return; }
+  const left = !!state.loadLeft;   // only what is still to do: late jobs count in this month
   const by = state.loadBy === undefined ? 'MT1800' : state.loadBy;
   const TM = W.teams || [], sel = TM.some(t => t.code === state.loadTeam) ? state.loadTeam : '';
   const tSize = t => { const v = parseInt((loadCfg.tsize || {})[t.code], 10); return v >= 0 ? v : t.size; };
-  const RB = W.rows.filter(r => !by || r[4] === by), R = RB.filter(r => !sel || r[7] === sel);
-  const hrs = f => W.months.map((_, i) => R.filter(r => r[0] === i && f(r)).reduce((s, r) => s + r[5], 0) / 60);
+  const RB = LV.rows.filter(r => (!by || r[4] === by) && (!left || r[8] === 'todo' || r[8] === 'late')).map(r => left && r[0] < LV.cur ? [LV.cur].concat(r.slice(1)) : r), R = RB.filter(r => !sel || r[7] === sel);
+  const hrs = f => LV.months.map((_, i) => R.filter(r => r[0] === i && f(r)).reduce((s, r) => s + r[5], 0) / 60);
   const work = hrs(r => r[2] !== 'MC-STOPPED'), hol = hrs(r => r[2] === 'MC-STOPPED'), tot = work.map((v, i) => v + hol[i]);
-  const lab = W.months.map(k => MON3[+k.slice(5) - 1] + ' ' + k.slice(2, 4));
+  const lab = LV.months.map(k => MON3[+k.slice(5) - 1] + ' ' + k.slice(2, 4));
   const c = loadCfg, selT = TM.find(t => t.code === sel), staff = selT ? tSize(selT) : Math.max(0, parseInt(c.staff, 10) || 0), days = +c.days || 0, hpd = +c.hpd || 0, rm = Math.min(90, Math.max(0, +c.rm || 0)), ot = Math.max(0, +c.ot || 0);
   const perHead = days * hpd * (1 - rm / 100);   // hours one technician has for the plan in a month
   const f0 = v => Math.round(v).toLocaleString(), f1 = v => (Math.round(v * 10) / 10).toLocaleString(), sumOf = a => a.reduce((x, y) => x + y, 0);
   const need = work.map(v => perHead ? v / perHead : 0), holMD = hol.map(v => hpd ? v / hpd : 0), holTeam = hol.map(v => staff && hpd ? v / (staff * hpd) : 0);
   const peak = need.indexOf(Math.max(...need)), sumAll = sumOf(tot);
-  $('loadSub').textContent = `แผน ${W.period} · ${W.issuer} · ${W.jobs.toLocaleString()} งาน`;
+  $('loadSub').textContent = `ปีแผน Apr ${LV.sy}–Mar ${LV.sy + 1} · งาน PM ${LV.pmJobs.toLocaleString()} งานจากแผน PM ในระบบ (อัปเดตตามแผน) + CHECK DAILY จากไฟล์แผน`;
   // toolbar: whose jobs · team size · the rest of the settings folded away
   const inp = (k, l, attrs, unit) => `<label class="lset"><span>${l}</span><span class="lin"><input type="number" data-lset="${k}" value="${esc(String(c[k]))}" ${attrs}><em>${unit}</em></span></label>`;
   const pick = [['MT1800', 'ทีมช่าง (MT1800)'], ['VENDOR', 'Vendor'], ['', 'ทั้งหมด']].map(([v, l]) => `<button type="button" data-loadby="${v}" aria-pressed="${by === v}">${l}</button>`).join('');
-  const tools = `<div class="ltool"><div class="ldby" role="group" aria-label="งานของใคร">${pick}</div>
+  const tools = `<div class="ltool"><div class="ldby" role="group" aria-label="ช่วงงาน"><button type="button" data-loadleft="" aria-pressed="${!left}">ทั้งแผน</button><button type="button" data-loadleft="1" aria-pressed="${left}">เหลือทำ (รวมงานค้าง)</button></div><div class="ldby" role="group" aria-label="งานของใคร">${pick}</div>
     ${selT ? `<span class="lteam">ทีม ${esc(sel)} · ${staff} คน <button type="button" data-loadteam="">ดูทุกทีม ✕</button></span>` : inp('staff', 'ช่างที่มี', 'min="0" max="999" placeholder="ไม่บังคับ" inputmode="numeric"', 'คน')}
     <details class="lmore"><summary>ตั้งค่า</summary><div class="lsets">${inp('days', 'วันทำงาน/เดือน', 'min="1" max="31"', 'วัน')}${inp('hpd', 'ชั่วโมง/วัน', 'min="1" max="24" step="0.5"', 'ชม.')}${inp('rm', 'เผื่องานซ่อม (RM)', 'min="0" max="90"', '%')}${inp('ot', 'วันหยุดที่มาทำได้/เดือน', 'min="0" max="15"', 'วัน')}</div>
       <p class="fnote">ช่าง 1 คนมีเวลาให้งานตามแผน ${f1(perHead)} ชม./เดือน (${days} วัน × ${hpd} ชม. หักเผื่องานซ่อม ${rm}%)</p></details></div>`;
@@ -3087,12 +3125,12 @@ function renderLoad() {
       overH.length ? `งานหยุดเครื่องต้องมาทำวันหยุดเกิน ${ot} วัน ${overH.length} เดือน · สูงสุด ${f1(Math.max(...holTeam))} วัน` : `วันหยุดที่ต้องมาทำสูงสุด ${f1(Math.max(...holTeam))} วัน`].filter(Boolean);
     verdict = `<div class="lverd ${cls}" style="grid-column:1/-1"><b>${head} · ช่าง ${staff} คน</b>${lines.map(l => `<span>${l}</span>`).join('')}</div>`;
   }
-  const now = new Date(), cur = W.months.indexOf(now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));   // -1 when today is outside the plan
+  const cur = LV.cur;
   // team cards: each team's plan against its own people (from M_System; machine types not in it are matched by a guess in tools/workload.js)
   let teams = '';
   if (TM.length) {
     const cards = TM.map(t => {
-      const RT = RB.filter(r => r[7] === t.code), mh = f => W.months.map((_, i) => RT.filter(r => r[0] === i && f(r)).reduce((s, r) => s + r[5], 0) / 60);
+      const RT = RB.filter(r => r[7] === t.code), mh = f => LV.months.map((_, i) => RT.filter(r => r[0] === i && f(r)).reduce((s, r) => s + r[5], 0) / 60);
       const tw = mh(r => r[2] !== 'MC-STOPPED'), thol = mh(r => r[2] === 'MC-STOPPED'), n = tw.map(v => perHead ? v / perHead : 0), size = tSize(t);
       const pk = n.indexOf(Math.max(...n)), hd = thol.map(v => size && hpd ? v / (size * hpd) : 0), overN = n.filter(v => v > size).length, hmax = Math.max(...hd);
       const st = !RT.length ? '' : overN || hmax > ot ? 'over' : n[pk] >= size * 0.85 ? 'tight' : 'ok';
@@ -3106,12 +3144,11 @@ function renderLoad() {
           <label><input type="number" min="0" max="99" data-tsize="${t.code}" value="${size}" aria-label="จำนวนคนในทีม ${esc(t.code)}"><small>คนที่มี</small></label></div>
         <svg viewBox="0 0 300 72" preserveAspectRatio="none" role="img" aria-label="ช่างที่ต้องใช้ทีม ${esc(t.code)} รายเดือน">${bars}</svg><p class="ltf">${note}</p></div>`;
     }).join('');
-    const nGuess = Object.keys(W.guessed || {}).length;
-    teams = `<div class="lthead"><h3>แยกตามทีม</h3><span>ทีมจาก M_System (ประเภทเครื่อง → ทีม)${nGuess ? ` · ${nGuess} ประเภทเครื่องไม่อยู่ใน M_System จับคู่ทีมโดยเดา` : ''} · กดการ์ดเพื่อดูเฉพาะทีมนั้น · แก้จำนวนคนในการ์ดได้</span></div>${cards}`;
+    teams = `<div class="lthead"><h3>แยกตามทีม</h3><span>ทีมจาก TeamCode ในแผน PM (CHECK DAILY ใช้ทีมจาก M_System) · กดการ์ดเพื่อดูเฉพาะทีมนั้น · แก้จำนวนคนในการ์ดได้</span></div>${cards}`;
   }
   // KPI tiles
   const tile = (cls, label, big, sub) => `<div class="pmk ${cls}"><small>${label}</small><b>${big}</b><span>${sub}</span></div>`;
-  const tiles = tile('nv', 'ชั่วโมงคนตามแผนทั้งปี', f0(sumAll), `เฉลี่ย ${f0(sumAll / 12)} ชม./เดือน`)
+  const tiles = tile('nv', left ? 'ชั่วโมงคนที่เหลือทำ' : 'ชั่วโมงคนตามแผนทั้งปี', f0(sumAll), `เฉลี่ย ${f0(sumAll / 12)} ชม./เดือน`)
     + tile('rd', 'ช่างที่ต้องใช้สูงสุด', f1(need[peak]) + ' คน', esc(lab[peak]) + (staff ? ` · มี ${staff} คน` : ''))
     + tile('pu', 'ช่างที่ต้องใช้เฉลี่ย', f1(sumOf(need) / 12) + ' คน', `วันทำงาน · ${f1(perHead)} ชม./คน/เดือน`)
     + tile('am', 'งานหยุดเครื่อง (ทำวันหยุด)', f0(sumOf(hol)) + ' ชม.', `${f0(sumOf(hol) / sumAll * 100)}% ของทั้งหมด · สูงสุด ${f0(Math.max(...holMD))} วันคน/เดือน`);
@@ -3143,23 +3180,24 @@ function renderLoad() {
   let sg = '';
   for (let i = 0; i <= 4; i++) { const v = smax * i / 4; sg += `<line x1="${sl}" x2="${SW - 6}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEF1F5"/><text x="${sl - 4}" y="${sy(v) + 4}" text-anchor="end">${f0(v / 1000)}k</text>`; }
   if (cur >= 0) sg += `<rect x="${sl + scw * cur + 1}" y="2" width="${scw - 2}" height="${SH - 4}" rx="8" fill="#FFF6DE" stroke="#F59E0B" stroke-dasharray="4 3"/>`;
-  W.months.forEach((_, i) => { const x = sl + scw * i + (scw - sbw) / 2;
+  LV.months.forEach((_, i) => { const x = sl + scw * i + (scw - sbw) / 2;
     sg += `<rect x="${x}" y="${sy(work[i])}" width="${sbw}" height="${SH - sb - sy(work[i])}" rx="2" fill="#0E2F7A" data-tip="${esc(lab[i])} · วันทำงาน ${f0(work[i])} ชม."/><rect x="${x}" y="${sy(tot[i])}" width="${sbw}" height="${Math.max(0, sy(work[i]) - sy(tot[i]) - 1)}" rx="2" fill="#F59E0B" data-tip="${esc(lab[i])} · วันหยุด (หยุดเครื่อง) ${f0(hol[i])} ชม."/><text x="${sl + scw * i + scw / 2}" y="${SH - 8}" text-anchor="middle"${i === cur ? ' style="font-weight:700;fill:#B45309"' : ''}>${esc(lab[i].slice(0, 3))}</text>`; });
   const split = `<div class="pmc w6"><h3>วันทำงาน กับ วันหยุด</h3><p class="sub">ชั่วโมงคนต่อเดือน</p><div class="lg"><span class="sw" style="background:#0E2F7A"></span>วันทำงาน (เครื่องเดิน) <span class="sw" style="background:#F59E0B"></span>วันหยุด (ต้องหยุดเครื่อง)</div><svg viewBox="0 0 ${SW} ${SH}" role="img" aria-label="ชั่วโมงวันทำงานกับวันหยุด">${sg}</svg></div>`;
   // job theme: hours a year, jobs, and the technicians it takes on average (th is sorted by hours)
   const pmax = Math.max(1, ...th.map(x => x.h));
   const pics = `<div class="pmc w6"><h3>ภาระตามประเภทงาน</h3><p class="sub">ชั่วโมงคนทั้งปี · จำนวนงาน · ช่างที่ต้องใช้เฉลี่ยต่อเดือน</p><div class="pmtech">${th.map(x => `<div class="pmtr" style="cursor:default;grid-template-columns:minmax(110px,1fr) 2fr 60px 140px"><span class="nm">${esc(x.t)}</span><span class="br"><i style="width:${(x.h / pmax * 100).toFixed(1)}%;background:${LOAD_COL[x.t] || '#8A97B0'}"></i></span><span class="pc">${f0(x.h)}</span><span class="nn">${x.n.toLocaleString()} งาน · ≈ ${f1(x.h / 12 / (perHead || 1))} คน</span></div>`).join('')}</div></div>`;
   // month table, folded
-  const rows = W.months.map((_, i) => { const k = staff ? (need[i] > staff || holTeam[i] > ot ? 'over' : need[i] >= staff * 0.85 ? 'tight' : 'ok') : '';
+  const rows = LV.months.map((_, i) => { const k = staff ? (need[i] > staff || holTeam[i] > ot ? 'over' : need[i] >= staff * 0.85 ? 'tight' : 'ok') : '';
     return `<tr${i === cur ? ' class="lcur"' : ''}><td><b>${esc(lab[i])}</b>${i === cur ? ' <span class="lnow">เดือนนี้</span>' : ''}</td><td class="num">${f0(work[i])}</td><td class="num"${i === peak ? ' style="color:#C4141B;font-weight:700"' : ''}>${f1(need[i])}</td><td class="num">${f0(hol[i])}</td><td class="num">${f0(holMD[i])}</td><td class="num"><b>${f0(tot[i])}</b></td>`
       + (staff ? `<td class="num">${f0(need[i] / staff * 100)}%</td><td class="num" style="color:${need[i] > staff ? '#C4141B' : '#1E9152'}">${need[i] > staff ? '+' + Math.ceil(need[i] - staff) : '—'}</td><td class="num"${holTeam[i] > ot ? ' style="color:#C4141B;font-weight:700"' : ''}>${f1(holTeam[i])}</td><td><span class="lst ${k}">${{ ok: 'ทัน', tight: 'ตึง', over: 'ไม่ทัน' }[k]}</span></td>` : '') + '</tr>'; }).join('');
   const table = `<details class="pmc ldet" style="grid-column:1/-1"><summary><h3>ตารางรายเดือน</h3></summary><div class="tscroll"><table class="oldest ftable ttable"><thead><tr><th>เดือน</th><th class="num">งานวันทำงาน (ชม.)</th><th class="num">ช่างที่ต้องใช้</th><th class="num">งานหยุดเครื่อง (ชม.)</th><th class="num">วันคน วันหยุด</th><th class="num">รวม (ชม.)</th>${staff ? '<th class="num">ใช้กำลังคน</th><th class="num">ต้องเพิ่มช่าง</th><th class="num">วันหยุดที่ทีมต้องมา</th><th>สถานะ</th>' : ''}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
-  const noTime = sumOf(Object.values(W.noTime || {}));
   box.innerHTML = `${tools}<div class="pmdash ldash">${verdict}${tiles}${teams}${chart}${donut}${split}${pics}${table}</div>`
-    + `<p class="fnote">จากไฟล์ ${esc(W.source)}${noTime ? ` · ${noTime} งานในแผนไม่มีเวลาทำงาน (WORKING TIME เป็น "-") จึงไม่ถูกนับชั่วโมง` : ''}</p>`;
+    + `<p class="fnote">เวลามาตรฐานต่องาน (นาที × คน) จากไฟล์ ${esc(W.source)}${LV.miss ? ` · ${LV.miss} งาน PM ไม่มีเวลามาตรฐานในไฟล์ จึงนับ 0 ชม.` : ''}${left ? ' · งานค้างจากเดือนก่อนนับรวมในเดือนนี้' : ''}</p>`;
 }
 $('loadView').addEventListener('click', e => {
   const b = e.target.closest('[data-loadby]'); if (b) { state.loadBy = b.dataset.loadby; renderLoad(); return; }
+  const lf = e.target.closest('[data-loadleft]'); if (lf) { state.loadLeft = !!lf.dataset.loadleft; renderLoad(); return; }
+  if (e.target.closest('[data-loadretry]')) { pmv.wlErr = ''; renderLoad(); return; }
   if (e.target.closest('input')) return;
   const t = e.target.closest('[data-loadteam]'); if (t) { state.loadTeam = state.loadTeam === t.dataset.loadteam ? '' : t.dataset.loadteam; renderLoad(); $('loadView').scrollIntoView({ block: 'start' }); }
 });
@@ -3985,14 +4023,14 @@ try { const t = store.get('ct_pmTab'); if (t === 'cal' || t === 'list' || t === 
 // "narate.kap@murata.com" → "Narate"; a name stays as it is
 const pmPicName = v => { const s = String(v || '').trim(); if (!s.includes('@')) return s; const f = s.split('@')[0].split(/[._]/)[0]; return f.charAt(0).toUpperCase() + f.slice(1).toLowerCase(); };
 const pmTheme = v => String(v || '').replace(/^PM\s+/i, '').toLowerCase().replace(/(^|-)\w/g, c => c.toUpperCase());
-function pmItems() {
-  const d = pmv.data[pmv.year];
+function pmItems(yr = pmv.year) {
+  const d = pmv.data[yr];
   if (!d) return [];
   if (d.items) return d.items;
   const now = new Date(), ym = now.getFullYear() * 12 + now.getMonth();
   d.items = d.rows.map(r => {
     const o = {}; d.cols.forEach((c, i) => { o[c] = String(r[i] ?? '').trim(); });
-    const m = PM_MONTHS.indexOf(upper(o.PlanMonth)) + 1, y = parseInt(o.PlanYear, 10) || pmv.year;
+    const m = PM_MONTHS.indexOf(upper(o.PlanMonth)) + 1, y = parseInt(o.PlanYear, 10) || yr;
     const s = upper(o.Status);
     const st = s === PM_S.done ? 'done' : s === PM_S.review ? 'review' : (m && y * 12 + m - 1 < ym ? 'late' : 'todo');
     const plan = parseAny(o.PlanDate), act = parseAny(o.ActualDate);

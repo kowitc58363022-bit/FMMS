@@ -322,7 +322,7 @@ body.pm-only .navgrp.g-rm,.navgrp[hidden]{display:none}
 .lwmen{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}.lwmen input{width:72px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;font:inherit;font-size:16px;font-weight:700;color:var(--ink)}
 .lwsum b.neg{color:#C4141B}.lwsum b.pos{color:#1E9152}
 .lwchart svg{width:100%;height:auto;display:block}.lwchart svg text{font-family:inherit;fill:#5F6675;font-size:12px}
-.lwchart .lg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:0 0 6px}.lwchart .lg .sw{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:-8px}
+.lwchart .lg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;color:var(--ink-2);margin:0 0 6px}.lwchart .lg .sw{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:-8px}.lwchart .lg .ln{display:inline-block;width:22px;border-top:2px dashed #E31B23;margin-right:-8px}.lwchart h3{margin:0 0 6px;font-size:16px}
 .lwb.lo{border-top-color:#1E9152}.lwb.lo .lwt b{color:var(--navy)}
 .lwcap{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
 .lwcap>div{display:flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--ink-2)}.lwcap>div span{flex:1}.lwcap>div b{font-family:var(--head-font);font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -3174,15 +3174,17 @@ const LOAD_OFF = true;
 function renderLoadMonths() {
   const W = window.WORKLOAD, box = $('loadBody');
   if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลเวลามาตรฐาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
-  const now = new Date(), Y = state.loadYear || now.getFullYear();
-  state.loadFrom = Y + '-01'; state.loadTo = Y + '-12';
+  // the plan year Apr–Mar (Y = the year it starts), like the master plan
+  const now = new Date(), Y = state.loadYear || (now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1);
+  state.loadFrom = Y + '-04'; state.loadTo = (Y + 1) + '-03';
   const LV = loadLive(W);
   if (LV.wait) { $('loadSub').textContent = ''; box.innerHTML = pmv.wlErr ? `<p class="mempty">${esc(pmv.wlErr)} <button type="button" class="btn" data-loadretry>ลองใหม่</button></p>` : '<p class="loading">กำลังโหลดแผน PM…</p>'; return; }
   const f0 = v => Math.round(v).toLocaleString(), f1 = v => (Math.round(v * 10) / 10).toLocaleString(), sumOf = a => a.reduce((x, y) => x + y, 0);
   const hpd = +loadCfg.hpd || 8, TM = W.teams || [], tSize = t => { const v = parseInt((loadCfg.tsize || {})[t.code], 10); return v >= 0 ? v : t.size; };
   // Mon–Fri and Sat–Sun of each month of the year (calendar; public holidays are not taken off)
   const wd = [], we = [];
-  for (let i = 0; i < 12; i++) { let a = 0, b = 0; for (let d = 1, n = new Date(Y, i + 1, 0).getDate(); d <= n; d++) { const k = new Date(Y, i, d).getDay(); k === 0 || k === 6 ? b++ : a++; } wd.push(a); we.push(b); }
+  LV.months.forEach(ym => { const yy = +ym.slice(0, 4), mm = +ym.slice(5) - 1; let a = 0, b = 0; for (let d = 1, n = new Date(yy, mm + 1, 0).getDate(); d <= n; d++) { const k = new Date(yy, mm, d).getDay(); k === 0 || k === 6 ? b++ : a++; } wd.push(a); we.push(b); });
+  const MN = LV.months.map(ym => MON3[+ym.slice(5) - 1] + ' ' + ym.slice(2, 4));   // "Apr 26"
   const RB = LV.rows.filter(r => r[4] === 'MT1800');
   const hrsOf = rows => { const o = Array(12).fill(0), s = Array(12).fill(0); rows.forEach(r => { (r[2] === 'MC-STOPPED' ? s : o)[r[0]] += r[5] / 60; }); return { o, s }; };
   const lvl = p => p > 100 ? 'hi' : p >= 85 ? 'md' : 'lo';
@@ -3204,11 +3206,11 @@ function renderLoadMonths() {
     const mO = c.pO.indexOf(Math.max(...c.pO)), mS = c.pS.indexOf(Math.max(...c.pS));
     return `<tr class="${k}${sel === t.code ? ' on' : ''}" data-loadteam="${t.code}" tabindex="0"><td class="tm"><b>${esc(t.code)}</b><small>${esc(t.lead || '')}</small></td>
       <td class="num"><input type="number" min="0" max="99" data-tsize="${t.code}" value="${tSize(t)}" aria-label="จำนวนคนทีม ${esc(t.code)}"></td>
-      <td class="num gO">${f0(yO)}</td><td class="num gO ${lvl(aO ? yO / aO * 100 : 0)}">${aO ? f0(yO / aO * 100) + '%' : '—'}</td><td class="num gO${oO ? ' bad' : ''}">${oO}</td><td class="num gO">${f1(c.needO[mO])} <small>${MON3[mO]}</small></td>
-      <td class="num gS">${f0(yS)}</td><td class="num gS ${lvl(aS ? yS / aS * 100 : 0)}">${aS ? f0(yS / aS * 100) + '%' : '—'}</td><td class="num gS${oS ? ' bad' : ''}">${oS}</td><td class="num gS">${f1(c.needS[mS])} <small>${MON3[mS]}</small></td>
+      <td class="num gO">${f0(yO)}</td><td class="num gO ${lvl(aO ? yO / aO * 100 : 0)}">${aO ? f0(yO / aO * 100) + '%' : '—'}</td><td class="num gO${oO ? ' bad' : ''}">${oO}</td><td class="num gO">${f1(c.needO[mO])} <small>${MN[mO]}</small></td>
+      <td class="num gS">${f0(yS)}</td><td class="num gS ${lvl(aS ? yS / aS * 100 : 0)}">${aS ? f0(yS / aS * 100) + '%' : '—'}</td><td class="num gS${oS ? ' bad' : ''}">${oS}</td><td class="num gS">${f1(c.needS[mS])} <small>${MN[mS]}</small></td>
       <td class="st"><span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></td></tr>`;
   }).join('');
-  const teams = TM.length ? `<div class="pmc lwteams"><h3>แยกตามทีม · ทั้งปี ${Y}</h3><p class="sub">จ.–ศ. = งานเครื่องเดิน · ส.–อา. = งานหยุดเครื่อง · กำลังคน = วัน × คนในทีม × ${hpd} ชม. · กดแถวเพื่อดูรายเดือนของทีมนั้น · แก้จำนวนคนได้</p>
+  const teams = TM.length ? `<div class="pmc lwteams"><h3>แยกตามทีม · ปีแผน Apr ${Y} – Mar ${Y + 1}</h3><p class="sub">จ.–ศ. = งานเครื่องเดิน · ส.–อา. = งานหยุดเครื่อง · กำลังคน = วัน × คนในทีม × ${hpd} ชม. · กดแถวเพื่อดูรายเดือนของทีมนั้น · แก้จำนวนคนได้</p>
     <div class="tscroll"><table class="lmteam"><colgroup><col style="width:14%"><col style="width:7%"><col span="8" style="width:9%"><col style="width:7%"></colgroup>
     <thead><tr class="g"><th rowspan="2">ทีม</th><th rowspan="2" class="num">คน</th><th colspan="4" class="gO">จ.–ศ. · งานเครื่องเดิน</th><th colspan="4" class="gS">ส.–อา. · งานหยุดเครื่อง</th><th rowspan="2" class="st">สถานะ</th></tr>
     <tr><th class="num gO">ชม.งาน</th><th class="num gO">ใช้กำลังคน</th><th class="num gO">เดือนที่เกิน</th><th class="num gO">ต้องใช้สูงสุด (คน)</th><th class="num gS">ชม.งาน</th><th class="num gS">ใช้กำลังคน</th><th class="num gS">เดือนที่เกิน</th><th class="num gS">ต้องใช้สูงสุด (คน)</th></tr></thead>
@@ -3218,16 +3220,35 @@ function renderLoadMonths() {
   const part = (name, d, h, cap, p) => `<div class="lwp ${lvl(p)}"><div><span>${name} <small>${d} วัน</small></span><b>${pct(p)}</b></div><span class="lwuse"><i style="width:${Math.min(100, p === Infinity ? 100 : p).toFixed(0)}%"></i></span><small>งาน <b>${f0(h)}</b> / มี ${f0(cap)} ชม. · ${h > cap ? 'ขาด' : 'เหลือ'} ${f0(Math.abs(cap - h))}</small></div>`;
   const blocks = LV.months.map((_, i) => {
     const k = lvl(Math.max(c.pO[i], c.pS[i]));
-    return `<div class="lwb ${k}${i === LV.cur ? ' now' : ''}"><div class="lwh"><b>${MON3[i]}</b>${i === LV.cur ? '<span class="lnow">เดือนนี้</span>' : ''}<span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}" style="margin-left:auto">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></div>
+    return `<div class="lwb ${k}${i === LV.cur ? ' now' : ''}"><div class="lwh"><b>${MN[i]}</b>${i === LV.cur ? '<span class="lnow">เดือนนี้</span>' : ''}<span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}" style="margin-left:auto">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></div>
       <div class="lwt"><small>เวลาทั้งหมด</small><b>${f0(tt[i])}</b><em>ชม. / มี ${f0(c.cO[i] + c.cS[i])}</em></div>
       ${part('เวลาทำงาน จ.–ศ.', wd[i], c.o[i], c.cO[i], c.pO[i])}${part('เวลาวันหยุด ส.–อา.', we[i], c.s[i], c.cS[i], c.pS[i])}</div>`;
   }).join('');
   const overO = c.pO.filter(p => p > 100).length, overS = c.pS.filter(p => p > 100).length;
-  box.innerHTML = `<div class="lwtop"><div class="lwyear" role="group" aria-label="ปี"><button type="button" data-loadyear="-1" aria-label="ปีก่อน">‹</button><b>${Y}</b><button type="button" data-loadyear="1" aria-label="ปีถัดไป">›</button></div>
+  // % of the people used each month: Mon–Fri and Sat–Sun side by side, the 100% line dashed; over 100% in red
+  const fin = p => p === Infinity ? 0 : p, top = Math.max(120, Math.ceil(Math.max(...c.pO.map(fin), ...c.pS.map(fin)) / 20) * 20 + 10);
+  const CW = 1000, CH = 300, L = 46, Rr = 10, Tt = 18, B = 30, cw = (CW - L - Rr) / 12, bw = Math.min(30, cw * 0.32), yy = v => Tt + (CH - Tt - B) * (1 - Math.min(v, top) / top);
+  let cg = '';
+  for (let v = 0; v <= top; v += top > 200 ? 50 : 20) cg += `<line x1="${L}" x2="${CW - Rr}" y1="${yy(v)}" y2="${yy(v)}" stroke="#EEF1F5"/><text x="${L - 6}" y="${yy(v) + 4}" text-anchor="end">${v}%</text>`;
+  LV.months.forEach((_, i) => {
+    const cx = L + cw * i + cw / 2;
+    if (i === LV.cur) cg += `<rect x="${cx - cw / 2 + 2}" y="2" width="${cw - 4}" height="${CH - 4}" rx="8" fill="#FFF6DE"/>`;
+    [[c.pO[i], c.o[i], c.cO[i], 'จ.–ศ.', '#0E2F7A', -1], [c.pS[i], c.s[i], c.cS[i], 'ส.–อา.', '#F59E0B', 1]].forEach(([p, h, cap, nm, col, side]) => {
+      const v = fin(p), x = cx + (side < 0 ? -bw - 2 : 2), over = p > 100;
+      cg += `<rect x="${x}" y="${yy(v)}" width="${bw}" height="${CH - B - yy(v)}" rx="4" fill="${over ? '#E31B23' : col}" data-tip="${MN[i]} · ${nm} · งาน ${f0(h)} / มี ${f0(cap)} ชม. (${pct(p)})${over ? ' · ขาด ' + f0(h - cap) + ' ชม.' : ''}"/>`
+        + (v ? `<text x="${x + bw / 2}" y="${yy(v) - 4}" text-anchor="middle" style="font-size:10.5px;font-weight:700;fill:${over ? '#C4141B' : '#5F6675'}">${p === Infinity ? '!' : f0(p)}</text>` : '');
+    });
+    cg += `<text x="${cx}" y="${CH - 10}" text-anchor="middle"${i === LV.cur ? ' style="font-weight:700;fill:#B45309"' : ''}>${MN[i]}</text>`;
+  });
+  cg += `<line x1="${L}" x2="${CW - Rr}" y1="${yy(100)}" y2="${yy(100)}" stroke="#E31B23" stroke-width="2" stroke-dasharray="6 4"/>`;
+  const pchart = `<div class="pmc lwchart"><h3>ใช้กำลังคนรายเดือน · ${sel ? 'ทีม ' + esc(sel) : 'ทั้งแผนก'}</h3>
+    <div class="lg"><span class="sw" style="background:#0E2F7A"></span>จ.–ศ. งานเครื่องเดิน <span class="sw" style="background:#F59E0B"></span>ส.–อา. งานหยุดเครื่อง <span class="sw" style="background:#E31B23"></span>เกิน 100% (ไม่ทัน) <span class="ln"></span>เต็มกำลัง 100% · ชี้ที่แท่งเพื่อดูชั่วโมง</div>
+    <svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="เปอร์เซ็นต์กำลังคนที่ใช้รายเดือน">${cg}</svg></div>`;
+  box.innerHTML = `<div class="lwtop"><div class="lwyear" role="group" aria-label="ปี"><button type="button" data-loadyear="-1" aria-label="ปีก่อน">‹</button><b>Apr ${Y} – Mar ${Y + 1}</b><button type="button" data-loadyear="1" aria-label="ปีถัดไป">›</button></div>
     <div class="ldby" role="group" aria-label="ทีม"><button type="button" data-loadteam="" aria-pressed="${!sel}">ทั้งแผนก</button>${TM.map(t => `<button type="button" data-loadteam="${t.code}" aria-pressed="${sel === t.code}">${esc(t.code)}</button>`).join('')}</div>
     ${sel ? `<span class="lwmen">ทีม ${esc(sel)} มี <b>${c.men}</b> คน</span>` : `<label class="lwmen">กำลังคนทั้งแผนก <input type="number" min="0" max="999" data-lset="men" value="${allMen}" aria-label="จำนวนคนทั้งแผนก"> คน</label>`}
     <div class="lwsum"><span>งานทั้งปี <b>${f0(sumOf(tt))}</b> ชม.</span><span>จ.–ศ. เกิน <b class="${overO ? 'neg' : 'pos'}">${overO}</b> เดือน</span><span>ส.–อา. เกิน <b class="${overS ? 'neg' : 'pos'}">${overS}</b> เดือน</span></div></div>
-    ${teams}
+    ${teams}${pchart}
     <h3 class="lwmh">รายเดือน · ${sel ? 'ทีม ' + esc(sel) : 'ทั้งแผนก'}</h3>
     <div class="lwgrid">${blocks}</div>
     <p class="fnote">ชั่วโมงงาน = งาน PM ในแผน × เวลามาตรฐานของงานนั้น (คน × นาที ÷ 60) + CHECK DAILY · งานเครื่องเดิน (MC-OPERATED) ทำ จ.–ศ. · งานหยุดเครื่อง (MC-STOPPED) ทำ ส.–อา. · กำลังคน = จำนวนวันตามปฏิทิน × คน × ${hpd} ชม. (ไม่หักวันนักขัตฤกษ์ วันลา และงานซ่อม) · ทีมดูจาก TeamCode ในแผน PM · ขอบสี: เขียว ใช้ไม่ถึง 85%, ส้ม 85–100%, แดง เกิน${LV.miss ? ` · ${LV.miss} งานไม่มีเวลามาตรฐาน นับ 0 ชม.` : ''}</p>`;

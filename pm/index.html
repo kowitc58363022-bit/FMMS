@@ -1138,7 +1138,11 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmheat th{font-weight:600;color:var(--muted);text-align:left;font-size:13px}
 .pmheat thead th:not(:first-child){text-align:center}
 .pmc .pmheat th,.pmc .pmheat td{border:0;padding:0 2px;background:none}
-.pmheat td{text-align:center}
+.pmheat td{text-align:center;width:22%}
+.pmheat tbody th{max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pmpg{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:6px;font-size:13px;color:var(--muted)}
+.pmpg button{width:36px;height:36px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:18px;color:var(--ink);cursor:pointer}
+.pmpg button:disabled{opacity:.35;cursor:default}
 .pmheat button,.pmheat .na{display:block;width:100%;min-height:38px;border:0;border-radius:10px;font:inherit;font-weight:700;color:#fff;cursor:pointer;font-variant-numeric:tabular-nums}
 .pmheat .na{display:grid;place-items:center;background:#F3F5F8;color:var(--muted);font-weight:400;cursor:default}
 .pmheat .hi,.pmc .sw.hi{background:linear-gradient(135deg,#0E2F7A,#3D6FD8)}
@@ -3784,10 +3788,14 @@ function pmDashboard() {
   const techRows = pics.length ? pics.map(t => `<button type="button" class="pmtr" ${t.p === NOPIC ? 'disabled' : `data-pmpic="${esc(t.p)}"`}><span class="nm">${esc(t.p)}</span><span class="br"><i class="${t.pct < 50 ? 'lo' : ''}" style="width:${t.pct}%"></i></span><span class="pc">${t.pct}%</span><span class="nn">${t.done}/${t.plan}${t.late ? ` · <em>เลย ${t.late}</em>` : ''}</span></button>`).join('') : '<p class="pmnone">ไม่มีงานในช่วงนี้</p>';
   // factory × the last 3 months up to the chosen one
   const endM = M || (pmv.year === now.getFullYear() ? now.getMonth() + 1 : 12), ms = [endM - 2, endM - 1, endM].filter(m => m >= 1);
-  const facs = uniq(base.map(x => x.o.FactoryID).filter(Boolean)).sort(natural);
-  const heat = `<table class="pmheat"><thead><tr><th>โรงงาน</th>${ms.map(m => `<th>${MON3[m - 1]}</th>`).join('')}</tr></thead><tbody>${facs.map(f => `<tr><th>${esc(f)}</th>${ms.map(m => {
+  // only places with jobs in these months, 8 a page
+  const allFacs = uniq(base.filter(x => ms.includes(x.m)).map(x => x.o.FactoryID).filter(Boolean)).sort(natural), HP = 8, pages = Math.max(1, Math.ceil(allFacs.length / HP));
+  pmv.heatPg = Math.min(pmv.heatPg || 0, pages - 1);
+  const facs = allFacs.slice(pmv.heatPg * HP, pmv.heatPg * HP + HP);
+  const pager = pages > 1 ? `<div class="pmpg"><button type="button" data-pmhpg="-1" aria-label="หน้าก่อน"${pmv.heatPg ? '' : ' disabled'}>‹</button><span>${pmv.heatPg + 1} / ${pages} · ${allFacs.length} แห่ง</span><button type="button" data-pmhpg="1" aria-label="หน้าถัดไป"${pmv.heatPg < pages - 1 ? '' : ' disabled'}>›</button></div>` : '';
+  const heat = `<table class="pmheat"><thead><tr><th>โรงงาน</th>${ms.map(m => `<th>${MON3[m - 1]}</th>`).join('')}</tr></thead><tbody>${facs.map(f => `<tr><th title="${esc(f)}">${esc(f)}</th>${ms.map(m => {
     const L = base.filter(x => x.o.FactoryID === f && x.m === m), p = pmPct(L);
-    return `<td>${p == null ? '<span class="na">—</span>' : `<button type="button" class="${p >= 70 ? 'hi' : p >= 50 ? 'md' : 'lo'}" data-pmheat="${esc(f)}|${m}" data-tip="${esc(f)} · ${MON3[m - 1]} · ${L.filter(pmDone).length}/${L.length} งาน">${p}%</button>`}</td>`; }).join('')}</tr>`).join('')}</tbody></table>`;
+    return `<td>${p == null ? '<span class="na">—</span>' : `<button type="button" class="${p >= 70 ? 'hi' : p >= 50 ? 'md' : 'lo'}" data-pmheat="${esc(f)}|${m}" data-tip="${esc(f)} · ${MON3[m - 1]} · ${L.filter(pmDone).length}/${L.length} งาน">${p}%</button>`}</td>`; }).join('')}</tr>`).join('')}</tbody></table>${pager}`;
   const chase = lateAll.slice(0, 4).map(x => ({ x, tag: `<span class="tg rd">เลย ${x.wait} วัน</span>` })).concat(review.slice(0, 3).map(x => ({ x, tag: `<span class="tg am">${x.wait ? `รอ ${x.wait} วัน` : `ส่งวันนี้`}</span>` })));
   const chaseRows = chase.length ? chase.map(({ x, tag }) => `<button type="button" class="pmfr" data-pm="${esc(x.id)}"><span><b>${esc(x.o.MachineID)}</b><small>${esc([x.theme, picOf(x)].join(' · '))}</small></span>${tag}</button>`).join('') : '<p class="pmnone">ไม่มีงานต้องตาม</p>';
   const eng = isEngR(), tmc = eng ? (pmv.trendMc && byMc[pmv.trendMc] ? pmv.trendMc : (machines[0] || {}).mc) : '';
@@ -4062,6 +4070,7 @@ $('pmView').addEventListener('click', e => {
   const pp = e.target.closest('[data-pmpic]'); if (pp) { pmv.f.pic = pp.dataset.pmpic; pmv.st = ''; toList(); return; }
   const ht = e.target.closest('[data-pmheat]'); if (ht) { const [loc, m] = ht.dataset.pmheat.split('|'); pmv.f.loc = loc; pmv.month = +m; pmv.st = ''; toList(); return; }
   const tr = e.target.closest('[data-pmtrend]'); if (tr) { pmv.trendMc = tr.dataset.pmtrend; renderPM(); return; }
+  const hp = e.target.closest('[data-pmhpg]'); if (hp) { pmv.heatPg = (pmv.heatPg || 0) + +hp.dataset.pmhpg; renderPM(); return; }
   if (e.target.closest('[data-pmtoday]')) { pmCalGo(new Date()); return; }
   const go = e.target.closest('[data-pmgo]'); if (go) { pmv.cal.mode = 'day'; pmCalGo(dateOf(go.dataset.pmgo)); return; }
   if (e.target.closest('[data-pmmore]')) { pmv.shown += 150; renderPM(); return; }

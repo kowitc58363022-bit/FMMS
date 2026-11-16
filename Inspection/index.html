@@ -111,6 +111,10 @@
     .group-f { padding: 7px 16px 0; font-size: var(--fs-2); color: var(--label-2); }
     .card { background: var(--card); border-radius: var(--r); overflow: hidden; border: 1px solid var(--card-line); box-shadow: 0 1px 2px rgba(30, 60, 90, 0.05); }
     .card + .card { margin-top: 12px; }
+    /* A list of items (sections 1-3): every item is its own card with a gap between, so where one ends is plain */
+    .card.list { background: none; border: none; box-shadow: none; border-radius: 0; overflow: visible; }
+    .card.list > .item, .card.list > .task, .card.list > .empty { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--r); box-shadow: 0 1px 2px rgba(30, 60, 90, 0.05); }
+    .card.list > * + * { margin-top: 10px; }
 
     /* Rows with an inset hairline separator */
     .row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 10px 16px; text-align: left; }
@@ -157,7 +161,7 @@
 
     /* ---------- Measurement item ---------- */
     .item { padding: 16px; scroll-margin-top: var(--head); scroll-margin-bottom: 110px; }
-    .item + .item { border-top: 0.5px solid var(--sep); }
+    .card:not(.list) > .item + .item { border-top: 0.5px solid var(--sep); }
     .item.off { opacity: 0.5; }
     .it-head { display: flex; align-items: flex-start; gap: 10px; }
     .it-no { flex-shrink: 0; min-width: 2.4em; font-weight: 600; font-size: var(--fs-1); line-height: 1.45; color: var(--svc, var(--label-2)); font-variant-numeric: tabular-nums; }
@@ -250,7 +254,7 @@
 
     /* ---------- Tasks ---------- */
     .task { padding: 16px; scroll-margin-top: var(--head); scroll-margin-bottom: 110px; }
-    .task + .task { border-top: 0.5px solid var(--sep); }
+    .card:not(.list) > .task + .task { border-top: 0.5px solid var(--sep); }
     .task.off { opacity: 0.5; }
     .task .seg { margin-top: 10px; }
     .task .seg span { gap: 5px; }
@@ -270,7 +274,6 @@
     .auto-tag { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--svc-tint, var(--fill)); color: var(--svc, var(--accent)); font-size: var(--fs-2); font-weight: 600; }
     .auto-why { padding: 0 16px 12px; font-size: var(--fs-2); color: var(--label-2); }
 
-    .show-all { display: block; width: 100%; margin-top: 12px; min-height: 44px; border-radius: var(--r); color: var(--accent); font-size: var(--fs-1); }
     .empty { padding: 14px 16px; color: var(--label-2); }
 
     /* Inline problem banner (form-level) */
@@ -691,7 +694,7 @@
       h: { machine: '', factory: last.factory || '', date: todayIso(), time: nowHm(), subtype: f.subtypes && f.subtypes.length === 1 ? f.subtypes[0] : '',
            job: f.kind === 'daily' ? 'daily' : '', period: '', models: {}, panel: '', phase: '3', vclass: '', refr: '', vpModel: '',
            pumpState: '', valveState: '', inspector: last.inspector || '', comment: '' },
-      v: {}, t: {}, tn: {}, rr: {}, autoWhy: '', showAll: false
+      v: {}, t: {}, tn: {}, rr: {}, autoWhy: ''
     };
   }
   const editKey = (id) => `insp.edit.${id}`;
@@ -857,7 +860,7 @@
     if (!S) {
       const v = JSON.parse(JSON.stringify(rec.v || {}));
       const rr = Object.fromEntries(Object.entries(rec.rr || {}).map(([k, x]) => { const { st, ...rest } = x; return [k, rest]; }));
-      S = { h: { ...blankState(form).h, ...rec.h, models: { ...(rec.h.models || {}) } }, v, t: { ...rec.t }, tn: { ...rec.tn }, rr, autoWhy: '', showAll: false };
+      S = { h: { ...blankState(form).h, ...rec.h, models: { ...(rec.h.models || {}) } }, v, t: { ...rec.t }, tn: { ...rec.tn }, rr, autoWhy: '' };
     }
     S.editId = id;
     setNav(`แก้ไข ${form.id} · ${rec.h.machine}`, `${rec.h.date} ${rec.h.time || ''}`, true, 'ผลตรวจ'); setFormChrome(true);
@@ -977,7 +980,7 @@
     const st = S.t[t.id] || '';
     return `<div class="task${needed ? '' : ' off'}" data-task="${esc(t.id)}">
       <div class="it-head"><span class="it-no">${esc(t.id)}</span><div class="it-text"><div class="it-title">${esc(t.label)}</div>${needed ? '' : '<div class="it-spec">ไม่อยู่ในรอบนี้</div>'}</div></div>
-      ${segHtml(`t_${t.id}`, [['done', '✓ เสร็จ', 'done'], ['notdone', '✕ ไม่เสร็จ', 'notdone'], ['skip', '– ไม่ได้ทำ', 'skip']], st)}
+      ${segHtml(`t_${t.id}`, [['done', '✓ เสร็จ', 'done'], ['notdone', '✕ ไม่เสร็จ', 'notdone']], st)}
       <textarea class="note" data-tn="${esc(t.id)}" placeholder="เหตุผล / สิ่งที่พบ (จำเป็น)" aria-label="เหตุผลที่ข้อ ${esc(t.id)} ไม่เสร็จ" ${st === 'notdone' ? '' : 'hidden'}>${esc(S.tn[t.id] || '')}</textarea>
     </div>`;
   }
@@ -1018,15 +1021,16 @@
   function rrHtml() {
     const rr = RR[form.id];
     if (!rr) return '';
-    const list = rrRows(form.id), shown = list.filter(x => S.showAll || rrNeeded(form, x.row, S.h));
+    const list = rrRows(form.id), shown = list.filter(x => rrNeeded(form, x.row, S.h));
     return `<section class="group" data-sec="3 Review"><h2 class="group-h"><span>3 · Review-Revise</span><span class="num">แนะนำ · ไม่บังคับ</span></h2>
       <div class="card">
         <div class="stack rr-find"><p class="hint" style="margin:0 0 4px">ข้อแนะนำจากประวัติเครื่องเสีย ไม่นับรวมในผลตรวจ เว้นว่างแล้วบันทึกได้</p>
           <details class="ref"><summary>3.1 ผลทบทวนประวัติเสียเรื้อรัง (${rr.find.length})</summary>
           <ul>${rr.find.map(([b, t]) => `<li><b>${esc(b)}</b> ${esc(t)}</li>`).join('')}</ul></details>
           ${rr.draft ? '<p class="hint">เนื้อหาหัวข้อนี้เป็นร่าง รอวิศวกรทบทวน</p>' : ''}</div>
-        <div class="stack"><span class="stack-label">3.2 เกณฑ์ตรวจพิเศษที่แนะนำ</span></div>
-        ${shown.length ? shown.map(rrRowHtml).join('') : '<p class="empty">รอบนี้ไม่มีเกณฑ์พิเศษที่แนะนำ</p>'}</div></section>`;
+        </div>
+      <h3 class="group-h" style="padding-top:14px">3.2 เกณฑ์ตรวจพิเศษที่แนะนำ</h3>
+      <div class="card list">${shown.length ? shown.map(rrRowHtml).join('') : '<p class="empty">รอบนี้ไม่มีเกณฑ์พิเศษที่แนะนำ</p>'}</div></section>`;
   }
 
   function renderForm() {
@@ -1036,17 +1040,16 @@
     if (!jobChosen(form, h)) {
       html += `<section class="group"><div class="card"><p class="empty">เลือกประเภทงาน${form.kind === 'pm' ? 'และรอบ PM' : ''} แล้วหัวข้อที่ต้องทำในรอบนั้นจะขึ้นมาที่นี่</p></div></section>`;
     } else {
+      // Only what this job / PM round asks for is shown; items outside it never appear in the form
       const need = (x) => isNeeded(form, x, h);
-      const items = form.m.filter(i => S.showAll || need(i));
+      const items = form.m.filter(need);
       html += `<section class="group" data-sec="${form.kind === 'daily' ? 'รายการตรวจ' : '1 ค่าที่วัด'}"><h2 class="group-h"><span>${form.kind === 'daily' ? 'รายการตรวจ' : '1 · ค่าที่วัดได้'}</span><span class="num">${form.m.filter(need).length} ข้อ</span></h2>
-        <div class="card">${items.length ? items.map(i => itemHtml(i, need(i))).join('') : '<p class="empty">รอบนี้ไม่มีข้อที่ต้องวัด</p>'}</div></section>`;
+        <div class="card list">${items.length ? items.map(i => itemHtml(i, need(i))).join('') : '<p class="empty">รอบนี้ไม่มีข้อที่ต้องวัด</p>'}</div></section>`;
       if (form.t) {
-        const ts = form.t.filter(t => S.showAll || need(t));
+        const ts = form.t.filter(need);
         html += `<section class="group" data-sec="2 งาน"><h2 class="group-h"><span>2 · หัวข้อตรวจเช็ค / ทำงาน</span><span class="num">${form.t.filter(need).length} ข้อ</span></h2>
-          <div class="card">${ts.length ? ts.map(t => taskHtml(t, need(t))).join('') : '<p class="empty">รอบนี้ไม่มีหัวข้องาน</p>'}</div></section>`;
+          <div class="card list">${ts.length ? ts.map(t => taskHtml(t, need(t))).join('') : '<p class="empty">รอบนี้ไม่มีหัวข้องาน</p>'}</div></section>`;
       }
-      const hidden = form.m.filter(i => !need(i)).length + (form.t ? form.t.filter(t => !need(t)).length : 0);
-      if (hidden > 0) html += `<button type="button" class="show-all" id="toggleAll">${S.showAll ? 'ซ่อนข้อที่ไม่อยู่ในรอบนี้' : `แสดงข้อที่ไม่อยู่ในรอบนี้ (${hidden})`}</button>`;
       html += rrHtml();
     }
     html += `<section class="group" data-sec="หมายเหตุ"><h2 class="group-h">${form.kind === 'daily' ? 'หมายเหตุ (M/C Stop / Unload)' : 'Other Comment / Alarm Code'}</h2>
@@ -1085,7 +1088,7 @@
         if (st === 'watch') watch.push({ item, l: c.l, v: vals[c.k], u: c.u });
       });
     });
-    // Section 2 is required for บันทึกผล (and so for sending to the PM plan): every task of the round needs เสร็จ / ไม่เสร็จ / ไม่ได้ทำ · บันทึกร่าง does not ask
+    // Section 2 is required for บันทึกผล (and so for sending to the PM plan): every task of the round needs เสร็จ or ไม่เสร็จ · บันทึกร่าง does not ask
     (form.t || []).filter(t => isNeeded(form, t, h)).forEach(t => {
       total++;
       if (S.t[t.id]) filled++; else missingTasks.push(t);
@@ -1794,7 +1797,6 @@
   });
   $('app').addEventListener('change', onInput);
   $('app').addEventListener('click', (e) => {
-    if (e.target.id === 'toggleAll') { S.showAll = !S.showAll; saveDraft(); renderForm(); }
     if (e.target.id === 'resetForm') askReset();
     const rs = e.target.closest('[data-resend]');
     if (rs) { const rec = store.get(HIST, []).find(x => x.id === rs.dataset.resend); if (rec) sendPM(rec, rs.closest('.pmsend')); return; }

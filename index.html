@@ -1319,8 +1319,6 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pst.done{background:#E6F4EA;color:#157A43}.pst.review{background:#FAF3FD;color:#7B2FA0}.pst.todo{background:#EEF1F6;color:#3A4560}.pst.late{background:#FDE7E8;color:#C4141B}
 .pmrow.done,.pmkpi .done{--pc:#2EAA62}.pmrow.review,.pmkpi .review{--pc:#9B51C8}.pmrow.late,.pmkpi .late{--pc:#E31B23}.pmrow.todo,.pmkpi .todo{--pc:#8A97B0}.pmkpi .all{--pc:var(--navy)}
 .pmmc{display:inline-block;font-size:11.5px;font-weight:600;color:#A35F00;background:#FFF8EC;border-radius:6px;padding:1px 6px;margin-left:6px}
-.pmbulk{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px;padding:10px 14px;border-radius:12px;background:#E6F4EA;color:#157A43;font-size:14px}.pmbulk span{flex:1;min-width:200px}
-.pmbulk button{min-height:40px;padding:0 18px;border:0;border-radius:999px;background:linear-gradient(135deg,#0F8A3B,#3CCB6A);color:#fff;font:inherit;font-weight:700;cursor:pointer}.pmbulk button:disabled{opacity:.6;cursor:default}
 .pmmore{margin:10px 0 0;width:100%;min-height:44px;border:1.5px dashed var(--line);border-radius:12px;background:#fff;color:var(--navy);font:inherit;font-weight:600;cursor:pointer}
 .pmempty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:12px}
 .pmdash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
@@ -4495,26 +4493,11 @@ function renderPM() {
   $('pmSub').textContent = (pmv.month ? MON3[pmv.month - 1] + ' ' : 'ทั้งปี ') + pmv.year + ' · ' + base.length + ' งาน' + (role() === 'technician' ? ' ของคุณ' : '');
   $('pmBody').innerHTML = seg + (pmv.tab === 'cal' ? pmCalendar() : pmv.tab === 'dash' ? pmDashboard() : pmListHtml());
 }
-// a waiting job sent from the Inspection page with nothing out of spec: the server also checks it has readings (pmApproveMany)
-const pmPassed = x => x.st === 'review' && x.o.Abnormal === '0' && !!x.o.InspectionID;
-async function pmBulkApprove(btn) {
-  const ids = pmFiltered().filter(pmPassed).map(x => x.id);
-  if (!ids.length || !confirm('อนุมัติ ' + ids.length + ' งาน PM ที่ค่าวัดอยู่ในเกณฑ์ทั้งหมด?\n\nงานที่ค่านอกเกณฑ์ หรือไม่ได้กรอกค่าวัด จะยังรออนุมัติ ให้เปิดดูทีละงาน')) return;
-  btn.disabled = true; btn.textContent = 'กำลังอนุมัติ…';
-  let done = 0, skip = 0;
-  try {
-    for (let i = 0; i < ids.length; i += 100) { const r = await api({ op: 'pmApproveMany', ids: ids.slice(i, i + 100) }); done += r.approved.length; skip += r.skipped.length; }
-    toast('อนุมัติแล้ว ' + done + ' งาน' + (skip ? ' · ข้าม ' + skip + ' งาน (ไม่มีค่าวัด หรือสถานะเปลี่ยนแล้ว) ให้เปิดดูเอง' : ''));
-  } catch (e) { if (!e.handled) toast(friendly(e)); }
-  await loadPM(true); renderPM();
-}
 function pmListHtml() {
   const list = pmFiltered();
   const back = role() === 'technician' && phoneMQ.matches ? '<button type="button" class="pmme-all" style="margin-top:0" data-pmall="">‹ กลับไปงาน PM ของฉัน</button>' : '';
   const dayNote = back + (pmv.day ? `<p class="pmnodate">${pmv.day === 'none' ? 'งานที่ยังไม่นัดวัน' : 'งานวันที่ ' + esc(dShort(dateOf(pmv.day)))} · ${list.length} งาน <button type="button" data-pmday="">ดูทุกวัน</button></p>` : '');
   if (!list.length) return dayNote + '<div class="pmempty">ไม่มีงาน PM ที่ตรงกับตัวกรอง</div>';
-  const ok = isEngR() ? list.filter(pmPassed) : [], waiting = list.filter(x => x.st === 'review').length;
-  const bulk = ok.length ? `<div class="pmbulk"><span>รออนุมัติ ${waiting} งาน · ค่าวัดอยู่ในเกณฑ์ทั้งหมด <b>${ok.length}</b> งาน</span><button type="button" data-pmbulk>อนุมัติ ${ok.length} งานที่ผ่าน</button></div>` : '';
   const rows = list.slice(0, pmv.shown).map(x => `<button type="button" class="pmrow ${x.st}" data-pm="${esc(x.id)}">
       <span class="m"><b>${esc(x.o.MachineID)}${x.stop ? '<span class="pmmc">หยุดเครื่อง</span>' : ''}</b><small>${esc([x.o.MachineType, x.o.FactoryID].filter(Boolean).join(' · '))}</small></span>
       <span class="th hide-s">PM ${esc(x.theme)}<span class="sub2">${esc(x.pic) || 'ยังไม่มี PIC'}</span></span>
@@ -4522,7 +4505,7 @@ function pmListHtml() {
       <span class="hide-s">${esc(x.o.Owner && /vendor/i.test(x.o.Owner) ? 'Vendor' : 'ทีมช่าง')}</span>
       <span><span class="pst ${x.st}">${PM_ST[x.st]}</span></span>
     </button>`).join('');
-  return dayNote + bulk + `<div class="pmlist">${rows}</div>` + (list.length > pmv.shown ? `<button type="button" class="pmmore" data-pmmore>แสดงเพิ่ม (อีก ${list.length - pmv.shown} งาน)</button>` : '');
+  return dayNote + `<div class="pmlist">${rows}</div>` + (list.length > pmv.shown ? `<button type="button" class="pmmore" data-pmmore>แสดงเพิ่ม (อีก ${list.length - pmv.shown} งาน)</button>` : '');
 }
 // calendar like AppSheet: Day / Week / Month around pmv.cal.date, Sunday first; a job sits on its plan date (or the day it was done)
 const PM_DOW = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -4909,7 +4892,6 @@ $('pmView').addEventListener('click', e => {
   // dashboard: a month on the chart picks it · a status / technician / factory cell opens the list filtered · a machine shows its values
   const dmo = e.target.closest('[data-pmdmon]'); if (dmo) { pmv.month = +dmo.dataset.pmdmon; pmv.day = ''; renderPM(); return; }
   const toList = () => { pmv.tab = 'list'; store.set('ct_pmTab', 'list'); pmv.day = ''; pmv.shown = 150; renderPM(); scrollTo(0, 0); };
-  const bk = e.target.closest('[data-pmbulk]'); if (bk) { pmBulkApprove(bk); return; }
   const ds = e.target.closest('[data-pmds]'); if (ds) { pmv.st = ds.dataset.pmds; toList(); return; }
   const pp = e.target.closest('[data-pmpic]'); if (pp) { pmv.f.pic = pp.dataset.pmpic; pmv.st = ''; toList(); return; }
   const ht = e.target.closest('[data-pmheat]'); if (ht) { const [loc, m] = ht.dataset.pmheat.split('|'); pmv.f.loc = loc; pmv.month = +m; pmv.st = ''; toList(); return; }
@@ -5921,7 +5903,7 @@ async function demoApi(p) {
   // ---------- แผน PM (demo: a made-up plan for this year and next) ----------
   if (/^pm/.test(p.op)) {
     if (!['technician', 'engineer', 'admin'].includes(u.role)) return { error: 'บัญชีนี้ไม่มีสิทธิ์ดูแผน PM' };
-    const COLS = ['PMID', 'Status', 'JobTheme', 'MachineID', 'PlanDate', 'PlanMonth', 'PlanYear', 'MachineState', 'ActualDate', 'Owner', 'PIC', 'TeamCode', 'MachineType', 'SystemID', 'MachineCode', 'FactoryID', 'Remark', 'Abnormal', 'ChecklistFile', 'InspectionFile', 'ApprovedBy', 'ApprovedAt', 'SubmittedAt', 'InspectionID'];
+    const COLS = ['PMID', 'Status', 'JobTheme', 'MachineID', 'PlanDate', 'PlanMonth', 'PlanYear', 'MachineState', 'ActualDate', 'Owner', 'PIC', 'TeamCode', 'MachineType', 'SystemID', 'MachineCode', 'FactoryID', 'Remark', 'Abnormal', 'ChecklistFile', 'InspectionFile', 'ApprovedBy', 'ApprovedAt', 'SubmittedAt'];
     if (!demo.pm) {
       const techs = Object.values(demo.users).filter(t => t.role === 'technician').map(t => t.name);
       const kinds = [['AHU', 'AIR HANDLING UNIT', 'PM QUARTERLY', 3], ['EF', 'EXHAUST FAN SYSTEM', 'PM MONTHLY', 1], ['OAC', 'OUTDOOR AIR CONDITIONING', 'PM SEMI-ANNUALLY', 6], ['FFU', 'FAN FILTER UNIT', 'PM QUARTERLY', 3], ['VP', 'VACUUM PUMP SYSTEM', 'PM MONTHLY', 1], ['CH', 'CHILLER', 'PM ANNUALLY', 12]];
@@ -5938,7 +5920,7 @@ async function demoApi(p) {
             const done = st !== 'INCOMPLETED';
             demo.pm.push({ PMID: 'pm' + String(demo.pm.length + 1).padStart(5, '0'), Status: st, JobTheme: theme, MachineID: mach, PlanDate: done || rnd() < 0.9 ? d : '', PlanMonth: PM_MONTHS[m], PlanYear: String(y),
               MachineState: stop ? 'MC-STOPPED' : 'MC-OPERATED', ActualDate: done ? d : '', Owner: code === 'CH' ? 'VENDOR' : 'MTC10', PIC: pic, TeamCode: 'M' + (1 + k % 6), MachineType: type, SystemID: type, MachineCode: code, FactoryID: fac,
-              Remark: '', Abnormal: done ? (rnd() < 0.07 ? '1' : '0') : '', ChecklistFile: done ? 'Documents/' + mach + '-' + theme + '.pdf' : '', InspectionFile: done ? 'Job Plan_Files_/' + mach + '.Inspection File.pdf' : '', InspectionID: done ? 'INS-demo-' + demo.pm.length : '',
+              Remark: '', Abnormal: done ? (rnd() < 0.07 ? '1' : '0') : '', ChecklistFile: done ? 'Documents/' + mach + '-' + theme + '.pdf' : '', InspectionFile: done ? 'Job Plan_Files_/' + mach + '.Inspection File.pdf' : '',
               ApprovedBy: st === 'COMPLETED' ? 'Mr.Pongsathorn' : '', ApprovedAt: st === 'COMPLETED' ? d + ' 16:00:00' : '', SubmittedAt: done ? d + ' 15:00:00' : '' });
           }
         }
@@ -5950,12 +5932,6 @@ async function demoApi(p) {
       demo.pm.filter(sees).forEach(x => { years[x.PlanYear] = (years[x.PlanYear] || 0) + 1; });
       return { ok: true, year, years, cols: COLS, rows: demo.pm.filter(x => sees(x) && +x.PlanYear === year).map(x => COLS.map(c => x[c] ?? '')),
         technicians: u.role === 'technician' ? [] : Object.values(demo.users).filter(t => t.role === 'technician').map(t => t.name) };
-    }
-    if (p.op === 'pmApproveMany') {
-      if (u.role !== 'engineer' && u.role !== 'admin') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' };
-      const approved = [], skipped = [];
-      (p.ids || []).forEach(id => { const j = demo.pm.find(q => q.PMID === id); if (j && j.Status === 'WAIT FOR APPROVE' && j.Abnormal === '0' && j.InspectionID) { Object.assign(j, { Status: 'COMPLETED', ApprovedBy: u.name, ApprovedAt: demoNow() }); approved.push(id); } else skipped.push(id); });
-      return { ok: true, approved, skipped };
     }
     const x = demo.pm.find(j => j.PMID === String(p.id));
     if (!x || !sees(x)) return { error: 'ไม่พบงาน PM ' + p.id };

@@ -1266,6 +1266,7 @@ body.phone-req .trk:not([hidden]){display:block}
 
 .dday[aria-pressed="true"]{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
 .dch{display:block;font-size:11.5px;border-radius:5px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#EAF1FD;color:#1E5BC6}
+.dch.follow{background:#FFF1DC;color:#B45309;box-shadow:inset 3px 0 0 #F59E0B}
 .dch.late{background:#FDE7E8;color:#C4141B}.dch.new{background:#F1F3F6;color:#4A5370}.dch.review{background:#F1EAFD;color:#6B3FB8}.dch.done{background:#E6F4EA;color:#157A43}
 .dmore{font-size:11.5px;color:var(--muted)}
 .dday{cursor:pointer}.dday .dnum{align-self:flex-start;border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:inherit;cursor:pointer}
@@ -1278,6 +1279,7 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 .dlegend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin:-8px 0 16px}.dlegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .ddayh{font-size:16px;color:var(--navy);margin:0 0 10px}
 .drow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 120px auto;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-left:4px solid var(--dc,#1E6FE8);border-radius:0 12px 12px 0;padding:12px 14px;margin-bottom:8px}
+.drow.follow{--dc:#F59E0B}.drow.follow .d{color:#B45309;font-weight:600}
 .drow.late{--dc:#E31B23}.drow.new{--dc:#8A93A8}.drow.review{--dc:#7B4FD0}.drow.done{--dc:#2EAA62}
 .drow .t b{display:block;font-size:15px;color:var(--ink)}.drow .t small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 .drow .w{font-size:13px;color:var(--ink-2)}.drow .w b{color:var(--ink);font-weight:600}
@@ -3000,7 +3002,10 @@ function renderDueCal() {
   });
   const by = {};
   jobs.forEach(x => { if (x.due) (by[isoDay(x.due)] = by[isoDay(x.due)] || []).push(x); });
-  const ORD = { late: 0, work: 1, new: 2, review: 3, done: 4 };
+  // งานที่ติดตาม (not finished) also sit on their follow date, in amber
+  const follows = jobs.filter(x => !x.done).map(x => ({ ...x, cls: 'follow', fw: followOf(x.r) })).filter(x => x.fw && x.fw.d);
+  follows.forEach(x => { const k = isoDay(x.fw.d); (by[k] = by[k] || []).push(x); });
+  const ORD = { late: 0, follow: 1, work: 2, new: 3, review: 4, done: 5 };
   Object.values(by).forEach(L => L.sort((a, b) => (ORD[a.cls] ?? 2) - (ORD[b.cls] ?? 2)));
   const late = jobs.filter(x => x.cls === 'late').sort((a, b) => (a.due || 0) - (b.due || 0));
   const noDue = jobs.filter(x => !x.due && !x.done);
@@ -3010,20 +3015,20 @@ function renderDueCal() {
   const cell = d => {
     const iso = isoDay(d), L = by[iso] || [];
     return `<div class="dday${d.getMonth() !== m0.getMonth() ? ' out' : ''}${iso === tIso ? ' today' : ''}" data-dcday="${iso}" aria-pressed="${D.day === iso}"><button type="button" class="dnum" data-dcday="${iso}" aria-label="${esc(dShort(d))} · ${L.length ? L.length + ' งาน' : 'ไม่มีงาน'}">${d.getDate()}</button>`
-      + L.slice(0, 3).map(x => `<button type="button" class="dch ${x.cls}" data-dcopen="${esc(x.id)}" title="${esc(String(x.r[c.title] ?? '').trim())}">${esc(v(x.r, ['MachineID', 'Machine No.']) || x.id)}</button>`).join('') + (L.length > 3 ? `<span class="dmore">+${L.length - 3}</span>` : '') + '</div>';
+      + L.slice(0, 3).map(x => `<button type="button" class="dch ${x.cls}" data-dcopen="${esc(x.id)}" title="${esc((x.fw ? 'ติดตาม · ' : '') + String(x.r[c.title] ?? '').trim())}">${x.fw ? '⚑ ' : ''}${esc(v(x.r, ['MachineID', 'Machine No.']) || x.id)}</button>`).join('') + (L.length > 3 ? `<span class="dmore">+${L.length - 3}</span>` : '') + '</div>';
   };
   const picked = D.day === 'late' ? late : D.day === 'none' ? noDue : (by[D.day] || []);
   const title = D.day === 'late' ? 'เกินกำหนด (ยังไม่เสร็จ)' : D.day === 'none' ? 'ยังไม่กำหนด Due date' : (d => DC_DOW[d.getDay()] + ' ' + dShort(d))(new Date(+D.day.slice(0, 4), +D.day.slice(5, 7) - 1, +D.day.slice(8, 10)));
   const inMonth = jobs.filter(x => x.due && x.due.getMonth() === m0.getMonth() && x.due.getFullYear() === m0.getFullYear());
-  $('calSub').textContent = `${MON3[m0.getMonth()]} ${m0.getFullYear()} · ครบกำหนด ${inMonth.length} งาน · ยังไม่เสร็จ ${inMonth.filter(x => !x.done).length}`;
+  $('calSub').textContent = `${MON3[m0.getMonth()]} ${m0.getFullYear()} · ครบกำหนด ${inMonth.length} งาน · ยังไม่เสร็จ ${inMonth.filter(x => !x.done).length}${(n => n ? ` · ติดตาม ${n}` : '')(follows.filter(x => x.fw.d.getMonth() === m0.getMonth() && x.fw.d.getFullYear() === m0.getFullYear()).length)}`;
   const row = x => `<div class="drow ${x.cls}"><div class="t"><b>${esc(String(x.r[c.title] ?? '').trim() || '—')}</b><small>${esc([x.id, v(x.r, ['MachineID', 'Machine No.']), v(x.r, ['FactoryID', 'Location']), x.st].filter(Boolean).join(' · '))}</small></div>
     <div class="w">ช่าง <b>${esc(techOf(x.r) || '—')}</b></div>
-    <div class="d">${x.due ? 'Due ' + esc(dShort(x.due)) + (x.cls === 'late' ? ' · เลย ' + Math.round((today - x.due) / DAY) + ' วัน' : '') : 'ยังไม่กำหนด'}</div>
+    <div class="d">${x.fw ? 'ติดตาม ' + esc(dShort(x.fw.d)) + (x.fw.note ? ' · ' + esc(x.fw.note) : '') : x.due ? 'Due ' + esc(dShort(x.due)) + (x.cls === 'late' ? ' · เลย ' + Math.round((today - x.due) / DAY) + ' วัน' : '') : 'ยังไม่กำหนด'}</div>
     <button type="button" class="btn" data-dcopen="${esc(x.id)}">เปิดงาน</button></div>`;
   $('calBody').innerHTML = `<div class="dcal-h"><button type="button" data-dcnav="-1" aria-label="เดือนก่อน">‹</button><b>${MON3[m0.getMonth()]} ${m0.getFullYear()}</b><button type="button" data-dcnav="1" aria-label="เดือนถัดไป">›</button><button type="button" data-dctoday>วันนี้</button>
       <span class="sp"></span>${late.length ? `<button type="button" class="late" data-dcday="late" aria-pressed="${D.day === 'late'}">เกินกำหนด ${late.length}</button>` : ''}${noDue.length ? `<button type="button" data-dcday="none" aria-pressed="${D.day === 'none'}">ไม่มี Due date ${noDue.length}</button>` : ''}</div>
     <div class="dcal">${DC_DOW.map(w => `<span class="dow">${w}</span>`).join('')}${cells.map(cell).join('')}</div>
-    <div class="dlegend"><span><i style="background:#E31B23"></i>เกินกำหนด</span><span><i style="background:#8A93A8"></i>รอรับงาน</span><span><i style="background:#1E6FE8"></i>กำลังซ่อม</span><span><i style="background:#7B4FD0"></i>รอตรวจรับ</span><span><i style="background:#2EAA62"></i>เสร็จแล้ว</span></div>
+    <div class="dlegend"><span><i style="background:#F59E0B"></i>งานที่ติดตาม</span><span><i style="background:#E31B23"></i>เกินกำหนด</span><span><i style="background:#8A93A8"></i>รอรับงาน</span><span><i style="background:#1E6FE8"></i>กำลังซ่อม</span><span><i style="background:#7B4FD0"></i>รอตรวจรับ</span><span><i style="background:#2EAA62"></i>เสร็จแล้ว</span></div>
     <h2 class="ddayh">${esc(title)} · ${picked.length ? picked.length + ' งาน' : 'ไม่มีงาน'}</h2>${picked.map(row).join('')}`;
   if ($('calDlg').open) calOpen($('calDlg').dataset.id);
 }
@@ -4834,7 +4839,7 @@ function pmWebHtml(w) {
   const trows = tasks.map(i => `<tr><td>${esc(i.no + '. ' + i.topic)}</td><td><span class="${cls(i.value)}">${esc(i.value)}</span></td><td>${esc(i.note)}</td></tr>`).join('');
   const bad = w.rows.filter(i => /นอกเกณฑ์|ไม่เสร็จ/.test(i.result)).length, watch = vals.filter(i => /เฝ้าระวัง/.test(i.result)).length;
   return `<div class="pmtbl-w"><h3>Inspection <em>${vals.length}</em> <small>${esc([w.form, w.period ? 'รอบ ' + w.period : '', w.date ? dShort(parseAny(w.date)) || w.date : '', w.inspector ? 'ผู้ตรวจ ' + w.inspector : ''].filter(Boolean).join(' · '))}</small></h3>
-      <p class="${bad ? 'pmbad' : 'pmok'}">${bad ? 'นอกเกณฑ์ / ไม่เสร็จ ' + bad + ' รายการ' : 'ทุกค่าอยู่ในเกณฑ์'}${watch ? ` <span class="pmwarn">· เฝ้าระวัง ${watch}</span>` : ''}</p>${w.comment ? `<p>Comment: ${esc(w.comment)}</p>` : ''}
+      <p class="${bad ? 'pmbad' : vals.length ? 'pmok' : 'pmwarn'}">${bad ? 'นอกเกณฑ์ / ไม่เสร็จ ' + bad + ' รายการ' : vals.length ? 'ทุกค่าอยู่ในเกณฑ์' : 'ไม่ได้กรอกค่าวัด (ส่งมาเฉพาะผลหัวข้องาน)'}${watch ? ` <span class="pmwarn">· เฝ้าระวัง ${watch}</span>` : ''}</p>${w.comment ? `<p>Comment: ${esc(w.comment)}</p>` : ''}
       ${vals.length ? `<div class="pmtbl"><table class="pmweb"><thead><tr><th>หัวข้อการตรวจ</th><th>ช่อง</th><th>ค่าที่วัด</th><th>ผล</th></tr></thead><tbody>${vrows}</tbody></table></div>` : ''}</div>
     ${tasks.length ? `<div class="pmtbl-w"><h3>Operation <em>${tasks.length}</em></h3><div class="pmtbl"><table class="pmweb ops"><thead><tr><th>Operation Item</th><th>Result</th><th>หมายเหตุ</th></tr></thead><tbody>${trows}</tbody></table></div></div>` : ''}
     ${rr.length ? `<div class="pmtbl-w"><h3>3 · Review-Revise <em>${rr.length}</em> <small>แนะนำ · ไม่นับในผลตรวจ</small></h3><div class="pmtbl"><table class="pmweb ops"><thead><tr><th>หัวข้อ</th><th>ค่า / ผล</th><th>หมายเหตุ</th></tr></thead><tbody>${rr.map(i => `<tr><td>${esc(i.no + '. ' + i.topic)}</td><td>${esc(i.value)}${i.result && i.result !== i.value ? ` <span class="${cls(i.result)}">${esc(i.result)}</span>` : ''}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;

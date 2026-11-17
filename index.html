@@ -1349,6 +1349,7 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmtr .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pmtr .br{height:10px;border-radius:99px;background:#EEF1F5;overflow:hidden}
 .pmtr .br i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#0E2F7A,#3D6FD8)}
+.pmtr .br i.ok{background:linear-gradient(90deg,#0F8A3B,#3CCB6A)}
 .pmtr .br i.lo{background:linear-gradient(90deg,#C4141B,#FF5A5F)}
 .pmtr .pc{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .pmtr .nn{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1364,6 +1365,7 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmpg button:disabled{opacity:.35;cursor:default}
 .pmheat button,.pmheat .na{display:block;width:100%;min-height:38px;border:0;border-radius:10px;font:inherit;font-weight:700;color:#fff;cursor:pointer;font-variant-numeric:tabular-nums}
 .pmheat .na{display:grid;place-items:center;background:#F3F5F8;color:var(--muted);font-weight:400;cursor:default}
+.pmheat .ok,.pmc .sw.ok{background:linear-gradient(135deg,#0F8A3B,#3CCB6A)}
 .pmheat .hi,.pmc .sw.hi{background:linear-gradient(135deg,#0E2F7A,#3D6FD8)}
 .pmheat .md,.pmc .sw.md{background:linear-gradient(135deg,#B45309,#F59E0B)}
 .pmheat .lo,.pmc .sw.lo{background:linear-gradient(135deg,#C4141B,#FF5A5F)}
@@ -4547,7 +4549,7 @@ function pmYearChart(base, M) {
   dp.forEach(p => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="#0E2F7A" stroke-width="2"/>`; });
   // % of that month's plan done, above its point (below when the point is at the top)
   dp.forEach((p, i) => { if (!plan[i]) return; const pc = Math.round(done[i] / plan[i] * 100), ty = p[1] - 10 < T + 10 ? p[1] + 18 : p[1] - 10;
-    g += `<text x="${p[0]}" y="${ty}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${pc >= 70 ? '#0E2F7A' : pc >= 50 ? '#B45309' : '#C4141B'};paint-order:stroke;stroke:#fff;stroke-width:3px">${pc}%</text>`; });
+    g += `<text x="${p[0]}" y="${ty}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${pc >= 100 ? '#0F8A3B' : pc >= 70 ? '#0E2F7A' : pc >= 50 ? '#B45309' : '#C4141B'};paint-order:stroke;stroke:#fff;stroke-width:3px">${pc}%</text>`; });
   MON3.forEach((m, i) => {
     const pc = plan[i] ? Math.round(done[i] / plan[i] * 100) : 0;
     g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle"${i + 1 === M ? ' style="font-weight:700;fill:#0E2F7A"' : ''}>${m}</text>`
@@ -4619,7 +4621,7 @@ function pmDashboard() {
   const NOPIC = 'ยังไม่มี PIC', picOf = x => x.pic || NOPIC;
   const pics = uniq(mon.map(picOf)).map(p => { const L = mon.filter(x => picOf(x) === p); return { p, plan: L.length, done: L.filter(pmDone).length, pct: pmPct(L), late: lateAll.filter(x => picOf(x) === p).length }; })
     .sort((a, b) => a.pct - b.pct || b.plan - a.plan);
-  const techRows = pics.length ? pics.map(t => `<button type="button" class="pmtr" ${t.p === NOPIC ? 'disabled' : `data-pmpic="${esc(t.p)}"`}><span class="nm">${esc(t.p)}</span><span class="br"><i class="${t.pct < 50 ? 'lo' : ''}" style="width:${t.pct}%"></i></span><span class="pc">${t.pct}%</span><span class="nn">${t.done}/${t.plan}${t.late ? ` · <em>เลย ${t.late}</em>` : ''}</span></button>`).join('') : '<p class="pmnone">ไม่มีงานในช่วงนี้</p>';
+  const techRows = pics.length ? pics.map(t => `<button type="button" class="pmtr" ${t.p === NOPIC ? 'disabled' : `data-pmpic="${esc(t.p)}"`}><span class="nm">${esc(t.p)}</span><span class="br"><i class="${t.pct >= 100 ? 'ok' : t.pct < 50 ? 'lo' : ''}" style="width:${t.pct}%"></i></span><span class="pc">${t.pct}%</span><span class="nn">${t.done}/${t.plan}${t.late ? ` · <em>เลย ${t.late}</em>` : ''}</span></button>`).join('') : '<p class="pmnone">ไม่มีงานในช่วงนี้</p>';
   // factory × the last 3 months up to the chosen one
   const endM = M || (pmv.year === now.getFullYear() ? now.getMonth() + 1 : 12), ms = [endM - 2, endM - 1, endM].filter(m => m >= 1);
   // only places with jobs in these months, 8 a page
@@ -4629,7 +4631,7 @@ function pmDashboard() {
   const pager = pages > 1 ? `<div class="pmpg"><button type="button" data-pmhpg="-1" aria-label="หน้าก่อน"${pmv.heatPg ? '' : ' disabled'}>‹</button><span>${pmv.heatPg + 1} / ${pages} · ${allFacs.length} แห่ง</span><button type="button" data-pmhpg="1" aria-label="หน้าถัดไป"${pmv.heatPg < pages - 1 ? '' : ' disabled'}>›</button></div>` : '';
   const heat = `<table class="pmheat"><thead><tr><th>โรงงาน</th>${ms.map(m => `<th>${MON3[m - 1]}</th>`).join('')}</tr></thead><tbody>${facs.map(f => `<tr><th title="${esc(f)}">${esc(f)}</th>${ms.map(m => {
     const L = base.filter(x => x.o.FactoryID === f && x.m === m), p = pmPct(L);
-    return `<td>${p == null ? '<span class="na">—</span>' : `<button type="button" class="${p >= 70 ? 'hi' : p >= 50 ? 'md' : 'lo'}" data-pmheat="${esc(f)}|${m}" data-tip="${esc(f)} · ${MON3[m - 1]} · ${L.filter(pmDone).length}/${L.length} งาน">${p}%</button>`}</td>`; }).join('')}</tr>`).join('')}</tbody></table>${pager}`;
+    return `<td>${p == null ? '<span class="na">—</span>' : `<button type="button" class="${p >= 100 ? 'ok' : p >= 70 ? 'hi' : p >= 50 ? 'md' : 'lo'}" data-pmheat="${esc(f)}|${m}" data-tip="${esc(f)} · ${MON3[m - 1]} · ${L.filter(pmDone).length}/${L.length} งาน">${p}%</button>`}</td>`; }).join('')}</tr>`).join('')}</tbody></table>${pager}`;
   const chase = lateAll.slice(0, 4).map(x => ({ x, tag: `<span class="tg rd">เลย ${x.wait} วัน</span>` })).concat(review.slice(0, 3).map(x => ({ x, tag: `<span class="tg am">${x.wait ? `รอ ${x.wait} วัน` : `ส่งวันนี้`}</span>` })));
   const chaseRows = chase.length ? chase.map(({ x, tag }) => `<button type="button" class="pmfr" data-pm="${esc(x.id)}"><span><b>${esc(x.o.MachineID)}</b><small>${esc([x.theme, picOf(x)].join(' · '))}</small></span>${tag}</button>`).join('') : '<p class="pmnone">ไม่มีงานต้องตาม</p>';
   const eng = isEngR(), tmc = eng ? (pmv.trendMc && byMc[pmv.trendMc] ? pmv.trendMc : (machines[0] || {}).mc) : '';
@@ -4639,7 +4641,7 @@ function pmDashboard() {
     <div class="pmc w8"><h3>แผนเทียบงานที่ทำแล้ว · ${pmv.year}</h3><p class="sub">${base.length ? `ทั้งปี ทำแล้ว <b>${base.filter(pmDone).length.toLocaleString()}</b> / ${base.length.toLocaleString()} งาน · <b>${pmPct(base)}%</b> · ` : ''}กดเดือนเพื่อดูเดือนนั้น</p><div class="lg"><span class="ln dash">แผน</span><span class="ln">ทำแล้ว (รวมรออนุมัติ)</span></div>${pmYearChart(base, M)}</div>
     <div class="pmc w4"><h3>สถานะงาน · ${esc(period)}</h3><p class="sub">กดเพื่อเปิดรายการ</p>${pmDonut(mon)}</div>
     <div class="pmc w6"><h3>ช่างผู้รับผิดชอบ · ${esc(period)}</h3><p class="sub">น้อยกว่า 50% เป็นสีแดง · กดชื่อเพื่อดูงาน</p><div class="pmtech">${techRows}</div></div>
-    <div class="pmc w6"><h3>ทำตามแผนรายโรงงาน</h3><p class="sub"><i class="sw hi"></i>≥70% <i class="sw md"></i>50–69% <i class="sw lo"></i>&lt;50% · กดช่องเพื่อดูงาน</p>${heat}</div>
+    <div class="pmc w6"><h3>ทำตามแผนรายโรงงาน</h3><p class="sub"><i class="sw ok"></i>100% <i class="sw hi"></i>70–99% <i class="sw md"></i>50–69% <i class="sw lo"></i>&lt;50% · กดช่องเพื่อดูงาน</p>${heat}</div>
     <div class="pmc ${eng ? 'w4' : 'w6'}"><h3>ต้องตามวันนี้</h3><p class="sub">เลยกำหนดนานสุด · รออนุมัตินานสุด</p>${chaseRows}</div>
     <div class="pmc ${eng ? 'w4' : 'w6'}"><h3>เครื่องที่ต้องดู</h3><p class="sub">ค่านอกเกณฑ์บ่อยในปีนี้${eng ? ' · กดเพื่อดูค่าวัด' : ''}</p>${mcRows}</div>
     ${eng ? `<div class="pmc w4"><h3>ค่าวัดย้อนหลัง</h3>${pmTrendHtml(tmc)}</div>` : ''}

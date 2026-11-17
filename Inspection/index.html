@@ -25,10 +25,9 @@
       --fill: rgba(40, 80, 110, 0.08);
       --fill-strong: rgba(40, 80, 110, 0.16);
       --sep: rgba(40, 70, 95, 0.16);
-      --label: #16213E;         /* PM plan ink */
+      --label: #1E2933;
       --label-2: #56636D;       /* 6.0:1 on card, 5.3:1 on bg */
-      --accent: #0E2F7A;        /* PM plan navy (was slate #2B3A4A) */
-      --cta: #E31B23;           /* PM plan red: the main button (บันทึกผล) */        /* interactive + selection only: the same slate grey on every screen. 11:1 on white */
+      --accent: #2B3A4A;        /* interactive + selection only: the same slate grey on every screen. 11:1 on white */
       --on-accent: #FFFFFF;
       --seg-on: #FFFFFF;
       --ok: #1A7F37;   --ok-tint: #E7F5EA;      /* 5.1:1 / 4.5:1 */
@@ -57,7 +56,7 @@
     [data-svc="vac"]   { --svc: #4A5A70; --svc-tint: #E5EAF0; --svc-icon: #6E6E73; --svc-icon-bg: rgba(110, 110, 115, 0.12); }
     [data-svc="water"] { --svc: #4F7019; --svc-tint: #ECF3DC; --svc-icon: #1F9D45; --svc-icon-bg: rgba(31, 157, 69, 0.12); }
     /* Inside a form one plain slate grey serves every machine (numbers, spec, buttons); service colours stay on the machine icons */
-    body[data-svc] { --svc: #0E2F7A; --svc-tint: #E8EEFA; --accent: #0E2F7A; }
+    body[data-svc] { --svc: #2B3A4A; --svc-tint: #EEF1F4; --accent: #2B3A4A; }
     @media (prefers-contrast: more) {
       :root { --label-2: #3A3A3C; --sep: rgba(60, 60, 67, 0.45); }
     }
@@ -178,9 +177,9 @@
     .it-row { margin-top: 12px; }
     .it-spec:empty { display: none; }
     /* Spec ("ค่ากำหนดเฉพาะ" on the paper sheet): its own tinted line so the limit is read before typing */
-    .spec { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: #EEF1F4; line-height: 1.4; }   /* spec box stays slate grey (not the PM navy) */
+    .spec { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: var(--svc-tint, var(--fill)); line-height: 1.4; }
     .spec span { font-size: var(--fs-2); font-weight: 500; color: var(--label-2); }
-    .spec b { font-size: var(--fs-1); font-weight: 600; color: #2B3A4A; }
+    .spec b { font-size: var(--fs-1); font-weight: 600; color: var(--svc, var(--label)); }
     .it-row > b { display: block; margin-bottom: 6px; font-weight: 500; font-size: var(--fs-2); color: var(--label-2); }
     /* Before / after work: same place and size as before, just bold and dark so they stand out */
     .it-row > b.ba, .cell-top .ba { font-weight: 600; color: var(--label); }
@@ -236,10 +235,12 @@
     /* ---------- Diagrams from the paper sheet ---------- */
     .fig { display: block; width: 100%; margin-top: 12px; padding: 0; border-radius: 10px; overflow: hidden; background: #FFFFFF; border: 0.5px solid var(--sep); text-align: left; }
     .fig img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: contain; background: #FFFFFF; }
-    .fig .fig-pic { position: relative; display: block; width: min(100%, calc(420px * var(--ar))); aspect-ratio: var(--ar); margin: 0 auto; padding: 0; background: none; }
-    .fig .fig-pic img { width: 100%; height: 100%; max-height: none; }
+    .fig .fig-pic { position: relative; display: block; width: min(100%, calc(420px * var(--ar))); margin: 0 auto; padding: 0; background: none; }
+    /* the picture keeps its own shape (no aspect-ratio box: older iPhone Safari stretched it); markers sit on it by % */
+    .fig .fig-pic img { width: 100%; height: auto; max-height: none; }
     .fig-pt { position: absolute; transform: translate(-50%, -50%); border: 3px solid transparent; border-radius: 6px; pointer-events: none; transition: border-color .15s, background-color .15s, box-shadow .15s; }
     .fig-pt.on { border-color: var(--ng); background: rgba(194, 31, 31, 0.14); box-shadow: 0 0 0 4px rgba(194, 31, 31, 0.18); }
+    .fig-val { position: absolute; transform: translate(-50%, -50%); font-style: normal; font-size: clamp(10px, 2.6vw, 14px); font-weight: 700; color: #1D4ED8; pointer-events: none; white-space: nowrap; }
     @media (prefers-reduced-motion: reduce) { .fig-pt { transition: none; } }
     .fig > span:last-child { display: block; padding: 8px 12px; background: var(--fill); color: var(--label-2); font-size: var(--fs-2); }
     .fig > span:last-child b { color: var(--accent); font-weight: 600; white-space: nowrap; }
@@ -256,10 +257,13 @@
     .task { padding: 16px; scroll-margin-top: var(--head); scroll-margin-bottom: 110px; }
     .card:not(.list) > .task + .task { border-top: 0.5px solid var(--sep); }
     .task.off { opacity: 0.5; }
+    .task.missing .it-title { color: var(--ng); }
+    .task.missing .it-title::after { content: ' · ยังไม่ได้เลือก'; font-weight: 500; font-size: var(--fs-2); }
     .task .seg { margin-top: 10px; }
     .task .seg span { gap: 5px; }
     .task .seg input:checked + span.done { background: var(--ok-tint); color: var(--ok); box-shadow: none; }
     .task .seg input:checked + span.notdone { background: var(--ng-tint); color: var(--ng); box-shadow: none; }
+    .task .seg input:checked + span.skip { background: var(--watch-tint); color: var(--watch); box-shadow: none; }
     .note { display: block; width: 100%; min-height: 64px; margin-top: 10px; padding: 10px 12px; border: 1.5px solid transparent; border-radius: 10px; background: var(--fill); font-size: var(--fs-1); resize: vertical; }
     .note:focus { outline: none; border-color: var(--accent); background: var(--card); }
     .note.is-invalid { border-color: var(--ng); }
@@ -278,8 +282,6 @@
 
     /* Inline problem banner (form-level) */
     .banner { margin-top: 16px; padding: 12px 16px; border-radius: var(--r); background: var(--ng-tint); color: var(--ng); font-size: var(--fs-2); }
-    .task.missing .it-title { color: var(--ng); }
-    .task.missing .it-title::after { content: ' · ยังไม่ได้เลือก'; font-weight: 500; font-size: var(--fs-2); }
     .banner b { display: block; font-size: var(--fs-1); margin-bottom: 2px; }
 
     /* ---------- Bottom toolbar ---------- */
@@ -291,7 +293,7 @@
     .chip.ng { background: var(--ng-tint); color: var(--ng); }
     .chip.watch { background: var(--watch-tint); color: var(--watch); }
     .chip.plain { background: transparent; color: var(--label-2); font-weight: 500; padding: 0 4px; }
-    .btn-primary { flex-shrink: 0; min-height: 50px; padding: 0 24px; border-radius: 25px; background: var(--cta); color: var(--on-accent); font-size: var(--fs-1); font-weight: 600; }
+    .btn-primary { flex-shrink: 0; min-height: 50px; padding: 0 24px; border-radius: 25px; background: var(--accent); color: var(--on-accent); font-size: var(--fs-1); font-weight: 600; }
     .btn-primary:active { opacity: 0.8; }
     .toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 40; max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 14px; background: rgba(28, 28, 30, 0.92); color: #FFFFFF; font-size: var(--fs-2); line-height: 1.4; text-align: center; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; }
     .toast.on { opacity: 1; transform: translate(-50%, 0); }
@@ -306,7 +308,7 @@
     .sheet p { margin-top: 6px; color: var(--label-2); text-align: center; font-size: var(--fs-2); }
     .sheet .acts { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
     .btn-block { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; border-radius: var(--r); font-size: var(--fs-1); font-weight: 600; }
-    .btn-block.primary { background: var(--cta); color: var(--on-accent); }
+    .btn-block.primary { background: var(--accent); color: var(--on-accent); }
     a.btn-block { text-decoration: none; }
     .btn-draft { flex-shrink: 0; min-height: 50px; padding: 0 16px; border-radius: 25px; background: var(--fill); color: var(--accent); font-size: var(--fs-1); font-weight: 600; }
     .btn-draft:active { opacity: 0.8; }
@@ -339,22 +341,94 @@
     .res { flex-shrink: 0; font-weight: 600; font-size: var(--fs-2); }
     .res.ok { color: var(--ok); }
     .res.ng { color: var(--ng); }
-    .res.wait { color: var(--watch); }
 
     @media (max-width: 360px) { .row-label { min-width: 6em; } .cells:not(.c4) { grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); } }
     @media (min-width: 720px) { .wrap { padding-left: 24px; padding-right: 24px; } }
 
-    /* ---------- Printout on the original paper form ---------- */
     #printHost { display: none; }
-    .psheet { position: relative; overflow: hidden; background: #FFFFFF; font-family: var(--font); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .pbg { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .pv { position: absolute; font-size: 10.5px; font-weight: 600; line-height: 1; white-space: nowrap; color: #1D3FAF; transform: translate(0, -96%); }
-    .pv.c { transform: translate(-50%, -96%); }
-    .pv.mid { transform: translate(-50%, -50%); font-size: 13px; }   /* y is the box centre, not a text baseline */
-    .pv.ng { color: #C81E1E; }
-    .pv.s { font-size: 8.5px; letter-spacing: -0.02em; }
-    .pring { position: absolute; height: 15px; border: 1.4px solid #1D3FAF; border-radius: 50%; transform: translate(-50%, -78%); }
-    .pcomment { position: absolute; font-size: 10px; font-weight: 600; color: #1D3FAF; white-space: normal; }
+    /* ---------- Printout in the "style 1" layout (CE97F1029_style1.html), drawn from the saved data ---------- */
+    /* One A4 page: 794 × 1123 px at 96 dpi; .s1-in shrinks to fit when a long form runs over (fitS1) */
+    .s1 { position: relative; width: 794px; height: 1123px; overflow: hidden; background: #FFFFFF; color: #111; font-family: "Sarabun", "Tahoma", "Leelawadee UI", "Segoe UI", Arial, sans-serif; font-size: 10.5px; line-height: 1.28; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .s1-in { position: absolute; left: 26px; top: 23px; width: 742px; transform-origin: top left; }
+    .s1 .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; border-bottom: 2px solid #D7000F; padding-bottom: 4px; margin-bottom: 5px; }
+    .s1 .logo { display: flex; flex-direction: column; line-height: 1; }
+    .s1 .logo img { display: block; height: 34px; width: auto; }
+    .s1 .title { text-align: center; font-size: 13.5px; font-weight: 800; letter-spacing: 0.2px; text-transform: uppercase; }
+    .s1 .code { font-size: 15.5px; font-weight: 800; letter-spacing: 0.4px; white-space: nowrap; }
+    .s1 table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 6px; font-size: 10px; overflow-wrap: anywhere; }
+    .s1 td, .s1 th { border: 1px solid #3A4A60; padding: 2px 5px; vertical-align: middle; }
+    .s1 th { background: #E6ECF4; color: #1F3A68; font-weight: 700; text-align: center; }
+    .s1 .meta td { padding: 2.5px 5px; }
+    .s1 .ml { font-weight: 700; background: #EEF2F7; white-space: nowrap; }
+    .s1 .mcards { display: grid; grid-template-columns: 1.38fr 0.92fr 1.05fr; gap: 6px; margin-bottom: 6px; }
+    .s1 .mcard { border: 1px solid #3A4A60; background: #FFFFFF; font-size: 9.8px; display: flex; flex-direction: column; }
+    .s1 .mrow { display: flex; align-items: center; gap: 5px; padding: 2.5px 7px; flex: 1; }
+    .s1 .mrow:nth-child(odd) { background: #EEF2F7; }
+    .s1 .mrow.flat, .s1 .mrow.col { flex: 0 0 auto; padding: 3.5px 7px; background: #FFFFFF !important; }
+    .s1 .mrow.flat { background: #EEF2F7 !important; }
+    .s1 .mrow.flat .checks { display: grid; grid-template-columns: repeat(2, auto); justify-content: start; gap: 4px 14px; }
+    .s1 .mrow.col { flex: 1; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; }
+    .s1 .jobs { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .s1 img.inl { display: block; width: 100%; height: auto; margin-top: 6px; }
+    .s1 .mlbl { font-weight: 700; white-space: nowrap; color: #1F3A68; }
+    .s1 .mval { flex: 1; white-space: nowrap; overflow-wrap: anywhere; }
+    .s1 .mblank { flex: 1; border-bottom: 1px solid #555; height: 11px; }
+    .s1 .checks { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; }
+    .s1 .chk { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; white-space: nowrap; }
+    .s1 .bx { display: inline-grid; place-items: center; width: 11px; height: 11px; border: 1.2px solid #222; background: #FFFFFF; font-size: 10px; line-height: 1; font-weight: 700; color: #1F3A68; vertical-align: middle; }
+    .s1 .sec { font-size: 11px; font-weight: 800; padding: 1.5px 0 2.5px 6px; border-left: 3.5px solid #D7000F; color: #1F3A68; margin-bottom: 2px; }
+    .s1 .c { text-align: center; }
+    /* remark cells (หมายเหตุ): their words centred, readings in them too */
+    .s1 .rm { text-align: center; }
+    .s1 .rm .fill { justify-content: center; }
+    /* one reading per line (belt, insulation): label | value in the middle | unit, with breathing room at both ends */
+    .s1 .lvu { display: grid; grid-template-columns: 74px 1fr 44px; align-items: baseline; padding: 0 6px; }
+    .s1 .lvu span:nth-child(2) { text-align: center; }
+    .s1 .lvu span:last-child { text-align: right; }
+    /* belt line "เส้นที่ n : value Kg." centred as one phrase; the value gets a fixed slot so the lines stack evenly */
+    .s1 .bv { display: inline-block; min-width: 34px; text-align: center; }
+    .s1 tr.off .fill span { color: #A8A8A8; }
+    .s1 .r { text-align: right; }
+    .s1 .nw { white-space: nowrap; }
+    .s1 .pen { color: #1F3A68; font-weight: 600; }
+    .s1 .ng { color: #D91E2A; font-weight: 700; }
+    /* several readings in one cell (R / S / T, Low / High…): an evenly spaced group in the middle, no rule underneath */
+    .s1 .fill { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px 14px; font-size: 10px; }
+    .s1 .fill.vt { flex-wrap: nowrap; gap: 6px; font-size: 9.5px; }
+    .s1 .fill.vt .bv { min-width: 26px; }
+    .s1 .fill span { white-space: nowrap; }
+    /* rows outside the chosen job / PM round: grey words, like the style 1 sheet */
+    .s1 tr.off td, .s1 tr.off td .pen { color: #A8A8A8 !important; }
+    .s1 tr.off .fill span { border-bottom-color: #CCC; }
+    .s1 tr.off .bx { border-color: #BBB; }
+    .s1 .refs { display: grid; gap: 6px; margin-bottom: 6px; align-items: stretch; }
+    .s1 .s1card { border: 1px solid #3A4A60; padding: 3px; height: calc(165px + var(--ch, 0px)); display: flex; flex-direction: column; }
+    .s1 .s1card-t { font-size: 9.8px; font-weight: 800; text-align: center; border-bottom: 1px solid #3A4A60; padding: 2px 0; margin-bottom: 3px; background: #E6ECF4; color: #1F3A68; }
+    .s1 .s1card-i { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+    .s1 .s1card-i img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .s1 .s1card-i table { margin: 0; font-size: 8.5px; }
+    .s1 .s1card-i td, .s1 .s1card-i th { padding: 1px 3px; text-align: center; }
+    .s1 .cmt { border: 1px solid #3A4A60; padding: 4px 6px; margin-bottom: 5px; }
+    .s1 .cmt-l { font-weight: 700; font-size: 9.8px; margin-bottom: 3px; }
+    .s1 .cmt-v { min-height: 13px; border-bottom: 1px dotted #666; padding-bottom: 1px; }
+    /* the comment as a card beside a single reference card: same frame and title bar, ruled lines to write on */
+    .s1 .cmt-lines { flex: 1; position: relative; margin: 2px 6px; line-height: 22px; text-align: left; }
+    /* ruled writing lines as real borders: a 1 px background gradient vanishes when the sheet is scaled down to fit a screen */
+    .s1 .rules { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .s1 .rules i { display: block; height: 22px; border-bottom: 1px solid #999; box-sizing: border-box; }
+    .s1 .cmt-txt { position: relative; }
+    .s1 .notes { font-size: 9px; line-height: 1.3; margin-bottom: 4px; }
+    .s1 .sigs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    /* A short sheet fills its page (fitS1 sets these on .s1-in): taller rows (--rp), bigger reference cards (--ch),
+       more ruled comment lines (--cm), and the footer pushed to the bottom (--ft) */
+    .s1 .sec + table td { padding-top: calc(2px + var(--rp, 0px)); padding-bottom: calc(2px + var(--rp, 0px)); }
+    .s1 .cmt .cmt-v { position: relative; min-height: calc(22px + var(--cm, 0px)); line-height: 22px; border-bottom: 0; padding-bottom: 0; }
+    .s1 .foot { margin-top: var(--ft, 0px); }
+    .s1 .sig { border: 1px solid #3A4A60; height: 40px; display: flex; flex-direction: column; justify-content: flex-end; padding: 3px 6px; text-align: center; font-size: 9.2px; font-weight: 600; }
+    .s1 .sig-v { border-bottom: 1px dotted #333; margin-bottom: 2px; min-height: 12px; font-weight: 600; color: #1F3A68; }
+    .s1 .motto { font-weight: 800; margin-top: 5px; font-size: 9.8px; text-align: center; }
+    /* the build stamp under the home list */
+    .appver { margin: 4px 0 24px; text-align: center; color: var(--label-2); font-size: var(--fs-2); }
     .pprev { margin-top: 16px; overflow: hidden; border: 1px solid #E5E5EA; border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
     .pprev-in { transform-origin: top left; }
     @media print {
@@ -391,8 +465,6 @@
   <div id="sheetHost"></div>
   <div id="printHost"></div>
 
-  <!-- Where each value goes on each paper form; generated from the PDFs (see CLAUDE.md) -->
-  <script src="print/layout.js"></script>
   <script src="forms.js"></script>
   <script>
   // =====================================================================
@@ -431,7 +503,7 @@
     del(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } }
   };
   // Service color per form (CSS [data-svc]): air, cooling, cooling tower, blower, chemical, heat, vacuum, water
-  const SVC = { EF: 'air', SF: 'air', VF: 'air', ACP: 'air', AD: 'air', AHU: 'cool', PCAC: 'cool', CT: 'tower', BP: 'blow', CFP: 'chem', HEX: 'heat', VP: 'vac', WP: 'water' };
+  const SVC = { EF: 'air', SF: 'air', VF: 'air', ACP: 'air', AD: 'air', AHU: 'cool', PCAC: 'cool', CT: 'tower', BP: 'blow', MX: 'blow', CFP: 'chem', HEX: 'heat', VP: 'vac', VPL: 'vac', WP: 'water' };
   // One outline icon per machine: Tabler Icons v3.19.0 (MIT, tabler.io/icons), copied in so the app works offline.
   // Drawn with the stroke set in .mtile svg; colour comes from the machine's [data-svc] --svc-icon.
   const ICONS = {
@@ -449,6 +521,8 @@
     ACP: '<path d="M3 10v6" /><path d="M12 5v3" /><path d="M10 5h4" /><path d="M5 13h-2" /><path d="M6 10h2l2 -2h3.382a1 1 0 0 1 .894 .553l1.448 2.894a1 1 0 0 0 .894 .553h1.382v-2h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2v-2h-3v2a1 1 0 0 1 -1 1h-3.465a1 1 0 0 1 -.832 -.445l-1.703 -2.555h-2v-6z" />',
     AD: '<path d="M18.963 14.938a6.54 6.54 0 0 0 -.899 -4.06l-4.89 -7.26c-.42 -.626 -1.287 -.804 -1.936 -.398a1.376 1.376 0 0 0 -.41 .397l-1.282 1.9m-1.625 2.415l-1.986 2.946c-1.695 2.837 -1.035 6.44 1.567 8.545c2.602 2.105 6.395 2.105 8.996 0a6.83 6.83 0 0 0 1.376 -1.499" /><path d="M3 3l18 18" />',
   };
+  ICONS.VPL = ICONS.VP;
+  ICONS.MX = '<path d="M12 13m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M14.167 10.5c.722 -1.538 1.156 -3.043 1.303 -4.514c.22 -1.63 -.762 -2.986 -3.47 -2.986s-3.69 1.357 -3.47 2.986c.147 1.471 .581 2.976 1.303 4.514" /><path d="M13.169 16.751c.97 1.395 2.057 2.523 3.257 3.386c1.3 1 2.967 .833 4.321 -1.512c1.354 -2.345 .67 -3.874 -.85 -4.498c-1.348 -.608 -2.868 -.985 -4.562 -1.128" /><path d="M8.664 13c-1.693 .143 -3.213 .52 -4.56 1.128c-1.522 .623 -2.206 2.153 -.852 4.498s3.02 2.517 4.321 1.512c1.2 -.863 2.287 -1.991 3.258 -3.386" />';   // Tabler "propeller"
   const TRASH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>';   // Tabler "trash"
   const machIcon = (id) => `<span class="mtile" data-svc="${SVC[id] || ''}" aria-hidden="true"><svg viewBox="0 0 24 24">${ICONS[id] || ''}</svg></span>`;
   // PM locations, from สถานที่_PM.txt (no MTL-9 / MTL-13)
@@ -472,19 +546,23 @@
     'R-32':  { sT: [3, 16], sP: [70, 175], dT: [70, 115], dP: [340, 450] },
   };
   const VP_FLOW = { 'CT4-65LE': [2.0, 120], 'CT3-60U': [7.0, 420], 'CT3-200U': [10.0, 600], 'CT4-450LE': [15.0, 900], 'CT3-350U': [12.0, 720], 'CT3-700': [15.0, 900] };
+  // Low vacuum (water ring) pumps, ตารางมาตรฐาน4 of CE97F1006J (Low Vacuum): [min l/min, max l/min, min m³/hr, max m³/hr]
+  const VPL_FLOW = { SKL521: [11, 19, 0.6, 1.2], SKH522: [11, 19, 0.6, 1.2], SKH542: [14, 26, 0.9, 1.5], SKH562: [18, 32, 1.1, 1.9], SKL741: [28, 52, 1.7, 3.1], 'SW-150S': [12, 14, 0.72, 0.84] };
+  // a form's flow table (form.flow, else the high vacuum one) as rows for the reference cards
+  const flowRows = (t) => Object.entries(t).map(([k, x]) => x.length === 4 ? [k, `${x[0]}–${x[1]}`, `${x[2]}–${x[3]}`] : [k, ...x]);
   const BELT = [['A', 15, 11, '< 80'], ['A', 20, 15, '80–100'], ['A', 31, 25, '101–132'], ['A', 31, 25, '> 132'], ['B', 31, 25, '< 125'], ['B', 41, 31, '126–160'], ['B', 51, 41, '161–200'], ['C', 71, 51, '< 200'], ['C', 82, 61, '201–250'], ['C', 92, 71, '251–355']];
   const tbl = (head, rows) => `<div class="tbl"><table><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;
   const REF_HTML = {
     belt: () => `<details class="ref"><summary>ตารางมาตรฐาน 2 · ความตึงสายพาน</summary>${tbl(['ร่อง', 'ใหม่ kg', 'เดิม kg', 'พูลเล่ย์เล็ก mm'], BELT)}</details>`,
     iso: () => `<details class="ref"><summary>ISO 10816 · ผ่านเมื่อ ≤ satisfactory</summary>${tbl(['Class', 'good ≤', 'satisfactory ≤', 'unsatisfactory ≤'], Object.entries(ISO).map(([c, v]) => [c, ...v]))}</details>`,
     refr: () => `<details class="ref"><summary>ตารางมาตรฐาน 1 · น้ำยา</summary>${tbl(['น้ำยา', 'ดูด °C', 'ดูด psi', 'จ่าย °C', 'จ่าย psi'], Object.entries(REFR).map(([k, v]) => [k, v.sT.join('–'), v.sP.join('–'), v.dT.join('–'), v.dP.join('–')]))}</details>`,
-    vpflow: () => `<details class="ref"><summary>ตารางมาตรฐาน 4 · Flow</summary>${tbl(['Model', 'l/min', 'm³/hr'], Object.entries((form && form.flow) || VP_FLOW).map(([k, v]) => v.length === 4 ? [k, `${v[0]}–${v[1]}`, `${v[2]}–${v[3]}`] : [k, ...v]))}</details>`,
+    vpflow: () => `<details class="ref"><summary>ตารางมาตรฐาน 4 · Flow</summary>${tbl(['Model', 'l/min', 'm³/hr'], flowRows((form && form.flow) || VP_FLOW))}</details>`,
   };
 
   // =====================================================================
   // Form definitions (one per paper sheet)
   // =====================================================================
-  const { FORMS, FIGS } = window.INSP;   // forms.js
+  const { FORMS, FIGS } = window.INSP;   // forms.js (the PM plan page reads the same file)
   const formById = (id) => FORMS.find(f => f.id === id);
 
   // Section 3 Review-Revise per PM system (daily logs have none). It is advice, kept apart from the inspection:
@@ -589,7 +667,7 @@
       }
       case 'i3': {
         const keys = h.phase === '1' ? ['I'] : ['R', 'S', 'T'];
-        return [{ t: 'RLA จากป้าย nameplate', c: [{ k: 'rla', l: 'RLA', u: 'A' }] }, ...BA(p => keys.map(k => ({ k: `${p}_${k}`, l: k, u: 'A' })))];
+        return BA(p => keys.map(k => ({ k: `${p}_${k}`, l: k, u: 'A' })));
       }
       case 'ins': return [{ t: 'ค่าหลังทำงาน', c: ['U-G', 'V-G', 'W-G'].map(k => ({ k, l: k, u: 'MΩ' })) }];
       case 'belt': return [{ t: 'ค่าหลังทำงาน', c: Array.from({ length: item.n }, (_, i) => ({ k: `l${i + 1}`, l: `เส้นที่ ${i + 1}`, u: 'kg' })) }];
@@ -622,6 +700,7 @@
       case 'value':
         if (item.judge === 'iso') return isoStatus(n, h);
         if (item.judge === 'refT') { const r = REFR[h.refr]; return r ? inRange(n, ...r.sT) : ''; }
+        // low vacuum: in the model's l/min range; high vacuum's table has no range, so it is not judged
         if (item.judge === 'vpflow') { const f = item.flow && item.flow[h.vpModel]; return f ? inRange(n, f[0], f[1]) : ''; }
         if (item.min == null && item.max == null) return '';
         return inRange(n, item.min, item.max);
@@ -665,11 +744,14 @@
     if (item.type === 'v3') return `±${item.tol}% ของ Std.${h.phase === '1' ? ' (230 V)' : item.rn ? ' (400 V · RN 230 V)' : ' (400 V)'}`;
     if (item.type === 'refr') { const r = REFR[h.refr]; return r ? `Low ${r.sP.join('–')} · High ${r.dP.join('–')} psi (${h.refr})` : 'เลือกชนิดน้ำยาในข้อมูลเครื่องก่อน'; }
     if (item.judge === 'refT') { const r = REFR[h.refr]; return r ? `${r.sT.join(' – ')} °C (${h.refr})` : 'เลือกชนิดน้ำยาในข้อมูลเครื่องก่อน'; }
-    if (item.judge === 'vpflow') { const f = (item.flow || VP_FLOW)[h.vpModel]; return !f ? 'เลือกรุ่นปั๊มในข้อมูลเครื่องก่อน' : item.flow ? `${f[0]} – ${f[1]} l/min ตามตาราง 4 (${h.vpModel})` : `${f[0]} l/min ตามตาราง 4 (${h.vpModel})`; }
+    if (item.judge === 'vpflow') {
+      const f = (item.flow || VP_FLOW)[h.vpModel];
+      return !f ? 'เลือกรุ่นปั๊มในข้อมูลเครื่องก่อน' : item.flow ? `${f[0]} – ${f[1]} l/min ตามตาราง 4 (${h.vpModel})` : `${f[0]} l/min ตามตาราง 4 (${h.vpModel})`;
+    }
     if (item.judge === 'iso' || item.type === 'vibTemp') return h.vclass ? `ISO 10816 Class ${h.vclass} · ผ่าน ≤ ${ISO[h.vclass][1]} mm/s` : 'เลือก Class เครื่องในข้อมูลเครื่องก่อน';
-    if (item.type === 'grid') return `เฉลี่ย ${item.min} – ${item.max} m/s`;
+    if (item.type === 'grid') return item.spec || `เฉลี่ย ${item.min} – ${item.max} m/s`;
     if (item.type === 'dosing') return 'ตามที่กำหนด';
-    if (item.type === 'vunb') return 'คำนวณให้อัตโนมัติ · มอเตอร์ 1 เฟสไม่ต้องทำ';
+    if (item.type === 'vunb') return 'คำนวณให้อัตโนมัติ';
     if (item.spec) return item.spec;
     if (item.min != null && item.max != null) return `${item.min} – ${item.max} ${item.unit || ''}`;
     if (item.min != null) return `≥ ${item.min} ${item.unit || ''}`;
@@ -695,6 +777,8 @@
   let S = null;
   const draftKey = (id) => `insp.draft.${id}${PMLINK && id === PMLINK.form ? '.' + PMLINK.id : ''}`;   // a PM job keeps its own draft
   const HIST = 'insp.records';
+  // Build stamp: tools/make_dist.js writes the build time here in dist/ (shown on the home page, used to spot updates)
+  const APP_VER = 'dev';
 
   function blankState(f) {
     const last = store.get('insp.last', {});
@@ -825,7 +909,8 @@
         <div class="card">${FORMS.filter(f => f.kind === 'daily').map(row).join('')}</div></section>
       <section class="group"><div class="card">
         <button type="button" class="row nrow" id="goHist"><span class="main"><b>ผลตรวจที่บันทึกไว้</b><small>เก็บในมือถือเครื่องนี้ · ดาวน์โหลด CSV ได้</small></span><span class="trail num">${count}</span>${CHEV}</button>
-      </div></section>`;
+      </div></section>
+      <p class="appver">เวอร์ชัน ${esc(APP_VER)}</p>`;
     $('app').querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => { location.hash = `#/f/${b.dataset.form}`; }));
     $('goHist').addEventListener('click', () => { location.hash = '#/history'; });
     window.scrollTo(0, 0);
@@ -951,20 +1036,23 @@
     const calcHtml = calc.length ? `<div class="calc" data-calc="${esc(item.id)}">${calcInner(calc)}</div>` : '';
     const extra = item.type === 'dosing' ? '<p class="hint">จับเวลา 2 ครั้งต่อปริมาณ · Avg. Dosing = ปริมาณ ÷ เวลาเฉลี่ย × 60</p>'
       : item.type === 'vunb' ? '<p class="hint">ใช้แรงดัน RS / ST / RT ของข้อ 1.1 (ค่าหลังทำงาน ถ้าไม่มีใช้ค่าก่อน) · Temp inc = 2 × Vunb² ตามกราฟในฟอร์ม</p>' : '';
-    return `<div class="item${needed ? '' : ' off'}" data-item="${esc(item.id)}" data-st="${st}">${head}${figHtml(item)}${body}${calcHtml}${extra}${item.ref ? REF_HTML[item.ref]() : ''}</div>`;
+    return `<div class="item${needed ? '' : ' off'}" data-item="${esc(item.id)}" data-st="${st}">${head}${figHtml(item, vals)}${body}${calcHtml}${extra}${item.ref ? REF_HTML[item.ref]() : ''}</div>`;
   }
 
   // First item that uses a diagram shows it; later items get a one-line link to the same picture
   let shownFigs = new Map();
-  function figHtml(item) {
+  function figHtml(item, vals) {
     const f = item.fig && FIGS[item.fig];
     if (!f) return '';
     if (shownFigs.has(item.fig)) return `<button type="button" class="fig-link" data-fig="${item.fig}" aria-label="ดูรูป: ${esc(f.cap)}">ดูรูปประกอบ (รูปเดียวกับข้อ ${esc(shownFigs.get(item.fig))})</button>`;
     shownFigs.set(item.fig, item.id);
     const img = `<img src="${f.src}" alt="${esc(f.cap)}" loading="lazy" decoding="async" onerror="this.closest('.fig').hidden=true">`;
-    // With point boxes the picture sits in a frame of its own aspect ratio, so the markers land on the drawing
-    const pic = f.pts ? `<span class="fig-pic" style="--ar:${f.ar}">${img}${Object.entries(f.pts).map(([n, [x, y, w, h]]) =>
-      `<i class="fig-pt" data-pt="${n}" style="left:${x * 100}%;top:${y * 100}%;width:${(w + 0.02) * 100}%;height:${(h + 0.03) * 100}%"></i>`).join('')}</span>` : img;
+    // With point boxes or value overlays the picture sits in a frame of its own aspect ratio, so markers land on the drawing
+    const overlays = [
+      ...(f.pts ? Object.entries(f.pts).map(([n, [x, y, w, h]]) => `<i class="fig-pt" data-pt="${n}" style="left:${x * 100}%;top:${y * 100}%;width:${(w + 0.02) * 100}%;height:${(h + 0.03) * 100}%"></i>`) : []),
+      ...(f.boxes ? Object.entries(f.boxes).map(([k, [x, y]]) => `<i class="fig-val" data-fk="${k}" style="left:${x}%;top:${y}%">${esc((vals && vals[k]) || '')}</i>`) : [])
+    ];
+    const pic = overlays.length ? `<span class="fig-pic" style="--ar:${f.ar}">${img}${overlays.join('')}</span>` : img;
     return `<button type="button" class="fig" data-fig="${item.fig}" aria-label="ขยายรูป: ${esc(f.cap)}">
       ${pic}
       <span>${esc(f.cap)} <b>แตะเพื่อขยาย</b></span></button>`;
@@ -985,12 +1073,14 @@
   }
   const calcInner = (calc) => calc.map(c => `<span class="${c.st || ''}">${esc(c.l)} <b>${fmt(c.v)}</b> ${esc(c.u)}${c.st ? ` ${VERDICT[c.st].g}` : ''}</span>`).join('');
 
+  // ไม่เสร็จ and ไม่ได้ทำ both need a reason typed under the task
+  const NEEDS_WHY = (s) => s === 'notdone' || s === 'skip';
   function taskHtml(t, needed) {
     const st = S.t[t.id] || '';
     return `<div class="task${needed ? '' : ' off'}" data-task="${esc(t.id)}">
       <div class="it-head"><span class="it-no">${esc(t.id)}</span><div class="it-text"><div class="it-title">${esc(t.label)}</div>${needed ? '' : '<div class="it-spec">ไม่อยู่ในรอบนี้</div>'}</div></div>
-      ${segHtml(`t_${t.id}`, [['done', '✓ เสร็จ', 'done'], ['notdone', '✕ ไม่เสร็จ', 'notdone']], st)}
-      <textarea class="note" data-tn="${esc(t.id)}" placeholder="เหตุผล / สิ่งที่พบ (จำเป็น)" aria-label="เหตุผลที่ข้อ ${esc(t.id)} ไม่เสร็จ" ${st === 'notdone' ? '' : 'hidden'}>${esc(S.tn[t.id] || '')}</textarea>
+      ${segHtml(`t_${t.id}`, [['done', '✓ เสร็จ', 'done'], ['notdone', '✕ ไม่เสร็จ', 'notdone'], ['skip', '– ไม่ได้ทำ', 'skip']], st)}
+      <textarea class="note" data-tn="${esc(t.id)}" placeholder="เหตุผล / สิ่งที่พบ (จำเป็น)" aria-label="เหตุผลของข้อ ${esc(t.id)}" ${NEEDS_WHY(st) ? '' : 'hidden'}>${esc(S.tn[t.id] || '')}</textarea>
     </div>`;
   }
 
@@ -1097,13 +1187,15 @@
         if (st === 'watch') watch.push({ item, l: c.l, v: vals[c.k], u: c.u });
       });
     });
-    // Section 2 is required for บันทึกผล (and so for sending to the PM plan): every task of the round needs เสร็จ or ไม่เสร็จ · บันทึกร่าง does not ask
+    // Section 2 is required: every task of the round needs เสร็จ, ไม่เสร็จ or ไม่ได้ทำ picked before saving
+    const skipped = [];
     (form.t || []).filter(t => isNeeded(form, t, h)).forEach(t => {
       total++;
       if (S.t[t.id]) filled++; else missingTasks.push(t);
       if (S.t[t.id] === 'notdone') notDone.push(t);
+      if (S.t[t.id] === 'skip') skipped.push(t);
     });
-    return { filled, total, ng, watch, notDone, missingTasks };   // section 3 is advice: never counted here
+    return { filled, total, ng, watch, notDone, skipped, missingTasks };   // section 3 is advice: never counted here
   }
   function updateTally() {
     const r = tally();
@@ -1146,6 +1238,9 @@
     if (pill) { pill.className = `pill ${st}`; pill.textContent = pillHtml(st); }
     const wrap = document.querySelector(`[data-item="${CSS.escape(item.id)}"]`);
     if (wrap) wrap.dataset.st = st;
+    if (item.fig && FIGS[item.fig].boxes) {
+      document.querySelectorAll(`.fig[data-fig="${item.fig}"] .fig-val`).forEach(el => { el.textContent = vals[el.dataset.fk] || ''; });
+    }
   }
   function onInput(e) {
     const el = e.target;
@@ -1186,8 +1281,8 @@
         const box = document.querySelector(`[data-task="${CSS.escape(id)}"]`);
         box.classList.remove('missing');
         const note = box.querySelector('textarea');
-        note.hidden = el.value !== 'notdone';
-        if (el.value === 'notdone' && !note.value) note.focus();
+        note.hidden = !NEEDS_WHY(el.value);
+        if (NEEDS_WHY(el.value) && !note.value) note.focus();
       } else if (el.name.startsWith('r_')) {
         const id = el.name.slice(2);
         (S.rr[id] = S.rr[id] || {}).r = el.value;
@@ -1214,9 +1309,9 @@
       errs.push(`ผลของหัวข้องาน ${r.missingTasks.length} ข้อ`);
       r.missingTasks.forEach(t => { const b = document.querySelector(`[data-task="${CSS.escape(t.id)}"]`); if (b) b.classList.add('missing'); });
     }
-    const noReason = r.notDone.filter(t => !String(S.tn[t.id] || '').trim());
+    const noReason = [...r.notDone, ...r.skipped].filter(t => !String(S.tn[t.id] || '').trim());
     if (noReason.length) {
-      errs.push(`เหตุผลของข้อที่ไม่เสร็จ (${noReason.map(t => t.id).join(', ')})`);
+      errs.push(`เหตุผลของข้อที่ไม่เสร็จ/ไม่ได้ทำ (${noReason.map(t => t.id).join(', ')})`);
       noReason.forEach(t => document.querySelector(`[data-tn="${CSS.escape(t.id)}"]`)?.classList.add('is-invalid'));
     }
     const errBox = $('formErr');
@@ -1292,12 +1387,13 @@
       h: { ...h, machine: h.machine.trim().toUpperCase() },
       v: values,
       t: Object.fromEntries(Object.entries(S.t).filter(([id]) => taskIds.has(id))),
-      tn: Object.fromEntries(Object.entries(S.tn).filter(([id]) => taskIds.has(id) && S.t[id] === 'notdone')),
+      tn: Object.fromEntries(Object.entries(S.tn).filter(([id]) => taskIds.has(id) && NEEDS_WHY(S.t[id]))),
       // 3.2 keeps what was typed plus the verdict and auto value as judged at save time; 3.3 keeps a snapshot of each finding
       // 3.2 advice: only the checks something was entered for, with the verdict of their own readings
       rr: Object.fromEntries(rrRows(form.id).filter(x => Object.values(S.rr[x.id] || {}).some(v => String(v).trim()))
         .map(x => [x.id, { ...S.rr[x.id], st: rrEval(x.row, S.rr[x.id]).st }])),
-      result: { ng: r.ng.map(line), watch: r.watch.map(line), notDone: r.notDone.map(x => ({ id: x.id, label: x.label, detail: S.tn[x.id] || '' })) },
+      result: { ng: r.ng.map(line), watch: r.watch.map(line), notDone: r.notDone.map(x => ({ id: x.id, label: x.label, detail: S.tn[x.id] || '' })),
+        skipped: r.skipped.map(x => ({ id: x.id, label: x.label, detail: S.tn[x.id] || '' })) },
       savedAt: t.toISOString(),
       pm: !S.editId && linked(form) && form.kind === 'pm' ? PMLINK.id : ''
     };
@@ -1368,6 +1464,36 @@
       say('ng', `ส่งเข้าแผน PM ไม่สำเร็จ: ${esc(e instanceof TypeError ? 'เชื่อมต่อระบบไม่ได้ ตรวจอินเทอร์เน็ต' : e.message)} · ผลยังอยู่ในมือถือ${retry}`);
     }
   }
+  // one row per value / task, as the PM plan stores them (Web_Inspection)
+  const SEND_ST = { ok: 'ผ่าน', watch: 'เฝ้าระวัง', ng: 'นอกเกณฑ์', done: 'เสร็จ', notdone: 'ไม่เสร็จ', skip: 'ไม่ได้ทำ' };
+  function recRows(r) {
+    const f = formById(r.form), out = [];
+    Object.entries(r.v).forEach(([id, vals]) => {
+      const item = f && f.m.find(i => i.id === id);
+      const labels = item ? Object.fromEntries(rowsOf(item, r.h).flatMap(row => row.c.map(c => [c.k, `${row.t ? row.t + ' ' : ''}${c.l}`]))) : {};
+      Object.entries(vals).forEach(([k, v]) => {
+        if (String(v).trim() === '') return;
+        const st = item ? (k === 'v' && item.type === 'ok' ? (v === 'ผิดปกติ' ? 'ng' : 'ok') : judge(item, k, v, vals, r.h)) : '';
+        out.push({ no: id, topic: item ? item.label : '', field: labels[k] || k, value: v, result: SEND_ST[st] || '', note: '' });
+      });
+    });
+    Object.entries(r.t).forEach(([id, s]) => {
+      const task = f && f.t && f.t.find(t => t.id === id);
+      out.push({ no: id, topic: task ? task.label : '', field: 'สถานะ', value: SEND_ST[s] || s, result: s === 'notdone' ? 'ไม่เสร็จ' : '', note: r.tn[id] || '' });
+    });
+    return out;
+  }
+  // section 3 (Review-Revise, advice) entries for the PM plan: field 'Review-Revise' · the verdict is worded ผิดปกติ / เฝ้าระวัง / ปกติ
+  // (not นอกเกณฑ์) so the plan does not count it as abnormal, as this page does not count it in the result
+  function rrSendRows(r) {
+    const rows = ((RR[r.form] || {}).rows || []), WORD = { ng: 'ผิดปกติ', watch: 'เฝ้าระวัง', ok: 'ปกติ' };
+    return Object.entries(r.rr || {}).map(([id, v]) => {
+      const row = rows[+id.split('.')[2] - 1], st = v.st || v.r || '';
+      const typed = row && row.cells ? row.cells.map(c => v[c.k] ? `${c.l} ${v[c.k]}${c.u ? ' ' + c.u : ''}` : '').filter(Boolean).join(' · ') : '';
+      return { no: id, topic: row ? row.l : '', field: 'Review-Revise', value: [typed, v.val].filter(Boolean).join(' → ') || WORD[st] || '', result: WORD[st] || '', note: v.n || '' };
+    });
+  }
+
 
   function findRow(kind, x, fix = '') {
     return `<div class="row find"><span class="g ${kind}" aria-hidden="true">${kind === 'ng' ? '✕' : kind === 'ok' ? '✓' : '!'}</span><span class="t">${esc(x.id)} ${esc(x.label)}<small>${esc(x.detail)}</small>${fix ? `<small class="fix">${esc(fix)}</small>` : ''}</span></div>`;
@@ -1376,7 +1502,7 @@
   function findingsHtml(rec) {
     const sec = (title, kind, list) => list.length ? `<section class="group"><h2 class="group-h"><span>${title}</span><span class="num">${list.length} ข้อ</span></h2>
       <div class="card">${list.map(x => findRow(kind, x)).join('')}</div></section>` : '';
-    return sec('นอกเกณฑ์', 'ng', rec.result.ng) + sec('ไม่เสร็จ', 'ng', rec.result.notDone) + sec('เฝ้าระวัง', 'watch', rec.result.watch);
+    return sec('นอกเกณฑ์', 'ng', rec.result.ng) + sec('ไม่เสร็จ', 'ng', rec.result.notDone) + sec('ไม่ได้ทำ', 'watch', rec.result.skipped || []) + sec('เฝ้าระวัง', 'watch', rec.result.watch);
   }
   // The optional 3.2 advice entries of a saved result, shown apart from its findings
   function adviceHtml(rec) {
@@ -1410,7 +1536,7 @@
       ${adviceHtml(rec)}
       ${rec.h.comment ? `<section class="group"><h2 class="group-h">Other Comment / Alarm Code</h2><div class="card"><p class="empty" style="color:var(--label)">${esc(rec.h.comment)}</p></div></section>` : ''}
       <section class="group"><div class="acts" style="display:flex;flex-direction:column;gap:8px">
-        ${canPrint(rec.form) ? `<button type="button" class="btn-block secondary" id="pdf">พิมพ์ใบตรวจ / บันทึกเป็น PDF</button>` : ''}
+        <button type="button" class="btn-block secondary" id="pdf">พิมพ์ใบตรวจ / บันทึกเป็น PDF</button>
         <button type="button" class="btn-block secondary" id="editRec">แก้ไขผลตรวจ</button>
         <button type="button" class="btn-block reset" id="delRec" style="margin-top:0">ลบผลตรวจนี้</button></div></section>`;
     $('pdf')?.addEventListener('click', () => { location.hash = `#/print/${rec.id}`; });
@@ -1431,7 +1557,7 @@
       </div>
       ${findingsHtml(rec)}
       ${rec.pm ? '' : `<section class="group"><div class="acts" style="display:flex;flex-direction:column;gap:8px">
-        ${canPrint(rec.form) ? `<button type="button" class="btn-block secondary" id="pdf">พิมพ์ใบตรวจ / บันทึกเป็น PDF</button>` : ''}
+        <button type="button" class="btn-block secondary" id="pdf">พิมพ์ใบตรวจ / บันทึกเป็น PDF</button>
         <button type="button" class="btn-block primary" id="next">ตรวจ ${esc(rec.form)} เครื่องถัดไป</button>
         <button type="button" class="btn-block secondary" id="home">เลือกเครื่องชนิดอื่น</button></div></section>`}`;   // a PM job goes back to the plan only (the send box)
     $('next')?.addEventListener('click', () => {
@@ -1447,256 +1573,256 @@
   }
 
   // =====================================================================
-  // Print on the original paper form: the PDF page as background, values placed on top
+  // Printout in the "style 1" layout (the user's CE97F1029_style1.html), for every form, drawn from the saved data.
+  // Values in navy, out-of-range in red; rows outside the job / PM round stay listed in grey, as on that sheet.
   // =====================================================================
-  const PL = window.PRINT_LAYOUT || {};
-  const canPrint = (formId) => !!PL[formId];
-  // Spots read off the sheet by hand (no text label to anchor on)
-  const MANUAL = {
-    WP: { align: { g: [[0.239, 0.549], [0.239, 0.613], [0.183, 0.579], [0.300, 0.579]], o: [[0.499, 0.546], [0.505, 0.612], [0.447, 0.581], [0.567, 0.581]] },
-          vunb: { x: 0.755, y: [0.601, 0.615, 0.629] } },
-    // 4x4 air-velocity tables, offsets from the small ก่อน / หลัง label beside each table
-    gridAHU:  { b: { dx: [0.092, 0.138, 0.185, 0.23], dy: [0.014, 0.0317, 0.0494, 0.0671] }, a: { dx: [0.107, 0.15, 0.191, 0.237], dy: [0.014, 0.0317, 0.0494, 0.0671] } },
-    gridPCAC: { b: { dx: [0.092, 0.135, 0.178, 0.222], dy: [0.0127, 0.0279, 0.043, 0.0582] }, a: { dx: [0.095, 0.138, 0.18, 0.222], dy: [0.0127, 0.0279, 0.043, 0.0582] } },
-  };
-  const pct = (n) => `${(n * 100).toFixed(3)}%`;
+  const S1_TITLE = { EF: 'Exhaust fan / Process exhaust fan', SF: 'Supply fan / FFU', VF: 'Ventilation fan', AHU: 'Air handling unit', PCAC: 'Air condition unit',
+    BP: 'Blower pump', MX: 'Agitator mixer', CFP: 'Chemical feed pump', HEX: 'Heat exchanger', VP: 'Vacuum pump (high vacuum)', VPL: 'Water ring vacuum pump (low vacuum)', WP: 'Water pump' };
+  const RULES = `<span class="rules" aria-hidden="true">${'<i></i>'.repeat(40)}</span>`;   // ruled lines; the box's height decides how many show
+  const S1_PERIOD = { '1M': '1 เดือน', '3M': '3 เดือน', '6M': '6 เดือน', '1Y': '1 ปี' };
+  function buildStyle1(rec) {
+    const f = formById(rec.form), h = rec.h, W = 794, H = 1123;
+    const pen = (v, bad) => v == null || String(v).trim() === '' ? '' : `<span class="${bad ? 'ng' : 'pen'}">${esc(v)}</span>`;
+    const bx = (on, label) => `<span class="chk"><span class="bx">${on ? '✓' : ''}</span> ${esc(label)}</span>`;
+    const dmy = (d) => d ? d.split('-').reverse().join('/') : '';
 
-  // Printed width of a value in px: measured on a hidden .pv inside a .psheet, so it uses the print font exactly
-  let measureEl;
-  function textW(s, size) {
-    if (!measureEl) {
-      const host = document.createElement('div');
-      host.className = 'psheet'; host.setAttribute('aria-hidden', 'true');
-      host.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden';
-      measureEl = document.createElement('span'); measureEl.className = 'pv'; measureEl.style.transform = 'none';
-      host.appendChild(measureEl); document.body.appendChild(host);
-    }
-    measureEl.style.fontSize = size + 'px'; measureEl.textContent = s;
-    return measureEl.getBoundingClientRect().width;
+    // Header block: who / where / what, in the sheet's three label-value columns
+    const models = (f.models || []).map(m => [`Model ${m}`, h.models[m] || '']);
+    if (models.length > 3) { const rest = models.splice(2); models.push([`Model ${rest.map(x => x[0].replace('Model ', '')).join(' / ')}`, rest.map(x => x[1] || '____').join(' / ')]); }
+    while (models.length < 3) models.push(['', '']);
+    const types = f.subtypes && f.subtypes.length ? f.subtypes.map(s => bx(h.subtype === s || f.subtypes.length === 1, s)).join('') : '';
+    const jobs = f.kind === 'daily' ? bx(true, 'ตรวจรายวัน')
+      : '<div class="checks">' + f.periods.map(p => bx(h.job === 'pm' && h.period === p, p)).join('') + '</div><div class="checks">' + bx(h.job === 'repair', 'งานซ่อม') + bx(h.job === 'insp', 'Inspection') + '</div>';
+    const extras = [
+      ...(f.panel ? [['หมายเลขตู้ไฟฟ้า', h.panel]] : []),
+      ...(f.m.some(i => i.judge === 'iso' || i.type === 'vibTemp') ? [['Class เครื่อง', h.vclass ? `Class ${h.vclass}` : '']] : []),
+      ...(f.refr ? [['ชนิดน้ำยา', h.refr]] : []), ...(f.vpModel ? [['รุ่นปั๊ม', h.vpModel]] : []),
+      ...(f.pumpState ? [['สถานะปั๊ม / วาล์วขาออก', [h.pumpState, h.valveState].filter(Boolean).join(' / ')]] : []),
+    ];
+    // three cards, as on the sheet: machine & place | equipment specs | type & job; empty values keep a blank line
+    const mr = (l, v, cls) => '<div class="mrow"><span class="mlbl">' + esc(l) + ' :</span>' + (v == null || String(v).trim() === '' ? '<span class="mblank"></span>' : '<span class="mval">' + v + '</span>') + '</div>';
+    const c1 = [[f.kind === 'daily' ? f.name + ' No.' : 'หมายเลขเครื่อง', pen(h.machine)], ['วันที่ตรวจ / เวลา', pen(dmy(h.date)) + (h.time ? ' เวลา ' + pen(h.time) : '')], ['โรงงาน', pen(h.factory)]];
+    const c2 = [...models.filter(m => m[0]).map(m => [m[0], pen(m[1])]), ...extras.map(([l, v]) => [l, pen(v)])];
+    const ex1 = c2.findIndex(x => x[0] === 'หมายเลขตู้ไฟฟ้า'); if (ex1 >= 0) c1.push(c2.splice(ex1, 1)[0]);
+    const meta = '<div class="mcards"><div class="mcard">' + c1.map(x => mr(x[0], x[1])).join('') + '</div><div class="mcard">' + c2.map(x => mr(x[0], x[1])).join('') + '</div>' +
+      '<div class="mcard">' + (types ? '<div class="mrow flat"><span class="mlbl">ประเภทเครื่อง :</span><span class="checks">' + types + '</span></div>' : '') +
+      '<div class="mrow col"><span class="mlbl">' + (f.kind === 'daily' ? 'งาน' : 'งานบำรุงรักษา') + ' :</span><div class="jobs">' + jobs + '</div></div></div></div>';
+
+    // Section 1: one row per item; items with several readings get sub-rows (belt lines, U-G / V-G / W-G, points)
+    const isB = (k) => k === 'b' || k.startsWith('b_') || /^b\d\d$/.test(k);
+    const isA = (k) => k === 'a' || k.startsWith('a_') || /^a\d\d$/.test(k);
+    const wpAlignBody = (id) => {
+      const f0 = FIGS.wpAlign, av = (rec.v && rec.v[id]) || {};
+      const pins = Object.entries(f0.boxes).map(([bk, [x, y]]) => {
+        const val = av[bk];
+        return val ? `<span style="position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#1D4ED8;white-space:nowrap">${esc(val)}</span>` : '';
+      }).join('');
+      // frame sized by padding-top (% of width), not aspect-ratio: iPhone Safari sizes aspect-ratio boxes in table cells wrongly
+      // and stretched the picture; padding keeps the shape everywhere, and holds the space before the picture loads
+      return `<div style="position:relative;display:block;width:100%;height:0;padding-top:${(100 / f0.ar).toFixed(3)}%"><img src="${f0.src}" style="position:absolute;left:0;top:0;width:100%;height:100%;display:block" alt="">${pins}</div>`;
+    };
+    const rows1 = f.m.map(it => {
+      const need = isNeeded(f, it, h), vals = need ? (rec.v[it.id] || {}) : {}, off = need ? '' : ' class="off"';
+      if (!need) return '';
+      const v = (c) => pen(vals[c.k], judge(it, c.k, vals[c.k], vals, h) === 'ng');
+      const fill = (cells, t) => `<div class="fill${it.type === 'vibTemp' ? ' vt' : ''}">${t ? `<span>${esc(t)}</span>` : ''}${cells.map(c => it.type === 'vibTemp' ? `<span>${esc(c.l)}: <span class="bv">${v(c)}</span> ${esc(c.u)}</span>` : `<span>${esc(c.l)}: ${v(c)}${c.u && vals[c.k] ? ` ${esc(c.u)}` : ''}</span>`).join('')}</div>`;
+      const calc = need ? computed(it, vals, h, rec.v).filter(c => isFinite(c.v)) : [];
+      const calcFill = calc.length ? `<div class="fill">${calc.map(c => `<span>${esc(c.k === 'avgTime' ? 'เวลาเฉลี่ย' : c.k === 'avgDosing' ? 'อัตราจ่ายเฉลี่ย' : c.l)}: ${pen(fmt(c.v), c.st === 'ng')} ${esc(c.u)}</span>`).join('')}</div>` : '';
+      // the spec as short as the paper sheet words it: the long ISO / tolerance wording lives in the reference cards
+      const spec = esc(it.judge === 'iso' || it.type === 'vibTemp' ? 'ตารางมาตรฐาน3' : it.judge === 'vpflow' ? 'ตารางมาตรฐาน4' : (it.judge === 'refT' || it.type === 'refr') ? 'ตารางมาตรฐาน1' : it.type === 'v3' ? `±${it.tol}% ของ Std.` : specText(it, h));
+      const head = (n) => {
+        const figImg = it.fig && FIGS[it.fig].inline ? (FIGS[it.fig].ar
+            ? `<div style="position:relative;height:0;padding-top:${(100 / FIGS[it.fig].ar).toFixed(3)}%;margin-top:6px"><img src="${FIGS[it.fig].src}" style="position:absolute;left:0;top:0;width:100%;height:100%;display:block" alt=""></div>`
+            : `<img class="inl" src="${FIGS[it.fig].src}" alt="">`)
+          : it.fig === 'hexPlates' && (vals.v === 'Multi-pass' || vals.v === 'Single-pass') ? `<img class="inl" src="img/${vals.v === 'Multi-pass' ? 'hex_multi' : 'hex_single'}.png" style="height:175px;width:auto;max-width:100%;margin:4px auto 0" alt="">` : '';
+        return `<td${n > 1 ? ` rowspan="${n}"` : ''} style="vertical-align:top">${esc(it.id)} ${esc(it.label)}${figImg}</td><td class="c"${n > 1 ? ` rowspan="${n}"` : ''}>${spec}</td>`;
+      };
+      if (it.type === 'ok' || it.type === 'choice') {
+        const txt = it.fig === 'hexPlates' && vals.v ? `${vals.v} arrangement` : vals.v;
+        return `<tr${off}>${head(1)}<td colspan="2" class="c">${pen(txt, vals.v === 'ผิดปกติ')}</td><td class="rm"></td></tr>`;
+      }
+      // belt lines and insulation readings: one line each, as on the sheet — label left, value, unit at the right edge
+      const itemNote = f.id === 'WP' && it.id === '1.1' ? 'หลังแมกเนติก คอนแทคเตอร์'
+        : (f.id === 'VP' && it.id === '1.8') || (f.id === 'PCAC' && /^1\.(7|8|9|10|11|12|13)$/.test(it.id)) || ((f.id === 'BP' || f.id === 'CFP' || f.id === 'MX') && /^1\.[123]$/.test(it.id)) || (f.id === 'VPL' && /^1\.(1|2|15)$/.test(it.id)) || (f.id === 'WP' && /^1\.[25]$/.test(it.id)) ? 'ค่าวัดหลังทำงาน' : '';
+      // label | value centred in the cell | unit, in three fixed lanes so every line lines up
+      const lvu = (l, val, u) => `<div class="lvu"><span>${l}</span><span>${val}</span><span>${u}</span></div>`;
+      if (it.type === 'belt') return Array.from({ length: it.n }, (_, i) => `<tr${off}>${i === 0 ? head(it.n) : ''}<td colspan="2" class="c">เส้นที่ ${i + 1} : <span class="bv">${v({ k: `l${i + 1}` })}</span> Kg.</td>${i === 0 ? `<td class="rm" rowspan="${it.n}">${itemNote}</td>` : ''}</tr>`).join('');
+      if (it.type === 'ins') return ['U-G', 'V-G', 'W-G'].map((k, i) => `<tr${off}>${i === 0 ? `<td rowspan="3" style="vertical-align:top">${esc(it.id)} ${esc(it.label)}</td>` : ''}<td class="c">${esc(it.spec)} &nbsp; ${k}</td><td colspan="2">${lvu('', v({ k }), '(MΩ)')}</td>${i === 0 ? `<td class="rm" rowspan="3">${itemNote}</td>` : ''}</tr>`).join('');
+      if (it.type === 'vunb') return `<tr${off}>${head(1)}<td colspan="2">${calcFill}</td><td class="rm"></td></tr>`;
+      if (it.type === 'align') return `<tr${off}><td style="vertical-align:top;border-right:none">${esc(it.id)} ${esc(it.label)}</td><td colspan="4" style="padding:4px 8px;border-left:none">${wpAlignBody(it.id)}</td></tr>`;
+      if (it.type === 'grid') {
+        const avgs = need ? computed(it, vals, h, rec.v) : [];
+        const avgCell = (k) => { const c = avgs.find(x => x.k === k); const val = c && isFinite(c.v) ? pen(fmt(c.v), c.st === 'ng') : ''; return lvu('', val, esc(it.unit || 'm/s')); };
+        const gridTbl = (p) => `<table style="width:auto;border-collapse:collapse;font-size:8.5px;margin:0"><tr>${['Point', 1, 2, 3, 4].map(x => `<th style="width:34px;height:15px;padding:1px 3px;background:#fff;border:1px solid #444;text-align:center;font-weight:${x === 'Point' ? 400 : 700}">${x}</th>`).join('')}</tr>${[1, 2, 3, 4].map(r => `<tr><th style="width:34px;height:15px;padding:1px 3px;background:#fff;border:1px solid #444;text-align:center;font-weight:700">${r}</th>${[1, 2, 3, 4].map(c => { const rv = need ? vals[`${p}${r}${c}`] : ''; return `<td style="width:34px;height:15px;padding:1px 3px;border:1px solid #444;text-align:center">${rv ? pen(rv, false) : ''}</td>`; }).join('')}</tr>`).join('')}</table>`;
+        return `<tr${off}>${head(1)}<td>${avgCell('b_avg')}</td><td>${avgCell('a_avg')}</td><td class="rm">${itemNote}</td></tr>
+          <tr${off}><td colspan="5" style="padding:5px 10px"><div style="display:flex;justify-content:space-around;align-items:center;gap:14px"><div style="display:flex;align-items:center;gap:8px"><span style="text-decoration:underline;font-weight:700">ก่อน</span>${gridTbl('b')}</div><div style="display:flex;align-items:center;gap:8px"><span style="text-decoration:underline;font-weight:700">หลัง</span>${gridTbl('a')}</div></div></td></tr>`;
+      }
+      const rows = rowsOf(it, h), cells = rows.flatMap(r => r.c);
+      const note = itemNote;
+      const main = rows.filter(r => !r.c.some(c => c.k === 'rla'));
+      // a plain before / after reading: its two columns
+      if (it.type === 'value') {
+        const b = cells.find(c => c.k === 'b'), a = cells.find(c => c.k === 'a');
+        return `<tr${off}>${head(1)}<td class="c">${b ? v(b) : ''}</td><td class="c">${a ? v(a) : ''}</td><td class="rm">${calcFill}</td></tr>`;
+      }
+      // phases before and after (R / S / T): one row, each side in its own column
+      const bRows = main.filter(r => r.c.every(c => isB(c.k))), aRows = main.filter(r => r.c.every(c => isA(c.k)));
+      if (bRows.length && aRows.length && bRows.length + aRows.length === main.length && !it.type.match(/grid/))
+        return `<tr${off}>${head(1)}<td>${bRows.map(r => fill(r.c)).join('')}</td><td>${aRows.map(r => fill(r.c)).join('')}</td><td class="rm">${note}</td></tr>`;
+      // anything else: one sub-row per reading row, the reading spread across both value columns
+      const subs = main.map(r => fill(r.c, r.t && r.t !== 'ค่าหลังทำงาน' ? r.t : ''));
+      if (calcFill) subs.push({ html: calcFill, avg: true });
+      if (!subs.length) subs.push('');
+      return subs.map((s, i) => {
+        const isAvg = typeof s === 'object' && s.avg;
+        const body = isAvg ? s.html : s;
+        return `<tr${off}>${i === 0 ? head(subs.length) : ''}<td colspan="2"${isAvg ? ' style="background:#F2F4F7;font-weight:700;border-top:1.5px solid #444"' : ''}>${body}</td>${i === 0 ? `<td class="rm"${subs.length > 1 ? ` rowspan="${subs.length}"` : ''}>${note}</td>` : ''}</tr>`;
+      }).join('');
+    }).join('');
+    const cols1 = ['VP', 'VPL', 'BP', 'MX'].includes(f.id) ? ['40%', '13%', '18%', '18%', '11%'] : ['35%', '16%', '18%', '18%', '13%'];
+    const sec1 = `<div class="sec">1. การตรวจข้อมูลการทำงานของเครื่อง</div><table><colgroup>${cols1.map(w => `<col style="width:${w}">`).join('')}</colgroup>
+      <thead><tr><th>หัวข้อการตรวจ</th><th>ค่ากำหนดเฉพาะ</th><th>ค่าวัดก่อนทำงาน</th><th>ค่าวัดหลังทำงาน</th><th>หมายเหตุ</th></tr></thead><tbody>${rows1}</tbody></table>`;
+
+    // Section 2: tick boxes; the reason of a task not done goes in its remark
+    const sec2 = f.t ? `<div class="sec">2. หัวข้อตรวจเช็ค/ทำงาน</div><table><colgroup><col><col style="width:52px"><col style="width:52px"><col style="width:52px"><col style="width:150px"></colgroup>
+      <thead><tr><th style="text-align:left">หัวข้อการตรวจเช็ค/ทำงาน</th><th>เสร็จ</th><th>ไม่เสร็จ</th><th>ไม่ได้ทำ</th><th>หมายเหตุ</th></tr></thead><tbody>${f.t.map(t => {
+        const need = isNeeded(f, t, h);
+        if (!need) return '';
+        const s = rec.t[t.id], why = need && NEEDS_WHY(s) ? (rec.tn || {})[t.id] : '';
+        return `<tr${need ? '' : ' class="off"'}><td>${esc(t.id)} ${esc(t.label)}</td><td class="c"><span class="bx">${s === 'done' ? '✓' : ''}</span></td><td class="c"><span class="bx">${s === 'notdone' ? '✓' : ''}</span></td><td class="c"><span class="bx">${s === 'skip' ? '✓' : ''}</span></td><td class="rm">${pen(why, true)}</td></tr>`;
+      }).join('')}</tbody></table>` : '';
+
+    // Advice entries of section 3, when any were filled
+    const rrAll = (RR[rec.form] || {}).rows || [];
+    const rr = Object.entries(rec.rr || {}).map(([id, x]) => {
+      const row = rrAll[+id.split('.')[2] - 1], bad = x.st === 'ng' || x.r === 'ng';
+      const cl = row && row.cells ? row.cells : null, val = (c) => x[c.k] ? pen(x[c.k] + (c.u ? ' ' + c.u : ''), bad) : '';
+      let mid;
+      if (cl && cl.some(c => c.k === 'b' || c.k === 'a')) mid = '<td class="c">' + cl.filter(c => c.k === 'b').map(val).join('') + '</td><td class="c">' + cl.filter(c => c.k === 'a').map(val).join('') + '</td>';
+      else if (cl) mid = '<td colspan="2" class="c">' + cl.map(c => x[c.k] ? pen(c.l + ' ' + x[c.k] + (c.u ? ' ' + c.u : ''), bad) : '').filter(Boolean).join(' · ') + '</td>';
+      else mid = '<td colspan="2" class="c">' + pen(x.r === 'ng' ? 'ผิดปกติ' : x.r === 'ok' ? 'ปกติ' : '', bad) + '</td>';
+      return '<tr><td>' + esc(id) + ' ' + esc(row ? row.l : '') + '</td>' + mid + '<td class="rm">' + esc(x.n || '') + '</td></tr>';
+    }).join('');
+    const sec3 = rr ? '<div class="sec">3. Review-Revise (แนะนำ)</div><table><colgroup><col style="width:40%"><col style="width:18%"><col style="width:18%"><col style="width:24%"></colgroup><thead><tr><th style="text-align:left">หัวข้อ</th><th>ค่าก่อนทำ</th><th>ค่าหลังทำ</th><th>หมายเหตุ</th></tr></thead><tbody>' + rr + '</tbody></table>' : '';
+
+    // Reference cards: the diagrams the items point to, then the sheet's standard tables
+    const tbl = (head, rows) => `<table><tr>${head.map(x => `<th>${esc(x)}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+    const cards = [...new Set(f.m.map(i => i.fig).filter(k => k && !FIGS[k].inline && k !== 'wpAlign' && !(k === 'hexPlates' && (rec.v['1.17'] || {}).v)))].map(k => [FIGS[k].cap.split(' (')[0], `<img src="${FIGS[k].src}" alt="">`, false, FIGS[k].h]);
+    [...new Set(f.m.map(i => i.ref).filter(Boolean))].forEach(r => cards.push(
+      r === 'iso' ? ['ตารางมาตรฐาน3 (ISO 10816)', '<img src="img/iso_10816.png" alt="">']
+      : r === 'belt' ? ['ตารางมาตรฐาน2', '<img src="img/belt_table.png" alt="">']
+      : r === 'refr' ? ['ตารางมาตรฐาน1 · น้ำยา', tbl(['น้ำยา', 'ดูด °C', 'ดูด psi', 'จ่าย °C', 'จ่าย psi'], Object.entries(REFR).map(([k, x]) => [k, x.sT.join('–'), x.sP.join('–'), x.dT.join('–'), x.dP.join('–')]))]
+      : ['ตารางมาตรฐาน4 · Flow', tbl(['Model', 'l/min', 'm³/hr'], flowRows(f.flow || VP_FLOW))]));
+    if (f.id === 'AHU') cards.push(['สูตรคำนวณปริมาณลม (CMM)', `<svg viewBox="0 0 360 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%" font-family="Sarabun, Tahoma, Arial, sans-serif" fill="#111">
+<text x="180" y="16" text-anchor="middle" font-size="12.5" font-weight="700">CMM (m³/min) = Air Velocity (m/sec) × Area (m²) × 60</text>
+<circle cx="45" cy="64" r="27" fill="none" stroke="#111" stroke-width="1.7"/>
+<line x1="45" y1="64" x2="72" y2="64" stroke="#111" stroke-width="1.7"/><circle cx="45" cy="64" r="1.8"/>
+<text x="58" y="57" text-anchor="middle" font-size="8" font-weight="700">Radius</text>
+<text x="95" y="58" font-size="10.5" font-weight="700" font-style="italic">Area (A) = π × r²</text>
+<text x="95" y="72" font-size="9">Where π = 3.14 and r² = radius × radius</text>
+<rect x="18" y="122" width="72" height="42" fill="none" stroke="#111" stroke-width="1.7"/>
+<rect x="22" y="126" width="64" height="34" fill="none" stroke="#111" stroke-width="0.8"/>
+<text x="98" y="146" font-size="10" font-weight="700">Height (H)</text>
+<text x="54" y="180" text-anchor="middle" font-size="10" font-weight="700">Width (W)</text>
+<text x="130" y="170" font-size="10.5" font-weight="700" font-style="italic">Area (A) = Width (W) × Height (H)</text>
+</svg>`, true]);
+    // Footer: comment, the scope of each round, signatures, motto
+    const note = [h.comment, ...Object.entries(rec.tn || {}).map(([id, n]) => `ข้อ ${id} ${rec.t[id] === 'skip' ? 'ไม่ได้ทำ' : 'ไม่เสร็จ'}: ${n}`)].filter(Boolean).join(' · ');
+    // With a single reference card, the comment box sits beside it as a card of the same size (half and half);
+    // otherwise it runs full width under the cards
+    const besideOne = cards.length === 1;
+    const card = ([t, body, , hgt]) => `<div class="s1card"${hgt ? ` style="height:calc(${hgt}px + var(--ch, 0px))"` : ''}><div class="s1card-t">${esc(t)}</div><div class="s1card-i">${body}</div></div>`;
+    const cmtCard = (hgt) => `<div class="s1card cmt-card"${hgt ? ` style="height:calc(${hgt}px + var(--ch, 0px))"` : ''}><div class="s1card-t">Other Comment / Alarm Code</div><div class="cmt-lines">${RULES}<span class="cmt-txt">${pen(note)}</span></div></div>`;
+    const refs = !cards.length ? '' : besideOne
+      ? `<div class="refs" style="grid-template-columns:1fr 1fr">${card(cards[0])}${cmtCard(cards[0][3])}</div>`
+      : `<div class="refs" style="grid-template-columns:${cards.map(c => c[2] ? '1.7fr' : '1fr').join(' ')}">${cards.map(card).join('')}</div>`;
+    const R = f.rules || {}, rng = (r) => r === 'all' ? 'ทำทุกหัวข้อ' : `ข้อ ${(r || []).join(', ')}`;
+    const notes = f.kind === 'daily' ? '' : `<div class="notes">${f.periods.map(p => `<div>- งานบำรุงรักษา ${S1_PERIOD[p] || p} : ${rng(R[p])}</div>`).join('')}${R.repair ? `<div>- งานซ่อม ${rng(R.repair)}</div>` : ''}${f.id === 'WP' ? '<div>หมายเหตุ : ข้อ 1.8 มอเตอร์ 1 เฟสไม่ต้องทำ</div>' : ''}</div>`;
+    const html = `<div class="s1"><div class="s1-in">
+      <div class="hdr"><div class="logo"><img src="img/murata_logo.png" alt="Murata"></div><div class="title">Inspection sheet of ${esc(S1_TITLE[f.id] || f.name)}</div><div class="code">${esc(f.code)}</div></div>
+      ${meta}${sec1}${sec2}${sec3}${refs}
+      ${besideOne ? '' : `<div class="cmt"><div class="cmt-l">Other Comment / Alarm Code</div><div class="cmt-v">${RULES}<span class="cmt-txt">${pen(note)}</span></div></div>`}
+      <div class="foot">${notes}
+      <div class="sigs">${['Engineer', 'Checker', 'Service By', 'Customer'].map(r => `<div class="sig"><div class="sig-v">${r === 'Service By' ? esc(h.inspector) : ''}</div><div>${r}</div></div>`).join('')}</div>
+      <div class="motto">"มาตรฐานคือหัวใจของการทำงานของเรา"</div></div>
+    </div></div>`;
+    return { html, W, H };
+  }
+  // Once the page is in the document: shrink a long form's content so it stays on one A4 page
+  function fitS1(root) {
+    root.querySelectorAll('.s1').forEach(pg => {
+      const inn = pg.querySelector('.s1-in'); inn.style.cssText = '';
+      // 8 px spare: phones lay Thai text out a little taller than the preview measures
+      const room = pg.clientHeight - 2 * inn.offsetTop - 8;
+      // A short sheet (few items in this round) shares its leftover paper, in this order, each step capped so
+      // nothing looks stretched: taller table rows, bigger reference cards, ruled lines in the comment box;
+      // whatever is still left goes above the footer, so the signatures sit at the bottom of the page
+      const left = () => room - inn.scrollHeight;
+      if (left() > 4) {
+        const rows = inn.querySelectorAll('.sec + table > tbody > tr').length;
+        if (rows) inn.style.setProperty('--rp', `${Math.min(5, left() * 0.45 / (2 * rows)).toFixed(2)}px`);
+        if (inn.querySelector('.s1card')) inn.style.setProperty('--ch', `${Math.max(0, Math.min(90, left() * 0.4)).toFixed(0)}px`);
+        if (inn.querySelector('.cmt-v')) inn.style.setProperty('--cm', `${Math.max(0, Math.min(110, Math.floor(left() * 0.7 / 22) * 22))}px`);
+        // still short (daily logs, 1M rounds): enlarge the whole sheet, up to 25%, laid out narrower so it keeps the page width
+        let z = Math.min(1.25, room / inn.scrollHeight);
+        for (let i = 0; i < 6 && z > 1.01; i++) {
+          inn.style.transform = `scale(${z})`; inn.style.width = `${742 / z}px`;
+          if (inn.scrollHeight * z <= room) break;
+          z = Math.max(1, Math.min(z * 0.995, room / inn.scrollHeight));
+        }
+        if (z <= 1.01) { inn.style.transform = ''; inn.style.width = ''; z = 1; }
+        let rest = (room - inn.scrollHeight * z) / z;   // the footer margin is scaled too
+        // a big gap left even so (a daily log with a few lines): more lines to write on, rather than blank paper
+        if (rest > 60 && inn.querySelector('.cmt-v')) {
+          const more = Math.floor((rest - 20) / 22) * 22;
+          inn.style.setProperty('--cm', `${(parseFloat(inn.style.getPropertyValue('--cm')) || 0) + more}px`);
+          rest = (room - inn.scrollHeight * z) / z;
+        }
+        if (rest > 0) inn.style.setProperty('--ft', `${Math.floor(rest)}px`);
+        return;
+      }
+      // Shrinking widens the content box, and full-width pictures grow taller with it: measure again until it fits
+      let k = 1;
+      for (let i = 0; i < 6 && inn.scrollHeight * k > room; i++) {
+        k = Math.min(k * 0.995, room / inn.scrollHeight);
+        inn.style.transform = `scale(${k})`; inn.style.width = `${742 / k}px`;
+      }
+    });
   }
 
-  function buildSheet(rec) {
-    const L = PL[rec.form], f = formById(rec.form), h = rec.h;
-    const W = L.page[0] * 96 / 72, H = L.page[1] * 96 / 72;
-    const parts = [];
-    // o.fit = width of the printed blank (page fraction): a value too long for it stays on one line, first smaller
-    // (down to 7px, still readable on paper), then condensed sideways for the rest
-    const put = (x, y, text, o = {}) => {
-      if (x == null || y == null || text == null || String(text).trim() === '') return;
-      let fs = o.fs || 0, sx = 1;
-      if (o.fit) {
-        const w = textW(String(text), 10.5), room = o.fit * W;
-        if (w > room) { fs = Math.max(7, 10.5 * room / w); sx = Math.min(1, room / (w * fs / 10.5)); }
-      }
-      const squeeze = sx < 1 ? `;transform:translate(${o.c ? '-50%' : '0'},-96%) scaleX(${sx.toFixed(3)});transform-origin:${o.c ? '50%' : '0'} 0` : '';
-      parts.push(`<span class="pv${o.c ? ' c' : ''}${o.box ? ' mid' : ''}${o.ng ? ' ng' : ''}${o.s ? ' s' : ''}" style="left:${pct(x)};top:${pct(y)}${fs ? `;font-size:${fs.toFixed(1)}px` : ''}${squeeze}">${esc(text)}</span>`);
-    };
-    const field = (p, text) => { if (p) put(p[0], p[1], text, { fit: p[2] }); };
-    const ring = (m) => { if (m) parts.push(`<span class="pring" style="left:${pct(m[0])};top:${pct(m[1])};width:${((m[2] + 0.02) * W).toFixed(1)}px"></span>`); };
-    const tick = (x, y) => put(x, y, '✓', { c: 1 });
-    const hd = L.hdr, ft = L.foot;
-
-    // Header
-    // Split values into the printed segments: ___ - ___ - ___ - ___ , __/__/__ , __ : __
-    const segs = (u, parts, fr) => { if (!u) return; parts.forEach((p, k) => put(u[0] + u[2] * fr[k], u[1], p, { c: 1 })); };
-    const mParts = h.machine.split('-');
-    if (hd.machine) { if (mParts.length >= 2 && mParts.length <= 4) segs(hd.machine, mParts, [0.12, 0.38, 0.63, 0.88]); else put(hd.machine[0] + 0.004, hd.machine[1], h.machine); }
-    field(hd.factory, h.factory);
-    if (hd.date) segs(hd.date, h.date.split('-').reverse(), [0.15, 0.48, 0.8]);
-    if (hd.time) segs(hd.time, h.time.split(':'), [0.25, 0.78]);
-    field(hd.panel, h.panel);
-    (f.models || []).forEach(m => field(hd.models[m.toLowerCase()] || hd.models[''], h.models[m]));
-    const mark = (k, i = 0) => ring((hd.marks[k] || [])[i]);
-    // Machine type: a tick in the box beside its label (boxes found by tools/find_boxes.js); a ring if no box was found
-    if (f.subtypes && f.subtypes.length > 1) {
-      const bx = ((hd.boxes || {})[h.subtype] || [])[0];
-      if (bx) put(bx[0], bx[1], '✓', { c: 1, box: 1 }); else mark(h.subtype);
-    }
-    mark(h.job);
-    if (h.job === 'pm') mark(h.period);
-    // Pump / valve state (WP): a tick in the box before เปิด or ปิด on its own row; a ring if no box was found
-    if (f.pumpState) [h.pumpState, h.valveState].forEach((s, i) => {
-      const bx = ((hd.boxes || {})[s] || [])[i];
-      if (bx) put(bx[0], bx[1], '✓', { c: 1, box: 1 }); else mark(s, i);
-    });
-
-    // Section 1: measured values, one sheet row per item (in sheet order)
-    // An item outside the chosen job / PM round prints "-" in every box it has, so the sheet shows it was not due
-    const dash = (it) => Object.fromEntries([...cellsOf(it, h).filter(c => c.k !== 'rla').map(c => c.k), 'b_avg', 'a_avg', 'avgTime', 'avgDosing'].map(k => [k, '-']));
-    const sheetItems = f.m.filter(i => i.type !== 'vunb');
-    sheetItems.forEach((it, idx) => {
-      const vals = isNeeded(f, it, h) ? rec.v[it.id] : dash(it); const y = L.rows1[idx];
-      if (!vals || y == null) return;
-      const ng = (k) => judge(it, k, vals[k], vals, h) === 'ng';
-      const P = (x, yy, k, c = 1) => put(x, yy, vals[k], { c, ng: ng(k), s: !c });
-      const inl = L.inl.filter(a => Math.abs(a.y - y) < 0.005);
-      const below = (re, n) => L.inl.filter(a => re.test(a.s) && a.y >= y - 0.004).sort((a, b) => a.y - b.y).slice(0, n);
-      switch (it.type) {
-        case 'value':
-          if (it.ba !== 'after') P(L.cols.b, y, 'b');
-          P(L.cols.a, y, 'a'); break;
-        case 'v3': case 'i3': {
-          const keys = it.type === 'v3' ? (h.phase === '1' ? ['L-N'] : ['RS', 'ST', 'RT', 'RN']) : (h.phase === '1' ? ['I'] : ['R', 'S', 'T']);
-          if (it.ba === 'both') {
-            // Cells print as "  /  /  ": put the three phases between the slashes when they are known
-            const sl = inl.filter(a => a.s === '/').map(a => a.x).sort((a, b) => a - b);
-            ['b', 'a'].forEach((p, pi) => {
-              const pair = sl.length >= 4 ? sl.slice(pi * 2, pi * 2 + 2) : null;
-              keys.forEach((k, j) => {
-                const x = keys.length === 1 ? L.cols[p] : pair ? [pair[0] - 0.016, (pair[0] + pair[1]) / 2 + 0.001, pair[1] + 0.018][j] : L.cols[p] + (j - 1) * 0.036;
-                put(x, y, vals[`${p}_${k}`], { c: 1, s: 1, ng: ng(`${p}_${k}`) });
-              });
-            });
-          } else if (it.slash && inl.filter(a => a.s === '/').length >= 2 && keys.length > 1) {
-            // One after-work cell printed as "  /  /  ": phases go before, between and after the two slashes
-            const [s1, s2] = inl.filter(a => a.s === '/').map(a => a.x).sort((a, b) => a - b);
-            keys.slice(0, 3).forEach((k, j) => P([s1 - 0.022, (s1 + s2) / 2 + 0.001, s2 + 0.024][j], y, `a_${k}`, 1));
-          } else {
-            const base = inl.find(a => /^(RS|R):$/.test(a.s));
-            keys.forEach((k, j) => {
-              const lab = k === 'L-N' ? 'RS' : k === 'I' ? 'R' : k;
-              const a = inl.find(a => a.s.replace(/\s/g, '') === `${lab}:`);
-              const x = a ? a.e + 0.003 : base ? base.e + 0.003 + j * (it.type === 'v3' ? 0.045 : 0.06) : L.cols.b + j * 0.045;
-              // Labels printed close together (RS:___ST:___): shrink the value so it ends before the next label
-              const next = inl.filter(b => b.x > x).sort((p, q) => p.x - q.x)[0];
-              const room = next ? (next.x - x - 0.002) * W : Infinity, len = String(vals[`a_${k}`] || '').length;
-              const fs = len ? Math.max(6.5, Math.min(8.5, room / (len * 0.6))) : 8.5;
-              put(x, y, vals[`a_${k}`], { ng: ng(`a_${k}`), s: 1, fs: fs < 8.5 ? fs : 0 });
-            });
-          }
-          break;
-        }
-        case 'ins': {
-          const ug = below(/^U-G$/, 1)[0]; const y0 = ug ? ug.y : y;
-          ['U-G', 'V-G', 'W-G'].forEach((k, j) => {
-            const an = L.inl.find(a => a.s === k && Math.abs(a.y - (y0 + j * L.rowH)) < 0.006);
-            P((L.cols.b + L.cols.a) / 2, an ? an.y : y0 + j * L.rowH, k);
-          });
-          break;
-        }
-        case 'belt': {
-          const ans = below(/^[1-3] ?:$/, it.n);
-          for (let j = 0; j < it.n; j++) { const an = ans[j]; P(an ? an.e + 0.012 : L.cols.b, an ? an.y : y + j * L.rowH, `l${j + 1}`, 0); }
-          break;
-        }
-        case 'refr': {
-          const lo = inl.find(a => /^Low/.test(a.s)), hi = inl.find(a => /High :$/.test(a.s));
-          P(lo ? lo.e + 0.004 : L.cols.b, y, 'lo', 0); P(hi ? hi.e + 0.004 : L.cols.a, y, 'hi', 0); break;
-        }
-        case 'pair': {
-          const ans = inl.filter(a => /^(Comp\.|CDU)\d ?:$/.test(a.s)).sort((a, b) => a.x - b.x);
-          it.labels.forEach((l, j) => P(ans[j] ? ans[j].e + 0.006 : L.cols.b + j * 0.1, y, `p${j + 1}`, 0)); break;
-        }
-        case 'vibTemp': {
-          const t = L.tbl.vt; if (!t) break;
-          for (let k = 1; k <= it.n; k++) { P(t.v, t.y0 + k * t.rh, `v${k}`); P(t.t, t.y0 + k * t.rh, `t${k}`); }
-          break;
-        }
-        case 'grid': {
-          const g = L.tbl.grid; if (!g) break;
-          const off = MANUAL['grid' + rec.form] || MANUAL.gridAHU;
-          ['b', 'a'].forEach(p => { for (let r = 1; r <= 4; r++) for (let c = 1; c <= 4; c++) P(g[p][0] + off[p].dx[c - 1], g[p][1] + off[p].dy[r - 1], `${p}${r}${c}`); });
-          P(L.cols.b, y, 'b_avg'); P(L.cols.a, y, 'a_avg'); break;
-        }
-        case 'dosing': {
-          const d = L.tbl.dose; if (!d) break;
-          [10, 20, 30, 40, 50].forEach(ml => { const yy = d.rows[ml]; if (yy == null) return; P(d.t1, yy, `t1_${ml}`); P(d.t2, yy, `t2_${ml}`); });
-          P(...d.avgTime, 'avgTime'); P(...d.avgDosing, 'avgDosing'); break;
-        }
-        case 'choice':
-          if (L.tbl.choice && L.tbl.choice[vals.v]) tick(...L.tbl.choice[vals.v]); break;
-        case 'align': {
-          const m = MANUAL[rec.form] && MANUAL[rec.form].align; if (!m) break;
-          [0, 1, 2, 3].forEach(j => { P(...m.g[j], `g${j}`); P(...m.o[j], `o${j}`); }); break;
-        }
-      }
-    });
-    const vu = f.m.find(i => i.type === 'vunb'), vm = MANUAL[rec.form] && MANUAL[rec.form].vunb;
-    if (vu && vm && rec.v[vu.id]) ['vavg', 'vunb', 'tinc'].forEach((k, j) => put(vm.x, vm.y[j], rec.v[vu.id][k], { c: 1 }));
-
-    // Section 2: tick the chosen column; a task outside the round gets "-" under ไม่ได้ทำ
-    (f.t || []).forEach((t, i) => {
-      if (L.rows2[i] == null) return;
-      if (!isNeeded(f, t, h)) { put(L.tcols.skip, L.rows2[i], '-', { c: 1 }); return; }
-      const s = rec.t[t.id]; if (s) tick(L.tcols[s], L.rows2[i]);
-    });
-
-    // Footer
-    const note = [h.comment, ...Object.entries(rec.tn || {}).map(([id, n]) => `ข้อ ${id} ไม่เสร็จ: ${n}`)].filter(Boolean).join(' · ');
-    if (note) parts.push(`<div class="pcomment" style="left:${pct(ft.commentX)};top:${pct(ft.comment[1] - 0.016)};width:${pct(0.95 - ft.commentX)};text-indent:${((ft.comment[0] - ft.commentX) * W).toFixed(1)}px;line-height:${(0.0172 * H).toFixed(1)}px">${esc(note)}</div>`);
-    // Layout y is the box's bottom edge: lift the name so it sits inside the signature box, not on its line
-    put(ft.service[0], ft.service[1] - 0.011, h.inspector, { c: 1, fs: Math.max(7, Math.min(10.5, 0.068 * W / (h.inspector.length * 0.6))) });
-    // Ref no boxes: each value is centred in its box and shrinks to the inner width less a small margin
-    // (refW = [width, centre x], found by tools/find_boxes.js; sheets without boxes keep the caption's centre)
-    const ref = (k, text) => {
-      const b = ft.refW && ft.refW[k];
-      if (ft[k]) put(b ? b[1] : ft[k][0], ft[k][1], text, { c: 1, fit: b ? b[0] - 0.01 : undefined });
-    };
-    ref('mc', h.machine);
-    ref('period', h.job === 'pm' ? h.period : h.job === 'repair' ? 'ซ่อม' : 'Insp.');
-    ref('date', h.date.split('-').reverse().join('/'));
-    return { html: `<div class="psheet" style="width:${W.toFixed(1)}px;height:${H.toFixed(1)}px"><img class="pbg" src="${L.bg}" alt="">${parts.join('')}</div>`, W, H, L };
-  }
-
+  // Printing: the style 1 sheet on A4, for any form
   function showPrint(id) {
     form = null; S = null;
-    const fromPM = id === '__view';   // a result sent to the PM plan, opened from the plan page
-    const rec = fromPM ? store.get('insp.view', null) : store.get(HIST, []).find(r => r.id === id);
-    setNav('พิมพ์ใบตรวจ', rec ? rec.h.machine : '', !fromPM, 'ผลตรวจ'); setFormChrome(false);
-    if (!rec || !canPrint(rec.form)) {
-      $('app').innerHTML = `<section class="group"><div class="card"><p class="empty">${rec ? 'ฟอร์มรายวันยังพิมพ์ลงใบเดิมไม่ได้ ใช้ CSV ไปก่อน' : fromPM ? 'ไม่พบใบตรวจ เปิดใหม่จากหน้าแผน PM' : 'ไม่พบผลตรวจนี้ในมือถือเครื่องนี้'}</p></div></section>`;
+    const rec = id === '__view' ? store.get('insp.view', null) : store.get(HIST, []).find(r => r.id === id);   // __view: a result opened from the PM plan page
+    setNav('พิมพ์ใบตรวจ', rec ? rec.h.machine : '', true, 'ผลตรวจ'); setFormChrome(false);
+    if (!rec || !formById(rec.form)) {
+      $('app').innerHTML = `<section class="group"><div class="card"><p class="empty">ไม่พบผลตรวจนี้ในมือถือเครื่องนี้</p></div></section>`;
       return;
     }
-    const s = buildSheet(rec);
-    $('printHost').innerHTML = `<style>@page { size: ${(s.L.page[0] / 72).toFixed(2)}in ${(s.L.page[1] / 72).toFixed(2)}in; margin: 0; }</style>${s.html}`;
-    $('app').innerHTML = `<div class="large"><h1>ใบตรวจ ${esc(rec.form)}</h1><p>ข้อมูลที่กรอกลงบนฟอร์มเดิม ตัวเลขสีแดง = นอกเกณฑ์ ช่องลายเซ็นเว้นไว้ให้เซ็นจริง</p></div>
+    const s = buildStyle1(rec);
+    $('printHost').innerHTML = `<style>@page { size: A4; margin: 0; }</style>${s.html}`;
+    $('app').innerHTML = `<div class="large"><h1>ใบตรวจ ${esc(rec.form)}</h1><p>ใบตรวจ A4 จากข้อมูลที่กรอก ตัวเลขสีแดง = นอกเกณฑ์ ช่องลายเซ็นเว้นไว้ให้เซ็นจริง</p></div>
       <section class="group"><button type="button" class="btn-block primary" id="doPrint">พิมพ์ / บันทึกเป็น PDF</button>
       <p class="group-f">ในหน้าพิมพ์ เลือกเครื่องพิมพ์ หรือเลือก "บันทึกเป็น PDF" (Android) · กดแชร์แล้วเลือกพิมพ์ จากนั้นถ่างนิ้วที่ตัวอย่างเพื่อได้ PDF (iPhone)</p></section>
       <div class="pprev" id="pprev"><div class="pprev-in" id="pprevIn">${s.html}</div></div>`;
-    // Without the form picture the printout is bare numbers: say so plainly instead of showing a broken image
-    const bgFailed = () => {
-      if ($('bgErr')) return;
-      $('pprev').insertAdjacentHTML('beforebegin', `<div class="banner" id="bgErr" role="alert"><b>ภาพใบฟอร์มยังไม่อยู่ในเครื่องนี้</b>ต่ออินเทอร์เน็ตแล้วเปิดแอปใหม่ 1 ครั้ง ระบบจะเก็บไว้ให้ใช้ตอนออฟไลน์ ตอนนี้พิมพ์ได้แค่ตัวเลข</div>`);
+    // the print copy is hidden until printing, so it can't measure itself: it takes the preview's fit.
+    // Pictures and fonts that load late make the sheet taller, so measure again once they are in.
+    const imgsIn = (el) => Promise.all([...el.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+    const refit = () => {
+      if (!$('pprevIn')) return;
+      fitS1($('pprevIn'));
+      const a = $('pprevIn').querySelector('.s1-in'), b = $('printHost').querySelector('.s1-in');
+      b.style.cssText = a.style.cssText;   // the fit: scale, width and the fill-the-page spacing
     };
-    [$('pprevIn'), $('printHost')].forEach(h => { const im = h.querySelector('img.pbg'); if (im) { im.addEventListener('error', bgFailed, { once: true }); if (im.complete && !im.naturalWidth) bgFailed(); } });
+    refit();
+    Promise.all([imgsIn($('pprevIn')), document.fonts ? document.fonts.ready : 0]).then(refit);
     const fit = () => { const box = $('pprev'); if (!box) return; const k = box.clientWidth / s.W; $('pprevIn').style.transform = `scale(${k})`; box.style.height = `${(s.H * k).toFixed(0)}px`; };
     fit(); window.addEventListener('resize', fit, { once: true });
+    // print once the reference pictures have loaded, or they come out blank
     $('doPrint').addEventListener('click', () => {
-      const img = $('printHost').querySelector('img');
-      const go = () => window.print();
-      if (img && !img.complete) img.addEventListener('load', go, { once: true }); else go();
+      Promise.all([imgsIn($('printHost')), imgsIn($('pprevIn'))]).then(() => { refit(); window.print(); });
     });
     window.scrollTo(0, 0);
-  }
-
-  // A result as a PDF file (opened by the PM plan in a new tab): the sheet drawn as in showPrint, photographed and put on one PDF page.
-  // The two libraries load only here, from cdnjs.
-  // integrity = the exact file checked once: a changed file on the CDN is refused (this page shares its site with the sign-in)
-  const loadJs = (src, sri) => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.integrity = sri; s.crossOrigin = 'anonymous'; s.onload = ok; s.onerror = () => no(new Error('โหลดตัวสร้าง PDF ไม่ได้ ตรวจอินเทอร์เน็ต')); document.head.appendChild(s); });
-  async function showPdf(id) {
-    form = null; S = null;
-    const fromPM = id === '__view';
-    const rec = fromPM ? store.get('insp.view', null) : store.get(HIST, []).find(r => r.id === id);
-    setNav('', '', false); setFormChrome(false);
-    const say = (t) => { $('app').innerHTML = `<section class="group"><div class="card"><p class="empty">${esc(t)}</p></div></section>`; };
-    if (!rec || !canPrint(rec.form)) { say(rec ? 'ฟอร์มรายวันยังพิมพ์ลงใบเดิมไม่ได้' : 'ไม่พบใบตรวจ เปิดใหม่จากหน้าแผน PM'); return; }
-    const s = buildSheet(rec), name = `Inspection ${rec.form} ${rec.h.machine} ${rec.h.date}`;
-    document.title = name;
-    $('app').innerHTML = `<p class="empty" style="text-align:center">กำลังสร้าง PDF…</p><div id="pdfSrc" style="position:absolute;left:0;top:0;z-index:-1">${s.html}</div>`;
-    try {
-      const img = $('pdfSrc').querySelector('img.pbg');
-      if (img && !img.complete) await new Promise((ok, no) => { img.onload = ok; img.onerror = () => no(new Error('โหลดภาพใบฟอร์มไม่ได้')); });
-      await loadJs('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==');
-      await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==');
-      const canvas = await window.html2canvas($('pdfSrc').firstElementChild, { scale: 2, backgroundColor: '#FFFFFF' });
-      const [pw, ph] = s.L.page;   // points
-      const pdf = new window.jspdf.jsPDF({ unit: 'pt', format: [pw, ph], orientation: pw > ph ? 'landscape' : 'portrait' });
-      pdf.setProperties({ title: name });
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, ph);
-      const url = URL.createObjectURL(pdf.output('blob'));
-      // the PDF fills the tab (the browser's own viewer: zoom, download, print)
-      document.body.innerHTML = `<iframe src="${url}" title="${esc(name)}" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe>`;
-    } catch (e) { say('สร้าง PDF ไม่สำเร็จ: ' + (e.message || e)); }
   }
 
   // ---------- History + CSV ----------
@@ -1705,13 +1831,13 @@
     setNav('ผลตรวจที่บันทึก', '', true); setFormChrome(false);
     const all = store.get(HIST, []);
     $('app').innerHTML = `<div class="large"><h1>ผลตรวจ</h1><p>${all.length} รายการ · เก็บในมือถือเครื่องนี้เท่านั้น ดาวน์โหลด CSV เก็บไว้เป็นระยะ</p></div>
+      ${PMLINK && all.some(r => r.pm === PMLINK.id && !r.sent) ? `<section class="group"><div class="pmsend warn" id="pmSend">ผลของงาน PM ${esc(PMLINK.id)} ยังไม่ได้ส่งเข้าแผน PM<button type="button" class="btn-block secondary" data-resend="${esc(all.find(r => r.pm === PMLINK.id && !r.sent).id)}">ส่งตอนนี้</button></div></section>` : ''}
       <section class="group"><div class="card">${all.length ? all.slice(0, 50).map(r => {
         const bad = r.result.ng.length + r.result.notDone.length;
-        const inner = `${machIcon(r.form)}<span class="main"><b>${esc(r.h.machine)} · ${esc(r.h.factory)}</b><small class="num">${esc(r.h.date)} ${esc(r.h.time || '')} · ${esc(jobLabel(r.h))} · ${esc(r.h.inspector)}${r.pm ? ` · งาน PM ${esc(r.pm)}` : ''}</small></span>${r.pm && !r.sent ? '<span class="res wait">ยังไม่ส่ง</span>' : ''}<span class="res ${bad ? 'ng' : 'ok'}">${bad ? `✕ ${bad}` : '✓ ผ่าน'}</span>`;
+        const inner = `${machIcon(r.form)}<span class="main"><b>${esc(r.h.machine)} · ${esc(r.h.factory)}</b><small class="num">${esc(r.h.date)} ${esc(r.h.time || '')} · ${esc(jobLabel(r.h))} · ${esc(r.h.inspector)}</small></span><span class="res ${bad ? 'ng' : 'ok'}">${bad ? `✕ ${bad}` : '✓ ผ่าน'}</span>`;
         const open = `<button type="button" class="row nrow" data-rec="${esc(r.id)}" aria-label="ดูผลตรวจ ${esc(r.h.machine)} ${esc(r.h.date)}">${inner}${CHEV}</button>`;
         return `<div class="hrow">${open}<button type="button" class="del" data-del="${esc(r.id)}" aria-label="ลบผลตรวจ ${esc(r.h.machine)} ${esc(r.h.date)}">${TRASH}</button></div>`;
       }).join('') : '<p class="empty">ยังไม่มีผลตรวจ เริ่มจากเลือกเครื่องที่หน้าแรก</p>'}</div></section>
-      ${PMLINK && all.some(r => r.pm === PMLINK.id && !r.sent) ? `<section class="group"><div class="pmsend warn" id="pmSend">ผลของงาน PM ${esc(PMLINK.id)} ยังไม่ได้ส่งเข้าแผน PM<button type="button" class="btn-block secondary" data-resend="${esc(all.find(r => r.pm === PMLINK.id && !r.sent).id)}">ส่งตอนนี้</button></div></section>` : ''}
       <section class="group"><button type="button" class="btn-block primary" id="csv"${all.length ? '' : ' disabled style="opacity:.4"'}>ดาวน์โหลด CSV</button>
       <p class="group-f">1 แถวต่อ 1 ค่าที่วัดหรือ 1 หัวข้องาน เปิดใน Excel ได้</p></section>`;
     $('csv').addEventListener('click', exportCsv);
@@ -1734,42 +1860,27 @@
       } });
   }
 
-  // one result → one row per value measured and per task (sections 1–2): {no, topic, field, value, result, note}
-  const ST = { ok: 'ผ่าน', watch: 'เฝ้าระวัง', ng: 'นอกเกณฑ์', done: 'เสร็จ', notdone: 'ไม่เสร็จ', skip: 'ไม่ได้ทำ' };
-  function recRows(r) {
-    const f = formById(r.form), out = [];
-    Object.entries(r.v).forEach(([id, vals]) => {
-      const item = f && f.m.find(i => i.id === id);
-      const labels = item ? Object.fromEntries(rowsOf(item, r.h).flatMap(row => row.c.map(c => [c.k, `${row.t ? row.t + ' ' : ''}${c.l}`]))) : {};
-      Object.entries(vals).forEach(([k, v]) => {
-        if (String(v).trim() === '') return;
-        const st = item ? (k === 'v' && item.type === 'ok' ? (v === 'ผิดปกติ' ? 'ng' : 'ok') : judge(item, k, v, vals, r.h)) : '';
-        out.push({ no: id, topic: item ? item.label : '', field: labels[k] || k, value: v, result: ST[st] || '', note: '' });
-      });
-    });
-    Object.entries(r.t).forEach(([id, s]) => {
-      const task = f && f.t && f.t.find(t => t.id === id);
-      out.push({ no: id, topic: task ? task.label : '', field: 'สถานะ', value: ST[s] || s, result: s === 'notdone' ? 'ไม่เสร็จ' : '', note: r.tn[id] || '' });
-    });
-    return out;
-  }
-  // section 3 (Review-Revise, advice) entries for the PM plan: field 'Review-Revise' · the verdict is worded ผิดปกติ / เฝ้าระวัง / ปกติ
-  // (not นอกเกณฑ์) so the plan does not count it as abnormal, as this page does not count it in the result
-  function rrSendRows(r) {
-    const rows = ((RR[r.form] || {}).rows || []), WORD = { ng: 'ผิดปกติ', watch: 'เฝ้าระวัง', ok: 'ปกติ' };
-    return Object.entries(r.rr || {}).map(([id, v]) => {
-      const row = rows[+id.split('.')[2] - 1], st = v.st || v.r || '';
-      const typed = row && row.cells ? row.cells.map(c => v[c.k] ? `${c.l} ${v[c.k]}${c.u ? ' ' + c.u : ''}` : '').filter(Boolean).join(' · ') : '';
-      return { no: id, topic: row ? row.l : '', field: 'Review-Revise', value: [typed, v.val].filter(Boolean).join(' → ') || WORD[st] || '', result: WORD[st] || '', note: v.n || '' };
-    });
-  }
   function exportCsv() {
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const head = ['รหัสตรวจ', 'วันที่', 'เวลา', 'ฟอร์ม', 'เลขฟอร์ม', 'เลขเครื่อง', 'โรงงาน', 'ชนิด', 'ประเภทงาน', 'รอบ', 'ผู้ตรวจ', 'ข้อ', 'หัวข้อ', 'ช่อง', 'ค่า', 'ผล', 'หมายเหตุ', 'Comment', 'บันทึกเมื่อ'];
     const rows = [];
+    const ST = { ok: 'ผ่าน', watch: 'เฝ้าระวัง', ng: 'นอกเกณฑ์', done: 'เสร็จ', notdone: 'ไม่เสร็จ', skip: 'ไม่ได้ทำ' };
     store.get(HIST, []).forEach(r => {
+      const f = formById(r.form);
       const base = [r.id, r.h.date, r.h.time, r.form, r.code, r.h.machine, r.h.factory, r.h.subtype, r.h.job, r.h.period, r.h.inspector];
-      recRows(r).forEach(x => rows.push([...base, x.no, x.topic, x.field, x.value, x.result, x.note, r.h.comment, r.savedAt]));
+      Object.entries(r.v).forEach(([id, vals]) => {
+        const item = f && f.m.find(i => i.id === id);
+        const labels = item ? Object.fromEntries(rowsOf(item, r.h).flatMap(row => row.c.map(c => [c.k, `${row.t ? row.t + ' ' : ''}${c.l}`]))) : {};
+        Object.entries(vals).forEach(([k, v]) => {
+          if (String(v).trim() === '') return;
+          const st = item ? (k === 'v' && item.type === 'ok' ? (v === 'ผิดปกติ' ? 'ng' : 'ok') : judge(item, k, v, vals, r.h)) : '';
+          rows.push([...base, id, item ? item.label : '', labels[k] || k, v, ST[st] || '', '', r.h.comment, r.savedAt]);
+        });
+      });
+      Object.entries(r.t).forEach(([id, s]) => {
+        const task = f && f.t && f.t.find(t => t.id === id);
+        rows.push([...base, id, task ? task.label : '', 'สถานะ', ST[s] || s, '', r.tn[id] || '', r.h.comment, r.savedAt]);
+      });
       Object.entries(r.rr || {}).forEach(([id, v]) => {
         const row = ((RR[r.form] || {}).rows || [])[+id.split('.')[2] - 1];
         const typed = row && row.cells ? row.cells.map(c => `${c.l} ${v[c.k] || '–'}`).join(' / ') : '';
@@ -1801,7 +1912,7 @@
     else if (hash.startsWith('#/e/')) { openEdit(decodeURIComponent(hash.slice(4)), freshEdit); freshEdit = false; }
     else if (hash === '#/history') showHistory();
     else if (hash.startsWith('#/print/')) showPrint(decodeURIComponent(hash.slice(8)));
-    else if (hash.startsWith('#/pdf/')) showPdf(decodeURIComponent(hash.slice(6)));
+    else if (hash.startsWith('#/pdf/')) showPrint(decodeURIComponent(hash.slice(6)));   // the PM plan page opens #/pdf/__view
     else if (hash.startsWith('#/rec/')) showRecord(decodeURIComponent(hash.slice(6)));
     else showHome();
   }
@@ -1836,6 +1947,7 @@
   });
   $('tally').addEventListener('click', (e) => { const b = e.target.closest('[data-jump]'); if (b) jump(b.dataset.jump); });
   $('save').addEventListener('click', () => save(false));
+  // A saved result and its printout step back to the results list, an edit back to its result; everything else goes home
   // บันทึกร่าง: typing is kept anyway; this marks the time and says so (before-work values now, after-work values later)
   $('saveDraft').addEventListener('click', () => {
     if (!form || !S) return;
@@ -1861,13 +1973,41 @@
         .catch((e) => say(`เก็บในระบบไม่สำเร็จ (${e instanceof TypeError ? 'เชื่อมต่อไม่ได้' : e.message}) · ค่าที่กรอกยังอยู่ในเครื่องนี้ กดบันทึกร่างอีกครั้งเมื่อมีเน็ต`));
     }
   });
-  // A saved result and its printout step back to the results list, an edit back to its result; everything else goes home
   $('back').addEventListener('click', () => {
     const h = location.hash;
     location.hash = h.startsWith('#/e/') ? `#/rec/${h.slice(4)}` : /^#\/(rec|print)\//.test(h) ? '#/history' : '#/';
   });
   window.addEventListener('hashchange', route);
   route();
+
+  // A newer version on the server: when the app opens or comes back to the screen (a home-screen app on iPhone
+  // resumes without reloading), read the server's index.html and compare its APP_VER with this one's.
+  // No message: the app reloads itself quietly, but only on the home page or the results list, never in the
+  // middle of a form or the print page (it waits until the inspector goes back to one of those).
+  let updReady = false, updBusy = false;
+  const quietPage = () => { const h = location.hash || '#/'; return h === '#/' || h === '#' || h === '#/history'; };
+  function applyUpdate() {
+    if (!updReady || updBusy || !quietPage()) return;
+    updBusy = true;
+    // the new service worker takes over first, so the reload gets the new files, not the stored ones
+    const go = () => location.reload();
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+      navigator.serviceWorker.getRegistration().then(r => r ? r.update().catch(() => {}) : 0).then(() => setTimeout(go, 600), go);
+    } else go();
+  }
+  function checkUpdate() {
+    if (updReady) return applyUpdate();
+    if (APP_VER === 'dev' || !navigator.onLine) return;
+    fetch(`index.html?v=${Date.now()}`, { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+      const m = t.match(/const APP_VER = '([^']+)'/);
+      if (!m || m[1] === APP_VER || m[1] === 'dev') return;
+      updReady = true; applyUpdate();
+    }).catch(() => {});
+  }
+  checkUpdate();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
+  window.addEventListener('online', checkUpdate);
+  window.addEventListener('hashchange', applyUpdate);
 
   // Keep the app on the phone for use without a network. Browsers allow this only over HTTPS (or localhost).
   if ('serviceWorker' in navigator && window.isSecureContext) {

@@ -1482,7 +1482,7 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmme-r{display:flex;justify-content:space-between;gap:8px;width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 14px;margin-bottom:8px;font:inherit;font-size:14px;color:var(--muted);text-align:left;cursor:pointer}.pmme-r b{color:var(--ink);font-weight:600}
 .pmme-all{display:block;width:100%;margin:18px 0 6px;min-height:44px;border:1px dashed var(--line);border-radius:12px;background:none;font:inherit;color:var(--navy);font-weight:600;cursor:pointer}
 /* phones: a job shows its details and ทำ Inspection only (no files, scheduling, manual submit when there is a form, plan edit) */
-@media (max-width:700px){#pmDlgBody .pm-files,#pmDlgBody .pm-edit,#pmDlgBody .pm-done.pm-hasform{display:none}}
+@media (max-width:700px){#pmDlgBody .pm-edit{display:none}}   /* phones: attach files / photos and see them too; only the plan edit stays on computers */
 .pminsp .btn{text-decoration:none}
 .pminsp{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.pminsp p{margin:0;color:var(--muted);font-size:13.5px;flex:1 1 220px}
 @media (max-width:700px){

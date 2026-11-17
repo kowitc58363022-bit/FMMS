@@ -1469,6 +1469,10 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmwl{display:grid;gap:8px;min-height:160px;touch-action:pan-y}
 .pmwc{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid #8A97B0;border-radius:12px;background:#fff;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
 .pmwc>span:first-child{flex:1;min-width:0}.pmwc b{display:block;font-size:15px}.pmwc small{display:block;font-size:12.5px;color:var(--muted)}
+.pmwnone{margin-top:20px;color:var(--muted)}
+.pmwl2{display:grid;gap:8px}.pmwl2 .pmwc{cursor:default}
+.pmwo{flex:1;min-width:0;border:0;background:none;padding:0;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.pmwq{flex:none;min-height:40px;padding:0 14px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}.pmwq:disabled{opacity:.6}
 .pmwc.late,.pmwc.todo{border-left-color:#E31B23}.pmwc.review{border-left-color:#9B51C8}.pmwc.done{border-left-color:#2EAA62}
 .pmme-c.late{border-color:#F3B7BA;background:#FFF8F8}
 .pmme-c .top{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:0;font:inherit;text-align:left;color:inherit;cursor:pointer}
@@ -1810,7 +1814,7 @@ body.sheet-open{overflow:hidden}
 <nav class="pnav" id="phoneNav" aria-label="เมนูมือถือ">
   <a href="#request" data-pn="request"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.5 2.5-2.3-.5-.5-2.3z"/></svg>แจ้งซ่อม</a>
   <a href="#track" data-pn="track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/></svg>ติดตามงาน<span class="pnb" hidden></span></a>
-  <a href="#pm" data-pn="pm" data-pmtab="list" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="3"/></svg>[PM] รายการ</a>
+  <a href="#pm" data-pn="pm" data-pmtab="list" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>[PM] ปฏิทิน</a>
   <a href="#pm" data-pn="pm" data-pmtab="cal" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>[PM] ปฏิทิน</a>
   <a href="#pm" data-pn="pm" data-pmtab="dash" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>[PM] Dashboard</a>
 </nav>
@@ -4371,9 +4375,20 @@ function pmWeekHtml() {
     : '<div class="pmempty">ไม่มีงาน PM วันนี้<br><small>ปัดซ้าย–ขวาที่รายการเพื่อดูวันอื่น</small></div>';
   const chips = L.length ? `<div class="pmwchips"><span>ทั้งหมด ${L.length}</span>${n('late') + n('todo') ? `<span class="o">ยังไม่ทำ ${n('late') + n('todo')}</span>` : ''}${n('review') ? `<span class="r">รออนุมัติ ${n('review')}</span>` : ''}${n('done') ? `<span class="d">เสร็จ ${n('done')}</span>` : ''}</div>` : '';
   const wrongYear = sel.getFullYear() !== pmv.year ? `<p class="pmnone">กำลังโหลดแผนปี ${sel.getFullYear()}…</p>` : '';
+  // jobs with no day yet (this month, and late ones): one tap books them on the day picked
+  const none = pmBase(true).filter(x => !x.plan && (x.st === 'late' || (x.st === 'todo' && x.m === sel.getMonth() + 1 && x.y === sel.getFullYear())))
+    .sort((a, b) => (a.st === 'late' ? 0 : 1) - (b.st === 'late' ? 0 : 1) || a.m - b.m || natural(a.o.MachineID, b.o.MachineID));
+  const book = none.length ? `<p class="pmwday pmwnone">ยังไม่นัดวัน · ${none.length} งาน</p><div class="pmwl2">${none.map(x => `<div class="pmwc ${x.st}"><button type="button" class="pmwo" data-pm="${esc(x.id)}"><b>${esc(x.o.MachineID)}</b><small>PM ${esc(x.theme)} · ${x.st === 'late' ? 'ของ ' + esc(MON3[x.m - 1] || '') + ' · เลยกำหนด' : esc(x.o.FactoryID || '')}</small></button><button type="button" class="pmwq" data-pmqs="${esc(x.id)}">นัด ${sel.getDate()} ${MON3[sel.getMonth()]}</button></div>`).join('')}</div>` : '';
   return `<div class="pmwk"><div class="pmwh"><button type="button" data-pmwk="-7" aria-label="สัปดาห์ก่อน">‹</button><b>${MON3[sel.getMonth()]} ${sel.getFullYear()}</b><button type="button" data-pmwk="7" aria-label="สัปดาห์ถัดไป">›</button>${sIso === tIso ? '' : '<button type="button" class="tdy" data-pmwk="0">วันนี้</button>'}</div>
     <div class="pmws">${strip}</div>
-    <p class="pmwday">${PM_DOW[sel.getDay()]} ${esc(dShort(sel))}${sIso === tIso ? ' · วันนี้' : ''}</p>${wrongYear}${chips}<div class="pmwl">${list}</div></div>`;
+    <p class="pmwday">${PM_DOW[sel.getDay()]} ${esc(dShort(sel))}${sIso === tIso ? ' · วันนี้' : ''}</p>${wrongYear}${chips}<div class="pmwl">${list}</div>${book}</div>`;
+}
+// book a job on the day picked in the phone calendar
+async function pmQuickSchedule(id, btn) {
+  const date = pmv.wk || isoDay(new Date());
+  btn.disabled = true; btn.textContent = 'กำลังนัด…';
+  try { await api({ op: 'pmSchedule', id, date }); toast('นัดวันทำ PM ' + dShort(dateOf(date)) + ' แล้ว'); await loadPM(true); }
+  catch (e) { btn.disabled = false; btn.textContent = 'ลองอีกครั้ง'; if (!e.handled) toast(friendly(e)); }
 }
 // swipe: on the week strip = a week, on the day's list = a day (a mostly sideways move of 50 px or more)
 let pmSw = null;
@@ -4416,9 +4431,9 @@ function renderPM() {
   $('pmTabs').innerHTML = `<button type="button" data-pmtab="list" aria-pressed="${pmv.tab === 'list'}">รายการ</button><button type="button" data-pmtab="cal" aria-pressed="${pmv.tab === 'cal'}">ปฏิทิน</button><button type="button" data-pmtab="dash" aria-pressed="${pmv.tab === 'dash'}">Dashboard</button>`;
   if (pmv.loading && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = '<p class="loading">กำลังโหลดแผน PM…</p>'; $('pmSub').textContent = ''; return; }
   if (pmv.err && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = `<div class="pmempty"><b>ยังโหลดแผน PM ไม่ได้</b><br>${esc(pmv.err)}<br><button type="button" class="btn" data-pmretry>ลองอีกครั้ง</button></div>`; return; }
-  // phones: รายการ / ปฏิทิน (week strip)
-  const seg = phoneMQ.matches ? `<div class="pmseg" role="group" aria-label="มุมมอง"><button type="button" data-pmmob="" aria-pressed="${!pmv.mobCal}">รายการ</button><button type="button" data-pmmob="1" aria-pressed="${!!pmv.mobCal}">ปฏิทิน</button></div>` : '';
-  if (phoneMQ.matches && pmv.mobCal) {
+  // phones: the week calendar only (the รายการ / ปฏิทิน switch below is kept off)
+  const seg = '';
+  if (phoneMQ.matches) {
     $('pmView').classList.add('mine');
     $('pmTitle').textContent = 'ปฏิทิน PM';
     $('pmSub').textContent = role() === 'technician' ? 'งาน PM ของคุณตามวันนัด' : 'งาน PM ตามวันนัด';
@@ -4876,6 +4891,7 @@ $('pmView').addEventListener('click', e => {
   const mb = e.target.closest('[data-pmmob]'); if (mb) { pmv.mobCal = !!mb.dataset.pmmob; renderPM(); return; }
   const wd = e.target.closest('[data-pmwd]'); if (wd) { pmv.wk = wd.dataset.pmwd; renderPM(); return; }
   const wk = e.target.closest('[data-pmwk]'); if (wk) { pmWkGo(+wk.dataset.pmwk); return; }
+  const qs = e.target.closest('[data-pmqs]'); if (qs) { pmQuickSchedule(qs.dataset.pmqs, qs); return; }
   const mf = e.target.closest('[data-pmmf]'); if (mf) { pmv.mineF = mf.dataset.pmmf; renderPM(); return; }
   const pa = e.target.closest('[data-pmall]'); if (pa) { pmv.all = !!pa.dataset.pmall; renderPM(); scrollTo(0, 0); return; }
   if (e.target.closest('[data-pmretry]')) { pmv.err = ''; loadPM(true); return; }

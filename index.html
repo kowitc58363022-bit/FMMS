@@ -4347,6 +4347,10 @@ async function loadPM(force) {
   } catch (e) { if (!e.handled) pmv.err = friendly(e); }
   pmv.loading = '';
   if (state.view === 'pm') renderPM();
+  let back = '';
+  try { back = localStorage.getItem('pm_inspect_sent') || ''; } catch {}
+  const [bid, bt] = back.split('|');
+  if (state.view === 'pm' && bid && Date.now() - +bt < 30 * 60000 && pmFind(bid)) { try { localStorage.removeItem('pm_inspect_sent'); } catch {} openPM(bid); }
 }
 // everything but the status / day filters (the KPI cards count these)
 function pmBase(allMonths) {
@@ -4385,7 +4389,7 @@ function pmMineHtml() {
     const fm = pmForm(x);
     return `<div class="pmme-c${isLate ? ' late' : ''}"><button type="button" class="top" data-pm="${esc(x.id)}"><b>${esc(x.o.MachineID)}</b>${pill}<i aria-hidden="true">›</i></button>
       <small>${esc([x.o.MachineType, x.o.FactoryID, 'PM ' + x.theme].filter(Boolean).join(' · '))}${x.stop ? ' · ต้องหยุดเครื่อง' : ''}</small>
-      ${fm && pmDraft(x, fm) ? `<small class="pmme-d">มีร่างที่บันทึกไว้ ${esc(pmDraftTime(pmDraft(x, fm)))}</small>` : ''}
+      ${fm && pmDraft(x, fm) ? `<small class="pmme-d">มีร่างที่บันทึกไว้ ${esc(pmDraftTime(pmDraft(x, fm)))}</small>` : x.st === 'todo' && x.o.InspectionID ? '<small class="pmme-d">บันทึกผลแล้ว · รอกดส่งให้วิศวะ</small>' : ''}
       ${fm ? `<a class="btn solid${isLate ? '' : ' go'}" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ' : 'เริ่มตรวจ'} · ${esc(fm.form.id)} รอบ ${esc(fm.period)}</a>` : `<button type="button" class="btn" data-pm="${esc(x.id)}">เปิดงาน</button>`}</div>`;
   };
   const sec = (title, list, html, cls) => list.length ? `<p class="pmme-h ${cls || ''}"><span>${title}</span><span>${list.length}</span></p>` + html : '';
@@ -4732,12 +4736,12 @@ function openPM(id) {
     // attached files only once the job was done (an AppSheet photo on a job not done yet is not its inspection)
     + (files.length && (x.st === 'done' || x.st === 'review') ? `<div class="pmtbl-w pm-files"><h3>Upload Inspection</h3><div class="pmfiles">${files.join('')}</div></div>` : '')
     // the Inspection / Operation tables only once the job was done and an inspection file is attached
-    + ((x.st === 'done' || x.st === 'review') && (refs('InspectionFile').length || o.InspectionID) ? (DEMO ? pmChecklistHtml(x) : '<div class="pmtbl-w" id="pmCk"><h3>Inspection</h3><p class="pmnone">กำลังโหลดค่าวัด…</p></div>') : '');
+    + (((x.st === 'done' || x.st === 'review') && refs('InspectionFile').length) || o.InspectionID ? (DEMO ? pmChecklistHtml(x) : '<div class="pmtbl-w" id="pmCk"><h3>Inspection</h3><p class="pmnone">กำลังโหลดค่าวัด…</p></div>') : '');
   if (work) {
     pmv.files = [];
     const fm = pmForm(x);
     if (fm) f += `<div class="pmsec"><h3>ทำ Inspection</h3><div class="full pminsp"><a class="btn solid" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ (มีร่าง ' + esc(pmDraftTime(pmDraft(x, fm))) + ')' : 'เปิดฟอร์ม'} ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
-      <p>กรอกค่าวัดที่เครื่องบนมือถือ กดบันทึกแล้วผลส่งเข้าแผนนี้ งานเป็น "รออนุมัติ" เอง ไม่ต้องกดส่งด้านล่าง</p></div></div>`;
+      ${o.InspectionID ? '<p class="pmok">✓ บันทึกผล Inspection แล้ว (ค่าวัดอยู่ด้านบน) · แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"</p>' : '<p>กรอกค่าวัดที่เครื่องบนมือถือ กด "บันทึกผล" แล้วกลับมาหน้านี้ แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"</p>'}</div></div>`;
     // no plan-date / done-date / abnormal fields: the date sent is today, abnormal comes from the Inspection sheet
     f += `<div class="pmsec pm-done${fm ? ' pm-hasform' : ''}"><h3>แนบไฟล์และรูป</h3>
         <div class="full"><label class="abtn"><svg class="ico-inline"><use href="#i-cam"/></svg>แนบไฟล์หรือรูป (PDF หรือรูป ไม่บังคับ สูงสุด ${CONFIG.MAX_PHOTOS} ไฟล์)<input type="file" id="pmFiles" accept="application/pdf,image/jpeg,image/png,image/webp" multiple hidden></label><div class="pmflist" id="pmFileList"></div></div>
@@ -4824,8 +4828,8 @@ window.addEventListener('storage', async e => {
   const id = e.newValue.split('|')[0];
   if (pmv.ck) delete pmv.ck[id];
   await loadPM(true);
-  if ($('pmDlg').open && $('pmDlg').dataset.id === id) openPM(id);
-  toast('ได้รับผล Inspection ของงาน ' + id + ' แล้ว · รออนุมัติ');
+  if (pmFind(id)) openPM(id);
+  toast('ได้รับผล Inspection ของงาน ' + id + ' แล้ว · แนบรูปถ้ามี แล้วกดส่งให้วิศวะ');
 });
 function pmFileList() { $('pmFileList').innerHTML = pmv.files.map((x, i) => `<span>${esc(x.name)} <button type="button" data-pmrm="${i}" aria-label="ลบไฟล์ ${esc(x.name)}">×</button></span>`).join(''); }
 const readDataUrl = file => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => no(new Error('อ่านไฟล์ไม่ได้')); r.readAsDataURL(file); });
@@ -4851,6 +4855,8 @@ async function pmDo(op) {
   const p = { op: { schedule: 'pmSchedule', submit: 'pmSubmit', approve: 'pmApprove', sendBack: 'pmSendBack', edit: 'pmEdit' }[op], id };
   if (op === 'schedule') p.date = v('pdate');
   if (op === 'submit') {
+    const fm = pmForm(x);
+    if (fm && pmDraft(x, fm)) return msg('งานนี้มีร่าง Inspection ที่ยังไม่ได้บันทึกผล · เปิดฟอร์ม Inspection แล้วกด "บันทึกผล" ก่อน แล้วค่อยกดส่ง');
     Object.assign(p, { date: isoDay(new Date()), remark: v('remark').trim(), abnormal: false, files: pmv.files.map(f => f.data) });
   }
   if (op === 'approve' || op === 'sendBack') { p.note = v('note').trim(); if (op === 'sendBack' && !p.note) return msg('กรุณาบอกเหตุผลที่ส่งกลับ'); }

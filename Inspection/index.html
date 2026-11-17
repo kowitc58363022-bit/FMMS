@@ -975,7 +975,7 @@
     const hasVib = f.m.some(i => i.judge === 'iso' || i.type === 'vibTemp');
     const dAt = S.draftAt ? new Date(S.draftAt) : null;
     let html = (dAt && !isNaN(dAt) ? `<div class="draftnote">ร่างที่บันทึกไว้ ${esc(dAt.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))} · กรอกค่าหลังทำงานต่อได้เลย</div>` : '')
-      + (linked(f) ? `<div class="pmnote">งาน PM <b>${esc(PMLINK.id)}</b> · กดบันทึกแล้วผลจะส่งเข้าแผน PM ให้วิศวะอนุมัติ</div>` : '')
+      + (linked(f) ? `<div class="pmnote">งาน PM <b>${esc(PMLINK.id)}</b> · กดบันทึกแล้วผลเข้างานนี้ จากนั้นกลับไปหน้างาน PM แนบรูปถ้ามี แล้วกดส่งให้วิศวะ</div>` : '')
       + `<section class="group" data-sec="ข้อมูล"><h2 class="group-h">การตรวจครั้งนี้</h2><div class="card">
       ${inputRow(f.kind === 'daily' ? `${esc(f.name)} No.` : 'หมายเลขเครื่อง', 'class="row-input code" data-h="machine" spellcheck="false" autocapitalize="characters"', h.machine, 'แตะเพื่อกรอก')}
       <label class="row"><span class="row-label">โรงงาน</span><select class="row-input" data-h="factory"><option value="">เลือก</option>${(h.factory && !FACTORIES.includes(h.factory) ? [h.factory, ...FACTORIES] : FACTORIES).map(x => `<option${x === h.factory ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></label>
@@ -1459,7 +1459,7 @@
       if (data.error) throw new Error(data.error);
       markSent(rec.id);
       try { localStorage.setItem('pm_inspect_sent', rec.pm + '|' + Date.now()); } catch (e) { /* the plan page refreshes on its own later */ }
-      say('ok', `ส่งเข้าแผน PM แล้ว · งาน ${esc(rec.pm)} รอวิศวะอนุมัติ${PMLINK.back ? `<a class="btn-block secondary" href="${esc(PMLINK.back)}">กลับไปหน้าแผน PM</a>` : ''}`);
+      say('ok', `บันทึกผลเข้างาน PM ${esc(rec.pm)} แล้ว · กลับไปหน้างาน PM แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"${PMLINK.back ? `<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้างาน PM</a>` : ''}`);
     } catch (e) {
       say('ng', `ส่งเข้าแผน PM ไม่สำเร็จ: ${esc(e instanceof TypeError ? 'เชื่อมต่อระบบไม่ได้ ตรวจอินเทอร์เน็ต' : e.message)} · ผลยังอยู่ในมือถือ${retry}`);
     }

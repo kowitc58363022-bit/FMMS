@@ -891,6 +891,8 @@ body[data-role="admin"] .userchip .user-avatar{border-color:#16213E}
 body[data-role="engineer"] .userchip .role{background:var(--red)}
 body[data-role="engineer"] .userchip .user-avatar{border-color:var(--red)}
 .userchip .link{border:1px solid var(--field);border-radius:999px;padding:4px 12px;color:var(--navy)}
+.fbbtn{display:inline-flex;align-items:center;gap:5px}.fbbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:700px){.fbbtn span{display:none}.userchip .fbbtn{padding:4px 8px}}
 .hist{margin-top:22px}
 .hist h3{font-family:var(--head-font);font-size:15px;color:var(--navy);margin:0 0 10px}
 .hist ol{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--line)}
@@ -1653,7 +1655,7 @@ body.sheet-open{overflow:hidden}
   <span class="brand"><img src="murata_logo.png" alt="Murata" height="30" width="76"><span class="sep" aria-hidden="true"></span><span class="name" id="title">ติดตามงานซ่อมบำรุง</span></span>
   <span class="sync" id="updated" aria-live="polite">กำลังโหลด…</span>
   <div class="r">
-    <span id="userChip" class="userchip" hidden><img id="userAvatar" class="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="" width="32" height="32" hidden><span id="userInitial" class="user-initial" aria-hidden="true" hidden></span><span class="role" id="userRole"></span><b id="userName"></b><button class="link" id="logoutBtn">ออกจากระบบ</button></span>
+    <span id="userChip" class="userchip" hidden><img id="userAvatar" class="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="" width="32" height="32" hidden><span id="userInitial" class="user-initial" aria-hidden="true" hidden></span><span class="role" id="userRole"></span><b id="userName"></b><button type="button" class="link fbbtn" id="fbBtn" title="ส่งความคิดเห็นเพื่อพัฒนาเว็บ" aria-label="ส่ง Feedback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9h8M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></svg><span>Feedback</span></button><button class="link" id="logoutBtn">ออกจากระบบ</button></span>
     <button type="button" class="link rfbtn" id="refreshBtn" aria-label="โหลดใหม่" title="โหลดใหม่"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
   </div>
 </div>
@@ -1847,6 +1849,17 @@ body.sheet-open{overflow:hidden}
 </dialog>
 
 <dialog id="calDlg" aria-label="รายละเอียดงาน"><div id="calDlgBody"></div></dialog>
+<dialog class="dlg" id="fbDlg" aria-labelledby="fbTitle">
+  <form id="fbForm" novalidate>
+    <div class="dlg-head"><h2 id="fbTitle">ส่ง Feedback</h2><p class="dsub">บอกปัญหาหรือสิ่งที่อยากให้ปรับ ทีมพัฒนาจะเก็บไว้ปรับปรุงเว็บ</p></div>
+    <div class="efields">
+      <label class="full">ประเภท<select id="fbType"><option>ปัญหา / Bug</option><option>อยากให้เพิ่ม</option><option>ใช้ยาก / ไม่เข้าใจ</option><option>อื่น ๆ</option></select></label>
+      <label class="full">ข้อความ<textarea id="fbText" rows="5" maxlength="2000" placeholder="เช่น หน้าแผน PM บนมือถือ กดนัดวันแล้วไม่เปลี่ยน"></textarea></label>
+    </div>
+    <p class="msg" id="fbMsg" role="alert"></p>
+    <div class="acts"><button type="submit" class="btn solid" id="fbOk">ส่ง</button><button type="button" class="btn" data-close>ยกเลิก</button></div>
+  </form>
+</dialog>
 <dialog class="dlg wide" id="actDlg" aria-labelledby="actTitle">
   <form id="actForm">
     <div class="dlg-head"><h2 id="actTitle"></h2><p class="dsub" id="actSub"></p></div>
@@ -5866,6 +5879,7 @@ async function demoApi(p) {
   const du = key && demo.users[key];
   if (!du) return { error: 'กรุณาเข้าสู่ระบบใหม่' };
   const u = { username: key, name: du.name, role: du.role, factory: du.factory || '' };
+  if (p.op === 'feedback') return String(p.text || '').trim() ? { ok: true } : { error: 'พิมพ์ข้อความก่อนส่ง' };
   const log = (id, type, detail, photos) => (demo.actions[id] = demo.actions[id] || []).push({ time: demoNow(), username: key, name: u.name, role: u.role, type, detail, photos: photos || [] });
   if (p.op === 'logout') return { ok: true };
   if (p.op === 'machines') return demoMachines();
@@ -6218,6 +6232,20 @@ $('gateForm').addEventListener('submit', async ev => {
   $('gateSubmit').textContent = 'เข้าสู่ระบบ';
 });
 $('logoutBtn').addEventListener('click', () => { showGate(''); toast('ออกจากระบบแล้ว'); });
+// Feedback → tab Web_Feedback of the data sheet (op feedback)
+$('fbBtn').addEventListener('click', () => { $('fbMsg').textContent = ''; $('fbDlg').showModal(); $('fbText').focus(); });
+$('fbText').addEventListener('input', () => { $('fbMsg').textContent = ''; });
+$('fbForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const text = $('fbText').value.trim();
+  if (!text) { $('fbMsg').textContent = 'พิมพ์ข้อความก่อนส่ง'; $('fbText').focus(); return; }
+  const b = $('fbOk'); b.disabled = true;
+  try {
+    await api({ op: 'feedback', type: $('fbType').value, text, page: location.hash || '#', device: (phoneMQ.matches ? 'มือถือ' : 'คอม') + ' · ' + navigator.userAgent.slice(0, 100) });
+    $('fbText').value = ''; $('fbDlg').close(); toast('ส่ง Feedback แล้ว ขอบคุณครับ');
+  } catch (err) { $('fbMsg').textContent = friendly(err); }
+  finally { b.disabled = false; }
+});
 // demo only: a hint under the sign-in button (the real page shows nothing there)
 if (DEMO) $('gateForm').insertAdjacentHTML('afterend', '<p class="gnote"></p>'), document.querySelector('.gnote').innerHTML ='โหมดตัวอย่าง — ลองเข้าด้วย <b>MT5400</b> หรือ <b>MT5600</b> (โรงงาน), <b>narat</b> (ช่าง), <b>pongsathorn</b> (วิศวะ) หรือ <b>admin</b> (แอดมิน) รหัสผ่าน <b>1234</b> ทุกบัญชี';
 

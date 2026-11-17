@@ -4462,6 +4462,7 @@ function renderPM() {
   const any = pmv.f.pic || pmv.f.theme || pmv.f.loc || pmv.f.mc || pmv.st || pmv.day || pmv.q;
   const bar = `<label>ปี<select data-pmf="year">${years.map(y => `<option${+y === pmv.year ? ' selected' : ''}>${y}</option>`).join('')}</select></label>`
     + `<label>เดือน<select data-pmf="month" class="${pmv.month ? 'on' : ''}"><option value="0">ทุกเดือน</option>${MON3.map((m, i) => `<option value="${i + 1}"${pmv.month === i + 1 ? ' selected' : ''}>${m}</option>`).join('')}</select></label>`
+    + sel('st', 'สถานะ', 'ทั้งหมด', ['todo', 'late', 'review', 'done'].map(k => `<option value="${k}"${pmv.st === k ? ' selected' : ''}>${PM_ST[k]}</option>`).join(''), pmv.st)
     + (isEngR() ? sel('pic', 'PIC', 'ทุกคน', opts(items.map(x => x.pic), pmv.f.pic), pmv.f.pic) : '')
     + sel('theme', 'ประเภท PM', 'ทั้งหมด', opts(items.map(x => x.theme), pmv.f.theme), pmv.f.theme)
     + sel('loc', 'Location', 'ทุกโรงงาน', opts(items.map(x => x.o.FactoryID), pmv.f.loc), pmv.f.loc)
@@ -4512,7 +4513,7 @@ const PM_DOW = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 const pmBar = x => `<button type="button" class="bar ${x.st}" data-pm="${esc(x.id)}" title="${esc(x.o.MachineID + ' ' + x.o.JobTheme + ' · ' + PM_ST[x.st])}">${esc(x.o.MachineID + ' ' + x.o.JobTheme)}</button>`;
 function pmByDay() {
   const by = {}, ORD = { late: 0, todo: 1, review: 2, done: 3 };
-  pmBase(true).forEach(x => { if (x.day) (by[isoDay(x.day)] = by[isoDay(x.day)] || []).push(x); });
+  pmBase(true).forEach(x => { if (x.day && (!pmv.st || x.st === pmv.st)) (by[isoDay(x.day)] = by[isoDay(x.day)] || []).push(x); });
   Object.values(by).forEach(L => L.sort((a, b) => ORD[a.st] - ORD[b.st] || natural(a.o.MachineID, b.o.MachineID)));
   return by;
 }
@@ -4876,6 +4877,7 @@ $('pmView').addEventListener('change', e => {
   const k = s.dataset.pmf;
   if (k === 'year') { pmv.year = +s.value; pmv.day = ''; pmv.cal.date = new Date(pmv.year, (pmv.month || 1) - 1, 1); loadPM(); }
   else if (k === 'month') { pmv.month = +s.value; pmv.day = ''; if (pmv.month) pmv.cal.date = new Date(pmv.year, pmv.month - 1, 1); }
+  else if (k === 'st') pmv.st = s.value;
   else pmv.f[k] = s.value;
   pmv.shown = 150; renderPM();
 });

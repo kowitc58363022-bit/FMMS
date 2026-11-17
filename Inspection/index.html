@@ -310,8 +310,6 @@
     .btn-block { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; border-radius: var(--r); font-size: var(--fs-1); font-weight: 600; }
     .btn-block.primary { background: var(--accent); color: var(--on-accent); }
     a.btn-block { text-decoration: none; }
-    .btn-draft { flex-shrink: 0; min-height: 50px; padding: 0 16px; border-radius: 25px; background: var(--fill); color: var(--accent); font-size: var(--fs-1); font-weight: 600; }
-    .btn-draft:active { opacity: 0.8; }
     .pmnote { margin-top: 16px; padding: 12px 16px; border-radius: var(--r); background: var(--fill); color: var(--label); font-size: var(--fs-2); }
     .draftnote { margin-top: 16px; padding: 12px 16px; border-radius: var(--r); background: var(--watch-tint); color: var(--watch); font-size: var(--fs-2); }
     .pmsend { margin-top: 12px; padding: 12px 16px; border-radius: var(--r); background: var(--fill); font-size: var(--fs-2); text-align: left; }
@@ -457,7 +455,6 @@
   <div class="toolbar" id="toolbar" hidden>
     <div class="toolbar-in">
       <div class="tally" id="tally" aria-live="polite"></div>
-      <button type="button" class="btn-draft" id="saveDraft">บันทึกร่าง</button>
       <button type="button" class="btn-primary" id="save">บันทึกผล</button>
     </div>
   </div>
@@ -940,9 +937,14 @@
     $('save').textContent = 'บันทึกผล';
     renderForm();
     window.scrollTo(0, 0);
-    pullDraft();
+    pullSaved();
   }
 
+  function stateOf(rec) {
+    const v = JSON.parse(JSON.stringify(rec.v || {}));
+    const rr = Object.fromEntries(Object.entries(rec.rr || {}).map(([k, x]) => { const { st, ...rest } = x; return [k, rest]; }));
+    return { h: { ...blankState(form).h, ...rec.h, models: { ...(rec.h.models || {}) } }, v, t: { ...rec.t }, tn: { ...rec.tn }, rr, autoWhy: '' };
+  }
   // Edit a saved result in the same form; saving replaces it in place (same id, so its printout follows)
   // fresh = start from the saved result; otherwise continue unsaved edits kept under insp.edit.<id>
   function openEdit(id, fresh) {
@@ -951,11 +953,7 @@
     if (!form) { location.hash = '#/history'; return; }
     if (fresh) store.del(editKey(id));
     S = store.get(editKey(id), null);
-    if (!S) {
-      const v = JSON.parse(JSON.stringify(rec.v || {}));
-      const rr = Object.fromEntries(Object.entries(rec.rr || {}).map(([k, x]) => { const { st, ...rest } = x; return [k, rest]; }));
-      S = { h: { ...blankState(form).h, ...rec.h, models: { ...(rec.h.models || {}) } }, v, t: { ...rec.t }, tn: { ...rec.tn }, rr, autoWhy: '' };
-    }
+    if (!S) S = stateOf(rec);
     S.editId = id;
     setNav(`แก้ไข ${form.id} · ${rec.h.machine}`, `${rec.h.date} ${rec.h.time || ''}`, true, 'ผลตรวจ'); setFormChrome(true);
     $('save').textContent = 'บันทึกการแก้ไข';
@@ -973,9 +971,9 @@
     const h = S.h, f = form;
     const hasElec = f.m.some(i => i.type === 'v3' || i.type === 'i3');
     const hasVib = f.m.some(i => i.judge === 'iso' || i.type === 'vibTemp');
-    const dAt = S.draftAt ? new Date(S.draftAt) : null;
-    let html = (dAt && !isNaN(dAt) ? `<div class="draftnote">ร่างที่บันทึกไว้ ${esc(dAt.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))} · กรอกค่าหลังทำงานต่อได้เลย</div>` : '')
-      + (linked(f) ? `<div class="pmnote">งาน PM <b>${esc(PMLINK.id)}</b> · กดบันทึกแล้วผลเข้างานนี้ จากนั้นกลับไปหน้างาน PM แนบรูปถ้ามี แล้วกดส่งให้วิศวะ</div>` : '')
+    const dAt = S.savedAt ? new Date(S.savedAt) : null;
+    let html = (dAt && !isNaN(dAt) ? `<div class="draftnote">ผลที่บันทึกไว้ ${esc(dAt.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))} · แก้แล้วกดบันทึกผลอีกครั้งได้ จนกว่าจะกดส่งให้วิศวะ</div>` : '')
+      + (linked(f) ? `<div class="pmnote">งาน PM <b>${esc(PMLINK.id)}</b> · กดบันทึกผลแล้วผลเข้างานนี้ (แก้ได้จนกว่าจะส่ง) จากนั้นกลับไปหน้างาน PM แนบรูปถ้ามี แล้วกดส่งให้วิศวะ</div>` : '')
       + `<section class="group" data-sec="ข้อมูล"><h2 class="group-h">การตรวจครั้งนี้</h2><div class="card">
       ${inputRow(f.kind === 'daily' ? `${esc(f.name)} No.` : 'หมายเลขเครื่อง', 'class="row-input code" data-h="machine" spellcheck="false" autocapitalize="characters"', h.machine, 'แตะเพื่อกรอก')}
       <label class="row"><span class="row-label">โรงงาน</span><select class="row-input" data-h="factory"><option value="">เลือก</option>${(h.factory && !FACTORIES.includes(h.factory) ? [h.factory, ...FACTORIES] : FACTORIES).map(x => `<option${x === h.factory ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></label>
@@ -1289,6 +1287,7 @@
         refreshRR(id);
       }
     }
+    S.editedAt = new Date().toISOString();
     saveDraft();
     updateTally();
   }
@@ -1423,25 +1422,25 @@
     const all = store.get(HIST, []), r = all.find(x => x.id === id);
     if (r) { r.sent = true; store.set(HIST, all); }
   }
-  // A linked PM draft also lives in the plan's sheet, so it can be continued on another phone or the PC
+  // A linked PM job's saved result comes back from the plan's sheet, so it can be edited on any phone or the PC until it is sent
   const pmToken = () => { try { return localStorage.getItem('pm_ct_token') || localStorage.getItem('ct_token') || ''; } catch (e) { return ''; } };
-  const draftOnline = () => linked(form) && form.kind === 'pm' && !S.editId && PMLINK.api && pmToken();
+  const pmOnline = () => linked(form) && form.kind === 'pm' && !S.editId && PMLINK.api && pmToken();
   async function pmCall(body) {
     const res = await fetch(PMLINK.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, token: pmToken(), id: PMLINK.id }) });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     return data;
   }
-  // On open: take the sheet's draft when it is newer than this device's and nothing was typed meanwhile
-  async function pullDraft() {
-    if (!draftOnline()) return;
+  // On open: the result saved for this job (newest), unless this phone has typing newer than it
+  async function pullSaved() {
+    if (!pmOnline()) return;
     const mine = form, before = JSON.stringify(S);
-    let r; try { r = await pmCall({ op: 'pmDraft' }); } catch (e) { return; }   // offline: keep this device's draft
-    if (form !== mine || JSON.stringify(S) !== before || !r.draft) return;
-    let d; try { d = JSON.parse(r.draft); } catch (e) { return; }
-    if (!d || !d.h || (S.draftAt && String(d.draftAt || '') <= S.draftAt)) return;
-    S = d; S.rr = S.rr || {}; saveDraft(); renderForm();
-    toast(`โหลดร่างจากระบบ${r.by ? ' (' + r.by + ')' : ''}`);
+    let r; try { r = await pmCall({ op: 'pmChecklist' }); } catch (e) { return; }   // offline: keep what this phone has
+    if (form !== mine || JSON.stringify(S) !== before || !r.web || !r.web.record) return;
+    let rec; try { rec = JSON.parse(r.web.record); } catch (e) { return; }
+    if (!rec || !rec.h || rec.form !== form.id || (S.editedAt && S.editedAt > String(rec.savedAt || ''))) return;
+    S = stateOf(rec); S.savedAt = rec.savedAt || r.web.at || ''; saveDraft(); renderForm();
+    toast('โหลดผลที่บันทึกไว้ · แก้ได้จนกว่าจะส่งให้วิศวะ');
   }
 
   async function sendPM(rec, el) {
@@ -1948,31 +1947,6 @@
   $('tally').addEventListener('click', (e) => { const b = e.target.closest('[data-jump]'); if (b) jump(b.dataset.jump); });
   $('save').addEventListener('click', () => save(false));
   // A saved result and its printout step back to the results list, an edit back to its result; everything else goes home
-  // บันทึกร่าง: typing is kept anyway; this marks the time and says so (before-work values now, after-work values later)
-  $('saveDraft').addEventListener('click', () => {
-    if (!form || !S) return;
-    S.draftAt = new Date().toISOString();
-    saveDraft();
-    const back = linked(form) && PMLINK.back;
-    $('sheetHost').innerHTML = `<div class="backdrop" id="bd"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT" aria-describedby="shD">
-      <div class="grabber" aria-hidden="true"></div>
-      <h2 id="shT">บันทึกร่างแล้ว</h2>
-      <p id="shD">${draftOnline() ? 'กำลังบันทึกเข้าระบบ…' : `ค่าที่กรอกเก็บไว้ในมือถือเครื่องนี้ ปิดหน้านี้ได้เลย ทำงานเสร็จแล้วเปิด${linked(form) ? 'งาน PM เดิม' : 'ฟอร์ม ' + esc(form.id) + ' บนมือถือเครื่องนี้'}กลับมากรอกค่าหลังทำงานต่อ`}</p>
-      <div class="acts">${back ? `<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้าแผน PM</a>` : ''}
-        <button type="button" class="btn-block ${back ? 'secondary' : 'primary'}" id="shBack">กรอกต่อ</button></div></div></div>`;
-    const close = () => { $('sheetHost').innerHTML = ''; document.removeEventListener('keydown', onKey); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    document.addEventListener('keydown', onKey);
-    $('bd').addEventListener('click', (e) => { if (e.target.id === 'bd') close(); });
-    $('shBack').addEventListener('click', () => { close(); renderForm(); });
-    (document.querySelector('#bd a') || $('shBack')).focus();
-    if (draftOnline()) {
-      const say = (t) => { const p = $('shD'); if (p) p.textContent = t; };
-      pmCall({ op: 'pmDraftSave', form: form.id, draft: JSON.stringify(S) })
-        .then(() => say('ค่าที่กรอกเก็บในระบบแล้ว เปิดงาน PM เดิมจากมือถือหรือคอมเครื่องไหนก็กรอกต่อได้'))
-        .catch((e) => say(`เก็บในระบบไม่สำเร็จ (${e instanceof TypeError ? 'เชื่อมต่อไม่ได้' : e.message}) · ค่าที่กรอกยังอยู่ในเครื่องนี้ กดบันทึกร่างอีกครั้งเมื่อมีเน็ต`));
-    }
-  });
   $('back').addEventListener('click', () => {
     const h = location.hash;
     location.hash = h.startsWith('#/e/') ? `#/rec/${h.slice(4)}` : /^#\/(rec|print)\//.test(h) ? '#/history' : '#/';

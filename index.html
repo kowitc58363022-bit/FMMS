@@ -1494,7 +1494,11 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
   #pmDlgBody .pmdl{grid-template-columns:96px minmax(0,1fr)}#pmDlgBody .pmdl dd{min-width:0;overflow-wrap:anywhere}
   #pmDlgBody .pmsec{grid-template-columns:minmax(0,1fr)}#pmDlgBody .pmsec>*{min-width:0}
   #pmDlgBody .pminsp{flex-wrap:wrap}#pmDlgBody .pminsp .btn{white-space:normal;max-width:100%}
-  #pmDlgBody .abtn{max-width:100%;white-space:normal}#pmDlgBody textarea,#pmDlgBody input{max-width:100%;box-sizing:border-box}}   /* phones: attach files / photos and see them too; only the plan edit stays on computers */
+  #pmDlgBody .abtn{max-width:100%;white-space:normal}#pmDlgBody textarea,#pmDlgBody input{max-width:100%;box-sizing:border-box}
+  /* iPhone Safari gives a date box its own minimum width: take the native look off so it fits the label */
+  #pmDlgBody label{min-width:0;max-width:100%}
+  #pmDlgBody input[type="date"]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;text-align:left}
+  #pmDlgBody input[type="date"]::-webkit-date-and-time-value{text-align:left}}   /* phones: attach files / photos and see them too; only the plan edit stays on computers */
 .pminsp .btn{text-decoration:none}
 .pminsp{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.pminsp p{margin:0;color:var(--muted);font-size:13.5px;flex:1 1 220px}
 @media (max-width:700px){
@@ -3566,9 +3570,12 @@ function trackJobs() {
   done.sort((a, b) => (b.fin || b.rep || 0) - (a.fin || a.rep || 0));
   return { open, done };
 }
+// a colour per step (reported red · technician amber · repairing blue · review purple · done green); a passed line blends from one step's colour into the next
+const TCOL = ['#E31B23', '#F59E0B', '#2F5FD0', '#9B51C8', '#1E9152'];
 function trackDots(x) {
   const s = trackStep(x);
-  return `<span class="tdots" aria-label="ขั้นที่ ${s + 1} จาก 5: ${esc(trackLabel(x))}">${TSTEPS.map((_, i) => (i ? `<i class="ln${i <= s ? ' on' : ''}"></i>` : '') + `<i class="dt${i <= s ? ' on' : ''}${i === s && !x.done ? ' now' : ''}"></i>`).join('')}</span>`;
+  return `<span class="tdots" aria-label="ขั้นที่ ${s + 1} จาก 5: ${esc(trackLabel(x))}">${TSTEPS.map((_, i) => (i ? `<i class="ln${i <= s ? ' on' : ''}"${i <= s ? ` style="background:linear-gradient(90deg,${TCOL[i - 1]},${TCOL[i]})"` : ''}></i>` : '')
+    + `<i class="dt${i <= s ? ' on' : ''}${i === s && !x.done ? ' now' : ''}"${i <= s ? ` style="background:${TCOL[i]}${i === s && !x.done ? `;box-shadow:0 0 0 4px ${TCOL[i]}33` : ''}"` : ''}></i>`).join('')}</span>`;
 }
 function trackCard(x) {
   const s = trackStep(x), today = new Date(); today.setHours(0, 0, 0, 0);

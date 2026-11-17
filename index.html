@@ -17,6 +17,8 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:24px}
+/* phones: no rubber-band past the page edges (fixed bars slid off screen) and no sideways pan; clip, not hidden, keeps position:sticky working */
+html,body{overscroll-behavior:none;overflow-x:clip;max-width:100%}
 body{margin:0;font-family:'Anuphan',system-ui,sans-serif;background:#fff;color:var(--ink);font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 ::selection{background:#11111526}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -417,7 +419,7 @@ button:active:not(:disabled),.btn:active:not(:disabled),.chip:active,.todo-i:act
 }
 body{background:var(--page);color:var(--ink)}
 body{background:#fff}
-.shell{min-height:100vh;background:#fff;position:relative}
+.shell{min-height:100vh;min-height:100dvh;background:#fff;position:relative}
 /* section banners: text on the left, the Murata robot on the right (one picture, cut from the original banner) */
 .hero{--hc:var(--red);position:relative;overflow:hidden;height:clamp(150px,15.5vw,224px);background:linear-gradient(100deg,#F8FAFD 0%,#EEF2F9 48%,#E4EAF4 100%);isolation:isolate}
 .hero[data-hero="list"]{--hc:#1B3F96}.hero[data-hero="monitor"]{--hc:#7B2FA0}.hero[data-hero="finance"]{--hc:#1E9152}

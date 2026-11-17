@@ -4541,7 +4541,7 @@ function pmCalendar() {
   const cells = Array.from({ length: first.getDay() }, () => '<span class="pmday out" aria-hidden="true"></span>');
   for (let d = 1; d <= days; d++) {
     const iso = isoDay(new Date(y, m, d)), L = by[iso] || [], n = k => L.filter(x => (k === 'todo' ? x.st === 'todo' || x.st === 'late' : x.st === k)).length;
-    cells.push(`<div class="pmday${iso === tIso ? ' today' : ''}" role="group" aria-label="${d} ${MON3[m]} · ${L.length} งาน"><button type="button" class="dnum" data-pmgo="${iso}" aria-label="ดูวันที่ ${d}">${d}</button>`
+    cells.push(`<div class="pmday${iso === tIso ? ' today' : ''}" data-pmgo="${iso}" role="group" aria-label="${d} ${MON3[m]} · ${L.length} งาน"><button type="button" class="dnum" data-pmgo="${iso}" aria-label="ดูวันที่ ${d}">${d}</button>`
       + L.slice(0, MAX).map(pmBar).join('') + (L.length > MAX ? `<button type="button" class="mo2" data-pmgo="${iso}">+${L.length - MAX} more</button>` : '')
       + (L.length ? `<button type="button" class="dots" data-pmgo="${iso}" style="border:0;background:none;padding:0">${['done', 'review', 'todo'].filter(k => n(k)).map(k => `<i class="${k}">${n(k)}</i>`).join('')}</button>` : '') + '</div>');
   }
@@ -4899,7 +4899,8 @@ $('pmView').addEventListener('click', e => {
   const ht = e.target.closest('[data-pmheat]'); if (ht) { const [loc, m] = ht.dataset.pmheat.split('|'); pmv.f.loc = loc; pmv.month = +m; pmv.st = ''; toList(); return; }
   const hp = e.target.closest('[data-pmhpg]'); if (hp) { pmv.heatPg = (pmv.heatPg || 0) + +hp.dataset.pmhpg; renderPM(); return; }
   if (e.target.closest('[data-pmtoday]')) { pmCalGo(new Date()); return; }
-  const go = e.target.closest('[data-pmgo]'); if (go) { pmv.cal.mode = 'day'; pmCalGo(dateOf(go.dataset.pmgo)); return; }
+  // a day box opens that day; a job bar inside it opens the job
+  const go = !e.target.closest('[data-pm]') && e.target.closest('[data-pmgo]'); if (go) { pmv.cal.mode = 'day'; pmCalGo(dateOf(go.dataset.pmgo)); return; }
   if (e.target.closest('[data-pmmore]')) { pmv.shown += 150; renderPM(); return; }
   const mb = e.target.closest('[data-pmmob]'); if (mb) { pmv.mobCal = !!mb.dataset.pmmob; renderPM(); return; }
   const wd = e.target.closest('[data-pmwd]'); if (wd) { pmv.wk = wd.dataset.pmwd; renderPM(); return; }

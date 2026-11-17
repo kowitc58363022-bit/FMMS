@@ -1450,6 +1450,26 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmme-f button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}.pmme-f button[aria-pressed="true"] span{background:#ffffff33;color:#fff}
 .pmme-h{display:flex;justify-content:space-between;align-items:baseline;margin:18px 2px 8px;font-size:13.5px;font-weight:600;color:var(--muted)}.pmme-h.late{color:var(--red)}
 .pmme-c{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px 14px;margin-bottom:10px}
+/* phone: รายการ / ปฏิทิน and the week calendar */
+.pmseg{display:flex;gap:4px;padding:4px;border-radius:12px;background:#EEF1F6;margin:0 0 12px}
+.pmseg button{flex:1;min-height:40px;border:0;border-radius:9px;background:none;font:inherit;font-size:14.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.pmseg button[aria-pressed="true"]{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(14,47,122,.15)}
+.pmwh{display:flex;align-items:center;gap:8px;margin-bottom:8px}.pmwh b{flex:1;text-align:center;font-family:var(--head-font);font-size:18px;color:var(--navy)}
+.pmwh button{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:20px;color:var(--navy);cursor:pointer}
+.pmwh .tdy{min-width:0;padding:0 12px;font-size:14px;font-weight:600;order:-1}
+.pmws{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;touch-action:pan-y;user-select:none}
+.pmwd{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:68px;padding:6px 0;border:0;border-radius:14px;background:#F3F5F8;font:inherit;color:var(--ink);cursor:pointer}
+.pmwd small{font-size:12px;color:var(--muted)}.pmwd b{font-size:18px;font-family:var(--head-font)}.pmwd i{height:18px}
+.pmwd em{display:inline-block;min-width:18px;border-radius:9px;padding:0 5px;font-style:normal;font-size:11.5px;font-weight:700;color:#fff}.pmwd em.o{background:#E31B23}.pmwd em.d{background:#1E9152}
+.pmwd.today{box-shadow:inset 0 0 0 2px #F59E0B}
+.pmwd.on{background:var(--navy);color:#fff}.pmwd.on small{color:#C9D6EE}
+.pmwday{margin:14px 0 6px;font-family:var(--head-font);font-size:16px;color:var(--ink)}
+.pmwchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.pmwchips span{border-radius:999px;padding:3px 10px;background:#EEF1F6;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.pmwchips .o{background:#FDE7E8;color:#C4141B}.pmwchips .r{background:#FAF3FD;color:#7B2FA0}.pmwchips .d{background:#E6F4EA;color:#157A43}
+.pmwl{display:grid;gap:8px;min-height:160px;touch-action:pan-y}
+.pmwc{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid #8A97B0;border-radius:12px;background:#fff;font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.pmwc>span:first-child{flex:1;min-width:0}.pmwc b{display:block;font-size:15px}.pmwc small{display:block;font-size:12.5px;color:var(--muted)}
+.pmwc.late,.pmwc.todo{border-left-color:#E31B23}.pmwc.review{border-left-color:#9B51C8}.pmwc.done{border-left-color:#2EAA62}
 .pmme-c.late{border-color:#F3B7BA;background:#FFF8F8}
 .pmme-c .top{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:0;font:inherit;text-align:left;color:inherit;cursor:pointer}
 .pmme-c .top b{font-size:16.5px;color:var(--ink)}.pmme-c .top i{margin-left:auto;font-style:normal;color:var(--muted);font-size:20px;line-height:1}
@@ -4338,8 +4358,42 @@ function pmMineHtml() {
     + `<button type="button" class="pmme-all" data-pmall="1">ดูแผนทั้งหมด · ตัวกรอง</button>`
     + `<p class="pmnone" style="text-align:center;margin:4px 0 0">เดือนนี้เหลือ ${left} จาก ${month.length} งาน</p>`;
 }
+// phone calendar: a week strip (swipe left / right = next / last week) and the jobs of the day picked (swipe the list = next / last day)
+function pmWeekHtml() {
+  const sel = pmv.wk ? new Date(pmv.wk) : new Date(); sel.setHours(0, 0, 0, 0);
+  const by = pmByDay(), tIso = isoDay(new Date()), sIso = isoDay(sel);
+  const s = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate() - sel.getDay());
+  const days = Array.from({ length: 7 }, (_, i) => new Date(s.getFullYear(), s.getMonth(), s.getDate() + i));
+  const strip = days.map(d => { const iso = isoDay(d), L = by[iso] || [], open = L.filter(x => x.st === 'todo' || x.st === 'late').length;
+    return `<button type="button" class="pmwd${iso === sIso ? ' on' : ''}${iso === tIso ? ' today' : ''}" data-pmwd="${iso}" aria-label="${PM_DOW[d.getDay()]} ${d.getDate()} · ${L.length} งาน"><small>${PM_DOW[d.getDay()]}</small><b>${d.getDate()}</b><i>${L.length ? `<em class="${open ? 'o' : 'd'}">${L.length}</em>` : ''}</i></button>`; }).join('');
+  const L = by[sIso] || [], n = k => L.filter(x => x.st === k).length;
+  const list = L.length ? L.map(x => `<button type="button" class="pmwc ${x.st}" data-pm="${esc(x.id)}"><span><b>${esc(x.o.MachineID)}</b><small>PM ${esc(x.theme)} · ${esc(x.o.FactoryID || '')}${x.stop ? ' · หยุดเครื่อง' : ''}</small></span><span class="pst ${x.st}">${PM_ST[x.st]}</span></button>`).join('')
+    : '<div class="pmempty">ไม่มีงาน PM วันนี้<br><small>ปัดซ้าย–ขวาที่รายการเพื่อดูวันอื่น</small></div>';
+  const chips = L.length ? `<div class="pmwchips"><span>ทั้งหมด ${L.length}</span>${n('late') + n('todo') ? `<span class="o">ยังไม่ทำ ${n('late') + n('todo')}</span>` : ''}${n('review') ? `<span class="r">รออนุมัติ ${n('review')}</span>` : ''}${n('done') ? `<span class="d">เสร็จ ${n('done')}</span>` : ''}</div>` : '';
+  const wrongYear = sel.getFullYear() !== pmv.year ? `<p class="pmnone">กำลังโหลดแผนปี ${sel.getFullYear()}…</p>` : '';
+  return `<div class="pmwk"><div class="pmwh"><button type="button" data-pmwk="-7" aria-label="สัปดาห์ก่อน">‹</button><b>${MON3[sel.getMonth()]} ${sel.getFullYear()}</b><button type="button" data-pmwk="7" aria-label="สัปดาห์ถัดไป">›</button>${sIso === tIso ? '' : '<button type="button" class="tdy" data-pmwk="0">วันนี้</button>'}</div>
+    <div class="pmws">${strip}</div>
+    <p class="pmwday">${PM_DOW[sel.getDay()]} ${esc(dShort(sel))}${sIso === tIso ? ' · วันนี้' : ''}</p>${wrongYear}${chips}<div class="pmwl">${list}</div></div>`;
+}
+// swipe: on the week strip = a week, on the day's list = a day (a mostly sideways move of 50 px or more)
+let pmSw = null;
+document.addEventListener('touchstart', e => { const t = e.target.closest && e.target.closest('.pmws, .pmwl'); pmSw = t ? { x: e.touches[0].clientX, y: e.touches[0].clientY, step: t.classList.contains('pmws') ? 7 : 1 } : null; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (!pmSw) return;
+  const dx = e.changedTouches[0].clientX - pmSw.x, dy = e.changedTouches[0].clientY - pmSw.y, step = pmSw.step;
+  pmSw = null;
+  if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy) * 1.5) pmWkGo(dx < 0 ? step : -step);
+}, { passive: true });
+// move the day picked: 0 = today, else ± days; another year loads that year's plan
+function pmWkGo(n) {
+  const cur = pmv.wk ? new Date(pmv.wk) : new Date();
+  const d = n === 0 ? new Date() : new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + n);
+  pmv.wk = isoDay(d);
+  if (d.getFullYear() !== pmv.year) { pmv.year = d.getFullYear(); loadPM(); }
+  renderPM();
+}
 function renderPM() {
-  if (phoneMQ.matches && pmv.tab !== 'list') pmv.tab = 'list';   // phones have the list only
+  if (phoneMQ.matches && pmv.tab !== 'list') pmv.tab = 'list';   // phones have the list only (plus the week calendar below)
   pmNavMark();
   $('pmView').classList.toggle('mine', pmMine());
   if (!canPM()) { $('pmKpi').innerHTML = ''; $('pmBar').innerHTML = ''; $('pmBar').dataset.html = ''; $('pmTabs').innerHTML = ''; $('pmSub').textContent = ''; $('pmBody').innerHTML = '<div class="pmempty"><b>บัญชีนี้ไม่มีสิทธิ์ใช้แผน PM</b><br>ใช้ได้เฉพาะช่าง วิศวะ และแอดมิน</div>'; return; }
@@ -4362,17 +4416,26 @@ function renderPM() {
   $('pmTabs').innerHTML = `<button type="button" data-pmtab="list" aria-pressed="${pmv.tab === 'list'}">รายการ</button><button type="button" data-pmtab="cal" aria-pressed="${pmv.tab === 'cal'}">ปฏิทิน</button><button type="button" data-pmtab="dash" aria-pressed="${pmv.tab === 'dash'}">Dashboard</button>`;
   if (pmv.loading && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = '<p class="loading">กำลังโหลดแผน PM…</p>'; $('pmSub').textContent = ''; return; }
   if (pmv.err && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = `<div class="pmempty"><b>ยังโหลดแผน PM ไม่ได้</b><br>${esc(pmv.err)}<br><button type="button" class="btn" data-pmretry>ลองอีกครั้ง</button></div>`; return; }
+  // phones: รายการ / ปฏิทิน (week strip)
+  const seg = phoneMQ.matches ? `<div class="pmseg" role="group" aria-label="มุมมอง"><button type="button" data-pmmob="" aria-pressed="${!pmv.mobCal}">รายการ</button><button type="button" data-pmmob="1" aria-pressed="${!!pmv.mobCal}">ปฏิทิน</button></div>` : '';
+  if (phoneMQ.matches && pmv.mobCal) {
+    $('pmView').classList.add('mine');
+    $('pmTitle').textContent = 'ปฏิทิน PM';
+    $('pmSub').textContent = role() === 'technician' ? 'งาน PM ของคุณตามวันนัด' : 'งาน PM ตามวันนัด';
+    $('pmBody').innerHTML = seg + pmWeekHtml();
+    return;
+  }
   if (pmMine()) {
     const now = new Date(), month = pmItems().filter(x => x.m === now.getMonth() + 1 && x.y === now.getFullYear());
     $('pmTitle').textContent = 'งาน PM ของฉัน';
     $('pmSub').textContent = MON3[now.getMonth()] + ' ' + now.getFullYear() + ' · เหลือ ' + month.filter(x => x.st === 'todo' || x.st === 'late').length + ' จาก ' + month.length;
-    $('pmBody').innerHTML = pmMineHtml();
+    $('pmBody').innerHTML = seg + pmMineHtml();
     return;
   }
   $('pmTitle').textContent = 'แผน PM';
   const base = pmBase();
   $('pmSub').textContent = (pmv.month ? MON3[pmv.month - 1] + ' ' : 'ทั้งปี ') + pmv.year + ' · ' + base.length + ' งาน' + (role() === 'technician' ? ' ของคุณ' : '');
-  $('pmBody').innerHTML = pmv.tab === 'cal' ? pmCalendar() : pmv.tab === 'dash' ? pmDashboard() : pmListHtml();
+  $('pmBody').innerHTML = seg + (pmv.tab === 'cal' ? pmCalendar() : pmv.tab === 'dash' ? pmDashboard() : pmListHtml());
 }
 function pmListHtml() {
   const list = pmFiltered();
@@ -4810,6 +4873,9 @@ $('pmView').addEventListener('click', e => {
   if (e.target.closest('[data-pmtoday]')) { pmCalGo(new Date()); return; }
   const go = e.target.closest('[data-pmgo]'); if (go) { pmv.cal.mode = 'day'; pmCalGo(dateOf(go.dataset.pmgo)); return; }
   if (e.target.closest('[data-pmmore]')) { pmv.shown += 150; renderPM(); return; }
+  const mb = e.target.closest('[data-pmmob]'); if (mb) { pmv.mobCal = !!mb.dataset.pmmob; renderPM(); return; }
+  const wd = e.target.closest('[data-pmwd]'); if (wd) { pmv.wk = wd.dataset.pmwd; renderPM(); return; }
+  const wk = e.target.closest('[data-pmwk]'); if (wk) { pmWkGo(+wk.dataset.pmwk); return; }
   const mf = e.target.closest('[data-pmmf]'); if (mf) { pmv.mineF = mf.dataset.pmmf; renderPM(); return; }
   const pa = e.target.closest('[data-pmall]'); if (pa) { pmv.all = !!pa.dataset.pmall; renderPM(); scrollTo(0, 0); return; }
   if (e.target.closest('[data-pmretry]')) { pmv.err = ''; loadPM(true); return; }

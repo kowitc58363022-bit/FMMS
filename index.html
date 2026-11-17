@@ -1876,7 +1876,7 @@ const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
   TITLE: 'ติดตามงานซ่อมบำรุง',
   // หน้า Inspection (กรอกค่าวัดที่เครื่อง) — ที่อยู่เทียบกับหน้านี้ · ต้องอยู่โดเมนเดียวกัน (ใช้การเข้าสู่ระบบของหน้านี้ส่งผล)
-  INSPECTION_URL: 'Inspection/index.html',   // หน้า Inspection (Dashboard_T/Inspection) · ชุดอัปโหลด GitHub ใช้ 'Inspection/index.html'
+  INSPECTION_URL: 'Inspection/index.html',   // หน้า Inspection อยู่โฟลเดอร์ Inspection ข้างไฟล์นี้
   PM_ONLY: false,   // true = หน้านี้มีแค่แผน PM
   REFRESH_SECONDS: 20,      // ดึงข้อมูลใหม่ทุกกี่วินาที (ขณะมีคนใช้หน้าเว็บ)
   IDLE_REFRESH_SECONDS: 60, // ไม่มีคนแตะหน้าเว็บเกิน 5 นาที (เช่น จอแสดงผล) ดึงช้าลงเหลือทุกกี่วินาที · แท็บที่ซ่อนอยู่ไม่ดึงเลย
@@ -4545,6 +4545,9 @@ function pmYearChart(base, M) {
   g += `<path d="${pmSmooth(pp)}" fill="none" stroke="#9AA6BD" stroke-width="2" stroke-dasharray="5 4"/>`;
   if (dp.length > 1) g += `<path d="${pmSmooth(dp)} L${dp[dp.length - 1][0].toFixed(1)} ${H - B} L${dp[0][0].toFixed(1)} ${H - B} Z" fill="url(#pg-area)"/><path d="${pmSmooth(dp)}" fill="none" stroke="url(#pg-line)" stroke-width="3" stroke-linecap="round"/>`;
   dp.forEach(p => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="#0E2F7A" stroke-width="2"/>`; });
+  // % of that month's plan done, above its point (below when the point is at the top)
+  dp.forEach((p, i) => { if (!plan[i]) return; const pc = Math.round(done[i] / plan[i] * 100), ty = p[1] - 10 < T + 10 ? p[1] + 18 : p[1] - 10;
+    g += `<text x="${p[0]}" y="${ty}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${pc >= 70 ? '#0E2F7A' : pc >= 50 ? '#B45309' : '#C4141B'};paint-order:stroke;stroke:#fff;stroke-width:3px">${pc}%</text>`; });
   MON3.forEach((m, i) => {
     const pc = plan[i] ? Math.round(done[i] / plan[i] * 100) : 0;
     g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle"${i + 1 === M ? ' style="font-weight:700;fill:#0E2F7A"' : ''}>${m}</text>`
@@ -4633,7 +4636,7 @@ function pmDashboard() {
   if (tmc && !pmv.trend[tmc]) setTimeout(() => pmTrendLoad(tmc));
   const mcRows = machines.length ? machines.slice(0, 6).map(e => `<button type="button" class="pmfr${e.mc === tmc ? ' on' : ''}" ${eng ? `data-pmtrend="${esc(e.mc)}"` : 'disabled'}><span><b>${esc(e.mc)}</b><small>${esc([e.type, e.fac].filter(Boolean).join(' · '))}${e.last ? ' · ล่าสุด ' + esc(dShort(e.last)) : ''}</small></span><span class="tg pu">${e.n} ครั้ง</span></button>`).join('') : '<p class="pmnone">ไม่มีค่านอกเกณฑ์ในปีนี้</p>';
   return `<div class="pmdash">${kpis}
-    <div class="pmc w8"><h3>แผนเทียบงานที่ทำแล้ว · ${pmv.year}</h3><p class="sub">กดเดือนเพื่อดูเดือนนั้น</p><div class="lg"><span class="ln dash">แผน</span><span class="ln">ทำแล้ว (รวมรออนุมัติ)</span></div>${pmYearChart(base, M)}</div>
+    <div class="pmc w8"><h3>แผนเทียบงานที่ทำแล้ว · ${pmv.year}</h3><p class="sub">${base.length ? `ทั้งปี ทำแล้ว <b>${base.filter(pmDone).length.toLocaleString()}</b> / ${base.length.toLocaleString()} งาน · <b>${pmPct(base)}%</b> · ` : ''}กดเดือนเพื่อดูเดือนนั้น</p><div class="lg"><span class="ln dash">แผน</span><span class="ln">ทำแล้ว (รวมรออนุมัติ)</span></div>${pmYearChart(base, M)}</div>
     <div class="pmc w4"><h3>สถานะงาน · ${esc(period)}</h3><p class="sub">กดเพื่อเปิดรายการ</p>${pmDonut(mon)}</div>
     <div class="pmc w6"><h3>ช่างผู้รับผิดชอบ · ${esc(period)}</h3><p class="sub">น้อยกว่า 50% เป็นสีแดง · กดชื่อเพื่อดูงาน</p><div class="pmtech">${techRows}</div></div>
     <div class="pmc w6"><h3>ทำตามแผนรายโรงงาน</h3><p class="sub"><i class="sw hi"></i>≥70% <i class="sw md"></i>50–69% <i class="sw lo"></i>&lt;50% · กดช่องเพื่อดูงาน</p>${heat}</div>

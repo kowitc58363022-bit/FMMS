@@ -2589,18 +2589,20 @@ function trendSvg(months) {
   const yv = v => B - v / top * (B - T), yb = v => B - v / topB * (B - T);
   const grid = [0, 1, 2, 3, 4].map(g => { const y = B - g / 4 * (B - T); return `<path d="M${L} ${y}H${R}" stroke="${g ? '#EEF1F6' : '#C9D1DE'}"/><text x="${L - 8}" y="${y + 4}" text-anchor="end" class="ax">${g * top / 4}</text><text x="${R + 8}" y="${y + 4}" class="ax acum">${g * topB / 4}</text>`; }).join('');
   const pts = months.map((o, i) => [L + slot * i + slot / 2, yb(o.wip)]);
-  return `<svg class="trend" viewBox="0 0 1260 232" role="img" aria-label="${svgEsc('งานเข้าและงานเสร็จรายเดือน: ' + months.map(o => monthName(o.y, o.m) + ' เข้า ' + o.in + ' เสร็จ ' + o.out + ' ค้าง ' + o.wip).join(', '))}">${grid}${months.map((o, i) => {
+  return `<svg class="trend" viewBox="0 0 1260 232" role="img" aria-label="${svgEsc('งานเข้าและงานเสร็จรายเดือน: ' + months.map(o => monthName(o.y, o.m) + ' เข้า ' + o.in + ' เสร็จ ' + o.out + ' ค้าง ' + o.wip).join(', '))}"><defs><linearGradient id="tg-in" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5B04A"/><stop offset="1" stop-color="#C9760F"/></linearGradient><linearGradient id="tg-out" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3CCB6A"/><stop offset="1" stop-color="#0F8A3B"/></linearGradient></defs>${grid}${months.map((o, i) => {
     const x = L + slot * i + slot / 2;
     return `<g data-tip="${svgEsc(monthName(o.y, o.m))}: งานเข้า ${o.in} · เสร็จ ${o.out} · ค้างสิ้นเดือน ${o.wip}">
-      <rect x="${x - bw - 2}" y="${yv(o.in)}" width="${bw}" height="${Math.max(B - yv(o.in), o.in ? 1 : 0)}" rx="3" fill="#E89A2C"/>
-      <rect x="${x + 2}" y="${yv(o.out)}" width="${bw}" height="${Math.max(B - yv(o.out), o.out ? 1 : 0)}" rx="3" fill="#1E9152"/>
+      <rect x="${x - bw - 2}" y="${yv(o.in)}" width="${bw}" height="${Math.max(B - yv(o.in), o.in ? 1 : 0)}" rx="3" fill="url(#tg-in)"/>
+      <rect x="${x + 2}" y="${yv(o.out)}" width="${bw}" height="${Math.max(B - yv(o.out), o.out ? 1 : 0)}" rx="3" fill="url(#tg-out)"/>
       ${o.in ? `<text x="${x - bw / 2 - 2}" y="${yv(o.in) - 5}" text-anchor="middle" class="bv">${o.in}</text>` : ''}${o.out ? `<text x="${x + bw / 2 + 2}" y="${yv(o.out) - 5}" text-anchor="middle" class="bv">${o.out}</text>` : ''}
       <text x="${x}" y="${B + 18}" text-anchor="middle" class="ax">${svgEsc(monthName(o.y, o.m))}</text></g>`;
   }).join('')}<path d="${pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join('')}" fill="none" stroke="#E31B23" stroke-width="2.5" stroke-dasharray="6 4"/>
     ${pts.map((q, i) => `<circle cx="${q[0]}" cy="${q[1]}" r="3.5" fill="#fff" stroke="#E31B23" stroke-width="2" data-tip="งานค้างสิ้น ${svgEsc(monthName(months[i].y, months[i].m))}: ${months[i].wip} งาน"/>`).join('')}</svg>`;
 }
+// a colour as a soft gradient (dark → light), same look as the PM dashboard
+const gfill = c => `linear-gradient(90deg,${c},color-mix(in srgb,${c} 62%,#fff))`;
 // one stacked bar: [{n, color, tip}] scaled to max
-const stackBar = (parts, max) => `<span class="hbt">${parts.filter(x => x.n > 0).map(x => `<span style="width:${x.n / max * 100}%;background:${x.color}" data-tip="${esc(x.tip)}">${x.n / max >= .05 ? esc(x.label ?? x.n) : ''}</span>`).join('')}</span>`;
+const stackBar = (parts, max) => `<span class="hbt">${parts.filter(x => x.n > 0).map(x => `<span style="width:${x.n / max * 100}%;background:${gfill(x.color)}" data-tip="${esc(x.tip)}">${x.n / max >= .05 ? esc(x.label ?? x.n) : ''}</span>`).join('')}</span>`;
 
 function renderMonitor(force) {
   // keep an open date picker alive through the 20-second refresh
@@ -2702,7 +2704,7 @@ function renderMonitor(force) {
   // durations
   const durMax = Math.max(1, ...seg.map(s => s.avg || 0));
   const durRows = seg.map(s => `<div class="hbr" data-tip="${esc(s.hint)} · ${s.v.length} งาน"><span class="dn">${esc(s.name)}<small>${esc(s.hint)}</small></span>
-    <span class="hbt"><span style="width:${(s.avg || 0) / durMax * 100}%;background:${s.color}"></span></span><b>${days1(s.avg)}<small>${s.v.length} งาน</small></b></div>`).join('');
+    <span class="hbt"><span style="width:${(s.avg || 0) / durMax * 100}%;background:${gfill(s.color)}"></span></span><b>${days1(s.avg)}<small>${s.v.length} งาน</small></b></div>`).join('');
   const segSum = seg.reduce((a, s) => a + (s.avg || 0), 0);
   const leadBar = segSum ? `<div class="lead"><div class="hbr"><span>เส้นทางเฉลี่ยรวม</span>${stackBar(seg.map(s => ({ n: s.avg || 0, color: s.color, label: days1(s.avg), tip: s.name + ': ' + days1(s.avg) })), segSum)}<b>${days1(segSum)}</b></div></div>` : '';
 
@@ -2724,7 +2726,7 @@ function renderMonitor(force) {
     const g = {}; open.forEach(x => { const k = String(x.r[scol] || '').trim() || 'ไม่ระบุ'; (g[k] = g[k] || []).push(x); });
     const list = Object.entries(g).sort((a, b) => b[1].length - a[1].length).slice(0, 8);
     const max = list[0][1].length;
-    sysHtml = `<div class="legend">${openStages.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div><div class="hb">${list.map(([k, L]) =>
+    sysHtml = `<div class="legend">${openStages.map(s => `<span><i style="background:${gfill(s.color)}"></i>${esc(s.name)}</span>`).join('')}</div><div class="hb">${list.map(([k, L]) =>
       `<div class="hbr"><span title="${esc(k)}">${esc(k)}</span>${stackBar(openStages.map(s => { const n = L.filter(x => x.stage === s.key).length; return { n, color: s.color, tip: `${k} · ${s.name}: ${n} งาน` }; }), max)}<b>${L.length} งาน</b></div>`).join('')}</div>`;
   } else if (scol && total) sysHtml = '<p class="mempty">ไม่มีงานค้าง</p>';
 
@@ -2760,9 +2762,9 @@ function renderMonitor(force) {
       ${total ? `<div class="flow">${PSTAGES.map((s, i) => stageCard(s, i) + (i < PSTAGES.length - 1 ? arrow(i) : '')).join('')}</div>` : empty}</section>
     <section class="card a-dur"><h2>เวลาที่ใช้ในแต่ละช่วง</h2><p class="cap">เฉลี่ยจากงานที่มีเวลาบันทึกครบทั้งสองจุด</p>${total ? `<div class="hb">${durRows}</div>${leadBar}` : empty}</section>
     <section class="card a-aging"><h2>อายุงานค้างในแต่ละขั้นตอน</h2><p class="cap">นับจากวันที่เข้าขั้นนั้น</p>
-      <div class="legend">${AGE_BUCKETS.map(b => `<span><i style="background:${b.color}"></i>${b.name}</span>`).join('')}</div>${open.length ? `<div class="hb">${agingRows}</div>` : '<p class="mempty">ไม่มีงานค้าง</p>'}</section>
+      <div class="legend">${AGE_BUCKETS.map(b => `<span><i style="background:${gfill(b.color)}"></i>${b.name}</span>`).join('')}</div>${open.length ? `<div class="hb">${agingRows}</div>` : '<p class="mempty">ไม่มีงานค้าง</p>'}</section>
     <section class="card a-trend"><h2>งานเข้า · งานเสร็จ · งานค้าง รายเดือน</h2>
-      <div class="legend"><span><i style="background:#E89A2C"></i>งานเข้า</span><span><i style="background:#1E9152"></i>งานเสร็จ</span><span><i class="lline"></i>งานค้างสิ้นเดือน (แกนขวา)</span></div>${trendSvg(months)}</section>
+      <div class="legend"><span><i style="background:${gfill('#E89A2C')}"></i>งานเข้า</span><span><i style="background:${gfill('#1E9152')}"></i>งานเสร็จ</span><span><i class="lline"></i>งานค้างสิ้นเดือน (แกนขวา)</span></div>${trendSvg(months)}</section>
     <section class="card a-sys"><h2>งานค้างตามระบบ</h2><p class="cap">8 ระบบที่มีงานค้างมากที่สุด แยกตามขั้นตอน</p>${sysHtml}</section>
     <section class="card a-rank"><h2>งานค้างตาม Priority</h2><p class="cap">แยกตามขั้นตอน</p>${rankHtml}</section>
     <section class="card a-board"><h2>งานที่ค้างนานที่สุดในแต่ละขั้นตอน</h2><p class="cap">เรียงจากค้างนานที่สุด (นับจากวันที่เข้าขั้นนั้น) · เลื่อนดูได้ในแต่ละคอลัมน์ · กดเพื่อเปิดงาน</p><div class="board">${board}</div></section>

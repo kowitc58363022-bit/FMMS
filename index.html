@@ -1876,7 +1876,7 @@ const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
   TITLE: 'ติดตามงานซ่อมบำรุง',
   // หน้า Inspection (กรอกค่าวัดที่เครื่อง) — ที่อยู่เทียบกับหน้านี้ · ต้องอยู่โดเมนเดียวกัน (ใช้การเข้าสู่ระบบของหน้านี้ส่งผล)
-  INSPECTION_URL: 'Inspection/index.html',   // หน้า Inspection อยู่โฟลเดอร์ Inspection ข้างไฟล์นี้
+  INSPECTION_URL: 'Inspection/index.html',   // หน้า Inspection (Dashboard_T/Inspection) · ชุดอัปโหลด GitHub ใช้ 'Inspection/index.html'
   PM_ONLY: false,   // true = หน้านี้มีแค่แผน PM
   REFRESH_SECONDS: 20,      // ดึงข้อมูลใหม่ทุกกี่วินาที (ขณะมีคนใช้หน้าเว็บ)
   IDLE_REFRESH_SECONDS: 60, // ไม่มีคนแตะหน้าเว็บเกิน 5 นาที (เช่น จอแสดงผล) ดึงช้าลงเหลือทุกกี่วินาที · แท็บที่ซ่อนอยู่ไม่ดึงเลย
@@ -4657,7 +4657,9 @@ const PMF = window.INSP || { FORMS: [], inRule: () => false };   // ../../Inspec
 function pmForm(x) {
   const code = upper(x.o.MachineCode || String(x.o.MachineID).split('-')[0]), type = upper(x.o.MachineType);
   const pm = PMF.FORMS.filter(fm => fm.kind === 'pm');
-  let form = /CHEMICAL/.test(type) ? pm.find(fm => fm.id === 'CFP') : null;
+  // T_PMJob MachineCode picks the sheet: LVP = low vacuum (water ring), HVP = high vacuum, MX = agitator mixer, BL = blower pump
+  const byCode = { LVP: 'VPL', HVP: 'VP', MX: 'MX', BL: 'BP' }[code];
+  let form = /CHEMICAL/.test(type) ? pm.find(fm => fm.id === 'CFP') : byCode ? pm.find(fm => fm.id === byCode) : null;
   form = form || pm.find(fm => fm.subtypes.some(s => upper(s) === code)) || pm.find(fm => fm.subtypes.some(s => code.startsWith(upper(s))));
   if (!form) return null;
   const t = upper(x.o.JobTheme), want = /SEMI|BI-QUARTER/.test(t) ? '6M' : /QUARTER/.test(t) ? '3M' : /ANNUAL/.test(t) ? '1Y' : '1M';

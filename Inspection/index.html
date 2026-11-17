@@ -478,7 +478,7 @@
     belt: () => `<details class="ref"><summary>ตารางมาตรฐาน 2 · ความตึงสายพาน</summary>${tbl(['ร่อง', 'ใหม่ kg', 'เดิม kg', 'พูลเล่ย์เล็ก mm'], BELT)}</details>`,
     iso: () => `<details class="ref"><summary>ISO 10816 · ผ่านเมื่อ ≤ satisfactory</summary>${tbl(['Class', 'good ≤', 'satisfactory ≤', 'unsatisfactory ≤'], Object.entries(ISO).map(([c, v]) => [c, ...v]))}</details>`,
     refr: () => `<details class="ref"><summary>ตารางมาตรฐาน 1 · น้ำยา</summary>${tbl(['น้ำยา', 'ดูด °C', 'ดูด psi', 'จ่าย °C', 'จ่าย psi'], Object.entries(REFR).map(([k, v]) => [k, v.sT.join('–'), v.sP.join('–'), v.dT.join('–'), v.dP.join('–')]))}</details>`,
-    vpflow: () => `<details class="ref"><summary>ตารางมาตรฐาน 4 · Flow</summary>${tbl(['Model', 'l/min', 'm³/hr'], Object.entries(VP_FLOW).map(([k, v]) => [k, ...v]))}</details>`,
+    vpflow: () => `<details class="ref"><summary>ตารางมาตรฐาน 4 · Flow</summary>${tbl(['Model', 'l/min', 'm³/hr'], Object.entries((form && form.flow) || VP_FLOW).map(([k, v]) => v.length === 4 ? [k, `${v[0]}–${v[1]}`, `${v[2]}–${v[3]}`] : [k, ...v]))}</details>`,
   };
 
   // =====================================================================
@@ -532,6 +532,14 @@
       rows: [chk('สภาพน้ำมันปั๊ม (สี / น้ำปน / ระดับ)', 'ป้องกันแรงดูดตก', 'ใส ไม่ขุ่นเป็นสีน้ำนม ระดับ ½ Sight glass', '1M'),
         chk('แนวโน้ม Unload test เทียบครั้งก่อน', 'จับการเสื่อมของปั๊มก่อนเสีย', '≤ -740 mmHg และแย่ลงไม่เกิน 10 mmHg', '1M'),
         chk('อุณหภูมิเรือนปั๊ม', 'ป้องกันปั๊มร้อนจนติดตาย', '< 70 °C', '1M', { cells: ba(null, 70, '°C') })] },
+    VPL: { draft: true, find: [['แรงดูดสุญญากาศไม่ถึงเกณฑ์ (Unload test)', 'จากน้ำซีล (Seal water) ไหลน้อยหรือร้อนเกิน วงแหวนน้ำในปั๊มไม่เต็ม'], ['ปั๊มและแบริ่งร้อนเกิน 45 °C', 'จาก Y-Strainer / Flow meter น้ำอุดตัน น้ำหล่อเย็นเข้าไม่พอ'], ['น้ำรั่วที่ Mechanical seal', 'จากซีลสึกและตะกรันในน้ำ ทำให้น้ำเข้าแบริ่ง'], ['สั่นสะเทือนสูงที่คัปปลิ้ง', 'จากลูกยางคัปปลิ้งสึกและศูนย์เพลา (Alignment) คลาดเคลื่อน']],
+      rows: [chk('อุณหภูมิน้ำซีลขาออกจากปั๊ม', 'ป้องกันแรงดูดตกเพราะน้ำร้อน', '< 40 °C (สูงกว่าน้ำขาเข้าไม่เกิน 10 °C)', '1M', { cells: [{ k: 'o', l: 'น้ำขาออก', u: '°C', max: 40 }] }),
+        chk('แนวโน้ม Unload test เทียบครั้งก่อน', 'จับการเสื่อมของปั๊มก่อนเสีย', '-740 ถึง -760 mmHg และแย่ลงไม่เกิน 10 mmHg', '1M'),
+        chk('ตะกรันในตัวปั๊มและท่อน้ำซีล', 'ป้องกันใบพัดเสียดสีและน้ำไหลน้อย', 'ไม่มีตะกรันหนา ท่อไม่ตีบ', '6M')] },
+    MX: { draft: true, find: [['น้ำมันเกียร์รั่วซึม', 'จากซีลเพลาออกและปะเก็นเสื่อม ระดับน้ำมันต่ำจนเฟืองสึก'], ['ชุดเกียร์ร้อนและสั่นสูง', 'จากน้ำมันเกียร์เสื่อมสภาพหรือแบริ่งสึก'], ['เพลากวนแกว่ง / คด', 'จากใบกวนไม่สมดุลหรือมีตะกอนเกาะใบกวน'], ['กระแสมอเตอร์เกินพิกัด', 'จากของเหลวหนืดขึ้นหรือใบกวนติดตะกอน']],
+      rows: [chk('ระดับและสภาพน้ำมันเกียร์', 'ป้องกันเฟือง/แบริ่งสึก', 'อยู่ระหว่างขีด H – L ไม่ขุ่น ไม่มีเศษโลหะ', '1M'),
+        chk('อุณหภูมิผิวเรือนเกียร์', 'ป้องกันเกียร์ไหม้', '< 70 °C', '1M', { cells: ba(null, 70, '°C') }),
+        chk('การแกว่งของเพลากวนและสภาพใบกวน', 'ป้องกันเพลาคดและแบริ่งเสีย', 'เพลาไม่แกว่ง ใบกวนไม่มีตะกอนเกาะ ไม่บิดงอ', '1Y')] },
     WP: { draft: true, find: [['น้ำรั่วที่ Gland packing / Mechanical seal เกินเกณฑ์', 'จากแพ็กกิ้งเสื่อมและเพลาสึก น้ำเข้าแบริ่ง'], ['แบริ่งปั๊ม/มอเตอร์ร้อนและสั่นสูง', 'จากศูนย์เพลา (Alignment) คลาดเคลื่อนและลูกยางคัปปลิ้งสึก'], ['แรงดันตก ปั๊มกินลม (Cavitation)', 'จาก Y-Strainer / Foot valve อุดตัน'], ['มอเตอร์ร้อน ตัด Overload', 'จากแรงดันไฟไม่สมดุล (Vunb) สูง']],
       rows: [chk('อัตรารั่วที่ Gland packing / Mechanical seal', 'ป้องกันน้ำเข้าแบริ่ง', 'Gland ≤ 5 หยด/นาที · Mechanical seal ต้องไม่รั่ว', '3M', { cells: ba(null, 5, 'หยด/นาที') }),
         chk('ความคลาดศูนย์เพลา (Alignment)', 'ป้องกันแบริ่ง/คัปปลิ้งเสียหาย', 'ระยะห่าง 1.0 – 3.0 mm ±0.2 · เยื้องศูนย์ ≤ 0.01 mm', '3M'),
@@ -614,7 +622,7 @@
       case 'value':
         if (item.judge === 'iso') return isoStatus(n, h);
         if (item.judge === 'refT') { const r = REFR[h.refr]; return r ? inRange(n, ...r.sT) : ''; }
-        if (item.judge === 'vpflow') return '';
+        if (item.judge === 'vpflow') { const f = item.flow && item.flow[h.vpModel]; return f ? inRange(n, f[0], f[1]) : ''; }
         if (item.min == null && item.max == null) return '';
         return inRange(n, item.min, item.max);
       case 'v3': { const nom = /RN|L-N/.test(key) ? 230 : 400; return Math.abs(n - nom) <= nom * item.tol / 100 ? 'ok' : 'ng'; }
@@ -657,7 +665,7 @@
     if (item.type === 'v3') return `±${item.tol}% ของ Std.${h.phase === '1' ? ' (230 V)' : item.rn ? ' (400 V · RN 230 V)' : ' (400 V)'}`;
     if (item.type === 'refr') { const r = REFR[h.refr]; return r ? `Low ${r.sP.join('–')} · High ${r.dP.join('–')} psi (${h.refr})` : 'เลือกชนิดน้ำยาในข้อมูลเครื่องก่อน'; }
     if (item.judge === 'refT') { const r = REFR[h.refr]; return r ? `${r.sT.join(' – ')} °C (${h.refr})` : 'เลือกชนิดน้ำยาในข้อมูลเครื่องก่อน'; }
-    if (item.judge === 'vpflow') { const f = VP_FLOW[h.vpModel]; return f ? `${f[0]} l/min ตามตาราง 4 (${h.vpModel})` : 'เลือกรุ่นปั๊มในข้อมูลเครื่องก่อน'; }
+    if (item.judge === 'vpflow') { const f = (item.flow || VP_FLOW)[h.vpModel]; return !f ? 'เลือกรุ่นปั๊มในข้อมูลเครื่องก่อน' : item.flow ? `${f[0]} – ${f[1]} l/min ตามตาราง 4 (${h.vpModel})` : `${f[0]} l/min ตามตาราง 4 (${h.vpModel})`; }
     if (item.judge === 'iso' || item.type === 'vibTemp') return h.vclass ? `ISO 10816 Class ${h.vclass} · ผ่าน ≤ ${ISO[h.vclass][1]} mm/s` : 'เลือก Class เครื่องในข้อมูลเครื่องก่อน';
     if (item.type === 'grid') return `เฉลี่ย ${item.min} – ${item.max} m/s`;
     if (item.type === 'dosing') return 'ตามที่กำหนด';
@@ -902,7 +910,7 @@
       html += f.models.map(m => `<label class="row"><span class="row-label">Model ${esc(m)}</span><input class="row-input" data-hm="${esc(m)}" value="${esc(h.models[m] || '')}" placeholder="ไม่บังคับ" autocomplete="off"></label>`).join('');
       if (f.panel) html += inputRow('ตู้ไฟฟ้า', 'class="row-input code" data-h="panel"', h.panel, 'ไม่บังคับ');
       if (hasVib) html += `<label class="row"><span class="row-label">Class เครื่อง</span><select class="row-input" data-h="vclass"><option value="">เลือก</option>${CLASSES.map(([c, l]) => `<option value="${c}"${h.vclass === c ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
-      if (f.vpModel) html += `<label class="row"><span class="row-label">รุ่นปั๊ม</span><select class="row-input" data-h="vpModel"><option value="">เลือก</option>${Object.keys(VP_FLOW).map(m => `<option${h.vpModel === m ? ' selected' : ''}>${m}</option>`).join('')}</select></label>`;
+      if (f.vpModel) html += `<label class="row"><span class="row-label">รุ่นปั๊ม</span><select class="row-input" data-h="vpModel"><option value="">เลือก</option>${Object.keys(f.flow || VP_FLOW).map(m => `<option${h.vpModel === m ? ' selected' : ''}>${m}</option>`).join('')}</select></label>`;
       if (hasElec) html += `<div class="stack"><span class="stack-label">ไฟเข้า</span>${segHtml('h_phase', [['3', '3 เฟส'], ['1', '1 เฟส']], h.phase)}</div>`;
       if (f.refr) html += `<div class="stack"><span class="stack-label">ชนิดน้ำยา</span>${segHtml('h_refr', Object.keys(REFR), h.refr)}</div>`;
       if (f.pumpState) html += `<div class="stack"><span class="stack-label">สถานะปั๊ม</span>${segHtml('h_pumpState', ['เปิด', 'ปิด'], h.pumpState)}</div>
@@ -1801,7 +1809,8 @@
   // Typing a reading for "จุดที่ N" lights box N on that item's picture
   function markPoint(el, on) {
     const item = el.dataset && el.dataset.it && form && form.m.find(i => i.id === el.dataset.it);
-    const n = item && item.type === 'vibTemp' && item.fig && (el.dataset.k.match(/^[vt](\d+)$/) || [])[1];
+    // a vibTemp item names the point in its cell keys; a single-point item (pt) is that point throughout
+    const n = item && item.fig && (item.pt ? String(item.pt) : item.type === 'vibTemp' && (el.dataset.k.match(/^[vt](\d+)$/) || [])[1]);
     if (!n) return;
     document.querySelectorAll(`.fig[data-fig="${item.fig}"] .fig-pt`).forEach(p => p.classList.toggle('on', on && p.dataset.pt === n));
   }

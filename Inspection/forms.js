@@ -12,6 +12,9 @@
   const belt = (id, n = 3) => it(id, 'belt', 'ความตึงสายพาน (ถ้ามี)', { n, spec: 'ตารางมาตรฐาน 2', tool: 'Belt tester', ref: 'belt' });
   const vt = (id, n, label, fig) => it(id, 'vibTemp', label, { n, tool: 'Vibration / Thermo meter', ref: 'iso', fig });
 
+  // Low vacuum (water ring) pumps, ตารางมาตรฐาน4 of CE97F1006J (Low Vacuum): [min l/min, max l/min, min m³/hr, max m³/hr]
+  const VPL_FLOW = { SKL521: [11, 19, 0.6, 1.2], SKH522: [11, 19, 0.6, 1.2], SKH542: [14, 26, 0.9, 1.5], SKH562: [18, 32, 1.1, 1.9], SKL741: [28, 52, 1.7, 3.1], 'SW-150S': [12, 14, 0.72, 0.84] };
+
   // Diagrams cropped from the paper sheets (img/), shown beside the items that need them
   const FIGS = {
     fan:       { src: 'img/fan_points.png',   cap: 'ตำแหน่งจุดวัดความสั่น 1–4 (ซ้าย: ขับสายพาน · ขวา: ต่อตรง)' },
@@ -20,6 +23,10 @@
     bp:        { src: 'img/bp_points.png',    cap: 'ตำแหน่งจุดวัด 1–3 ของชุดเกียร์และมอเตอร์', ar: 1102 / 794,
                  pts: { 1: [0.117, 0.548, 0.089, 0.083], 2: [0.355, 0.539, 0.087, 0.083], 3: [0.860, 0.605, 0.087, 0.083] } },
     vp:        { src: 'img/vp_points.png',    cap: 'ตำแหน่งจุดวัด 1–4 ตามแบบปั๊ม CT3 / CT4 / FT3' },
+    vpl:       { src: 'img/vpl_points.png',   ar: 1028 / 523, cap: 'ตำแหน่งจุดวัด 1–4 ของปั๊มสุญญากาศและมอเตอร์ (Vibration checking point)',
+                 pts: { 1: [0.887, 0.082, 0.078, 0.105], 2: [0.667, 0.086, 0.078, 0.105], 3: [0.464, 0.157, 0.078, 0.105], 4: [0.112, 0.153, 0.078, 0.105] } },
+    mx:        { src: 'img/mx_points.png',    ar: 863 / 1307, cap: 'ตำแหน่งจุดวัด 1–3 ของชุดเกียร์และมอเตอร์',
+                 pts: { 1: [0.852, 0.074, 0.104, 0.046], 2: [0.852, 0.145, 0.104, 0.046], 3: [0.913, 0.233, 0.104, 0.046] } },
     wp:        { src: 'img/wp_points.png',    cap: 'ตำแหน่งจุดวัด 1–3 ตามแบบปั๊ม (แนวตั้ง / แนวนอน)' },
     wpAlign:   { src: 'img/wp_alignment.png', cap: 'วิธีวัด Alignment: ระยะห่างหน้าคัปปลิ้ง (ซ้าย) และเยื้องศูนย์ (ขวา)' },
     hexRods:   { src: 'img/hex_rods.png',     cap: 'จุดวัดระยะเหล็กสตัดเกลียว D1–D8' },
@@ -97,6 +104,13 @@
       t: tasks(['วัดค่าการทำงานของเครื่อง ตามข้อ 1', 'ตรวจสอบการรั่วของน้ำมันเกียร์ และเปลี่ยนแผ่น Filter', 'อัดจารบี / ตรวจเช็คและเติมน้ำมันเกียร์ (ถ้ามี)', 'ตรวจสอบเสียงผิดปกติชุดเกียร์, มอเตอร์', 'เปลี่ยนชิ้นส่วนหลัก Bearing, Seal, Gasket, O-ring', 'ขัดล้างทำความสะอาดภายใน, พ่นสีเคลือบเกียร์, พ่นสีภายนอก', 'เปลี่ยน Bearing motor, เคลือบน้ำยา Varnish, อบขดลวดมอเตอร์']),
       rules: { '3M': ['1.1', '1.2', '1.4', '2.1-2.4'], '1Y': 'all', repair: 'all' } },
 
+    { id: 'MX', kind: 'pm', code: 'CE97F1012H', name: 'Agitator Mixer', th: 'เครื่องกวนผสม',
+      subtypes: ['MX', 'AGI', 'Other'], models: ['Pump'], panel: true, periods: ['1M', '1Y'],
+      m: [v3('1.1', { slash: true }), i3('1.2', undefined, { slash: true }), ins('1.3'),
+          vt('1.4', 3, 'ความสั่นสะเทือน / ความร้อน ชุดเกียร์และมอเตอร์', 'mx')],
+      t: tasks(['วัดค่าการทำงานของเครื่อง ตามข้อ 1', 'ตรวจสอบการรั่วของน้ำมันเกียร์', 'อัดจารบี / ตรวจเช็คและเติมน้ำมันเกียร์ (ถ้ามี)', 'ตรวจสอบเสียงผิดปกติชุดเกียร์, มอเตอร์', 'เปลี่ยนชิ้นส่วนหลัก Bearing, Seal, Gasket, O-ring', 'ขัดล้างทำความสะอาดภายใน, พ่นสีเคลือบเกียร์, พ่นสีภายนอก', 'เปลี่ยน Bearing motor, เคลือบน้ำยา Varnish, อบขดลวดมอเตอร์']),
+      rules: { '1M': ['1.1', '1.2', '1.4', '2.1-2.4'], '1Y': 'all', repair: 'all' } },
+
     { id: 'CFP', kind: 'pm', code: 'CE97F1012H', name: 'Chemical Feed Pump', th: 'ปั๊มจ่ายสารเคมี',
       subtypes: ['CHP', 'CP', 'WP', 'Other'], models: ['Pump'], panel: true, periods: ['3M'],
       m: [v3('1.1', { slash: true }), i3('1.2', undefined, { slash: true }), ins('1.3'),
@@ -130,6 +144,21 @@
           vt('1.8', 4, 'ความสั่นสะเทือน / ความร้อน ปั๊มและมอเตอร์', 'vp')],
       t: tasks(['วัดค่าการทำงานของเครื่อง ตามข้อ 1', '5ส บริเวณเครื่อง', 'ตรวจเช็คการรั่วของน้ำจากปั๊มสุญญากาศ', 'ตรวจสอบสภาพเกจวัดแรงดูด (vacuum gauge)', 'ทำความสะอาด Y-Strainer ของท่อด้านดูด', 'ทำความสะอาด Flow meter น้ำ', 'เปลี่ยนสายพาน, ตรวจสอบร่อง Pulley และปรับตั้ง Alignment', 'เก็บตัวอย่างน้ำมันเพื่อวิเคราะห์ (เขียนระบุหมายเลขเครื่อง)', 'ตรวจสอบระดับน้ำมันและเติมน้ำมัน ประมาณ ½ ของ Sight glass', 'เปลี่ยนชิ้นส่วนหลัก Bearing, Seal, Gasket, O-ring, Gear', 'ขัดล้างทำความสะอาดภายใน, พ่นสีเคลือบใบพัด, พ่นสีภายนอก', 'เปลี่ยน Bearing motor, เคลือบน้ำยา Varnish, อบขดลวดมอเตอร์']),
       rules: { '1M': ['1.1-1.6', '2.1-2.9'], '1Y': 'all', repair: 'all' } },
+
+    // Water ring vacuum pump: items keep the paper sheet's numbers (1.1–1.16), since its round scopes are written in them
+    { id: 'VPL', kind: 'pm', code: 'CE97F1006J', name: 'Vacuum Pump', th: 'ปั๊มสุญญากาศ · Low Vacuum',
+      subtypes: ['VP'], models: ['Pump', 'Motor'], panel: true, periods: ['1M', '6M', '1Y'], vpModel: true, flow: VPL_FLOW,
+      m: [v3('1.1', { rn: true }), i3('1.2'),
+          val('1.3', 'อุณหภูมิน้ำขาเข้าปั๊ม', null, 30, '°C', 'Thermo meter', { spec: '< 30 °C' }),
+          val('1.4', 'แรงดันน้ำขาเข้าปั๊ม', 2.0, 5.5, 'kg/cm²', 'Pressure gauge'),
+          it('1.5', 'value', 'อัตราการไหลของน้ำเข้าปั๊ม', { unit: 'l/min', judge: 'vpflow', flow: VPL_FLOW, tool: 'Flow meter', ref: 'vpflow' }),
+          ...[1, 2, 3, 4].map(p => val(`1.${5 + p}`, `ความร้อนปั๊มและมอเตอร์ขณะทำงาน จุดที่ ${p}`, null, 45, '°C', 'IR thermo meter', { spec: '< 45 °C', fig: 'vpl', pt: p })),
+          ...[1, 2, 3, 4].map(p => vib(`1.${9 + p}`, p, { fig: 'vpl', pt: p })),
+          val('1.14', 'Unload test (ปิดวาล์วด้านดูด 5 วินาที)', -760, -740, 'mmHg', 'Vacuum gauge', { neg: true }),
+          ins('1.15'),
+          it('1.16', 'align', 'ปรับตั้ง Alignment และเปลี่ยนลูกยาง Coupling', { tool: 'Dial gauge / Feeler gauge', fig: 'wpAlign' })],
+      t: tasks(['วัดค่าการทำงานของเครื่อง ตามข้อ 1', '5ส บริเวณเครื่อง', 'ตรวจเช็คการรั่วของน้ำจากปั๊มสุญญากาศ', 'ตรวจสอบสภาพเกจวัดแรงดูด (vacuum gauge)', 'ทำความสะอาด Y-Strainer ของท่อด้านดูด', 'ทำความสะอาด Flow meter น้ำ', 'ตรวจสอบสภาพของลูกยาง และปรับตั้งศูนย์ (Alignment)', 'เปลี่ยน Bearing, Mechanical seal, teflon ball ของปั๊มสุญญากาศ', 'ขัดล้างทำความสะอาดภายใน, พ่นสีกันสนิมปั๊มสุญญากาศ', 'เปลี่ยน Bearing motor, เคลือบน้ำยา Varnish, อบขดลวดมอเตอร์']),
+      rules: { '1M': ['1.1-1.13', '2.1-2.4'], '6M': ['1.1-1.16', '2.1-2.7'], '1Y': 'all', repair: ['1.1-1.16', '2.1-2.7'] } },
 
     { id: 'WP', kind: 'pm', code: 'CE97F1012H', name: 'Water Pump', th: 'ปั๊มน้ำ',
       subtypes: ['CP', 'CWP', 'WP', 'Other'], models: ['Pump', 'Motor'], panel: true, periods: ['3M', '1Y'], pumpState: true,
@@ -199,5 +228,5 @@
       return a === from[0] && b >= from[1] && b <= to[1];
     });
   }
-  window.INSP = { FORMS, FIGS, inRule };
+  window.INSP = { FORMS, FIGS, inRule, VPL_FLOW };
 })();

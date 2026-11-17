@@ -847,6 +847,7 @@
     $('save').textContent = 'บันทึกผล';
     renderForm();
     window.scrollTo(0, 0);
+    pullDraft();
   }
 
   // Edit a saved result in the same form; saving replaces it in place (same id, so its printout follows)
@@ -1318,6 +1319,27 @@
     const all = store.get(HIST, []), r = all.find(x => x.id === id);
     if (r) { r.sent = true; store.set(HIST, all); }
   }
+  // A linked PM draft also lives in the plan's sheet, so it can be continued on another phone or the PC
+  const pmToken = () => { try { return localStorage.getItem('pm_ct_token') || localStorage.getItem('ct_token') || ''; } catch (e) { return ''; } };
+  const draftOnline = () => linked(form) && form.kind === 'pm' && !S.editId && PMLINK.api && pmToken();
+  async function pmCall(body) {
+    const res = await fetch(PMLINK.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, token: pmToken(), id: PMLINK.id }) });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  }
+  // On open: take the sheet's draft when it is newer than this device's and nothing was typed meanwhile
+  async function pullDraft() {
+    if (!draftOnline()) return;
+    const mine = form, before = JSON.stringify(S);
+    let r; try { r = await pmCall({ op: 'pmDraft' }); } catch (e) { return; }   // offline: keep this device's draft
+    if (form !== mine || JSON.stringify(S) !== before || !r.draft) return;
+    let d; try { d = JSON.parse(r.draft); } catch (e) { return; }
+    if (!d || !d.h || (S.draftAt && String(d.draftAt || '') <= S.draftAt)) return;
+    S = d; S.rr = S.rr || {}; saveDraft(); renderForm();
+    toast(`โหลดร่างจากระบบ${r.by ? ' (' + r.by + ')' : ''}`);
+  }
+
   async function sendPM(rec, el) {
     const say = (cls, html) => { if (el) { el.className = 'pmsend ' + cls; el.innerHTML = html; } };
     const retry = `<button type="button" class="btn-block secondary" data-resend="${esc(rec.id)}">ส่งอีกครั้ง</button>`;
@@ -1814,7 +1836,7 @@
     $('sheetHost').innerHTML = `<div class="backdrop" id="bd"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT" aria-describedby="shD">
       <div class="grabber" aria-hidden="true"></div>
       <h2 id="shT">บันทึกร่างแล้ว</h2>
-      <p id="shD">ค่าที่กรอกเก็บไว้ในมือถือเครื่องนี้ ปิดหน้านี้ได้เลย ทำงานเสร็จแล้วเปิด${linked(form) ? 'งาน PM เดิม' : 'ฟอร์ม ' + esc(form.id) + ' บนมือถือเครื่องนี้'}กลับมากรอกค่าหลังทำงานต่อ</p>
+      <p id="shD">${draftOnline() ? 'กำลังบันทึกเข้าระบบ…' : `ค่าที่กรอกเก็บไว้ในมือถือเครื่องนี้ ปิดหน้านี้ได้เลย ทำงานเสร็จแล้วเปิด${linked(form) ? 'งาน PM เดิม' : 'ฟอร์ม ' + esc(form.id) + ' บนมือถือเครื่องนี้'}กลับมากรอกค่าหลังทำงานต่อ`}</p>
       <div class="acts">${back ? `<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้าแผน PM</a>` : ''}
         <button type="button" class="btn-block ${back ? 'secondary' : 'primary'}" id="shBack">กรอกต่อ</button></div></div></div>`;
     const close = () => { $('sheetHost').innerHTML = ''; document.removeEventListener('keydown', onKey); };
@@ -1823,6 +1845,12 @@
     $('bd').addEventListener('click', (e) => { if (e.target.id === 'bd') close(); });
     $('shBack').addEventListener('click', () => { close(); renderForm(); });
     (document.querySelector('#bd a') || $('shBack')).focus();
+    if (draftOnline()) {
+      const say = (t) => { const p = $('shD'); if (p) p.textContent = t; };
+      pmCall({ op: 'pmDraftSave', form: form.id, draft: JSON.stringify(S) })
+        .then(() => say('ค่าที่กรอกเก็บในระบบแล้ว เปิดงาน PM เดิมจากมือถือหรือคอมเครื่องไหนก็กรอกต่อได้'))
+        .catch((e) => say(`เก็บในระบบไม่สำเร็จ (${e instanceof TypeError ? 'เชื่อมต่อไม่ได้' : e.message}) · ค่าที่กรอกยังอยู่ในเครื่องนี้ กดบันทึกร่างอีกครั้งเมื่อมีเน็ต`));
+    }
   });
   // A saved result and its printout step back to the results list, an edit back to its result; everything else goes home
   $('back').addEventListener('click', () => {

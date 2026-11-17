@@ -4389,8 +4389,8 @@ function pmMineHtml() {
     const fm = pmForm(x);
     return `<div class="pmme-c${isLate ? ' late' : ''}"><button type="button" class="top" data-pm="${esc(x.id)}"><b>${esc(x.o.MachineID)}</b>${pill}<i aria-hidden="true">›</i></button>
       <small>${esc([x.o.MachineType, x.o.FactoryID, 'PM ' + x.theme].filter(Boolean).join(' · '))}${x.stop ? ' · ต้องหยุดเครื่อง' : ''}</small>
-      ${fm && pmDraft(x, fm) ? `<small class="pmme-d">มีร่างที่บันทึกไว้ ${esc(pmDraftTime(pmDraft(x, fm)))}</small>` : x.st === 'todo' && x.o.InspectionID ? '<small class="pmme-d">บันทึกผลแล้ว · รอกดส่งให้วิศวะ</small>' : ''}
-      ${fm ? `<a class="btn solid${isLate ? '' : ' go'}" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ' : 'เริ่มตรวจ'} · ${esc(fm.form.id)} รอบ ${esc(fm.period)}</a>` : `<button type="button" class="btn" data-pm="${esc(x.id)}">เปิดงาน</button>`}</div>`;
+      ${fm && pmDraft(x, fm) ? `<small class="pmme-d">ยังไม่ได้กดบันทึกผล · กรอกล่าสุด ${esc(pmDraftTime(pmDraft(x, fm)))}</small>` : x.st === 'todo' && x.o.InspectionID ? '<small class="pmme-d">บันทึกผลแล้ว · รอกดส่งให้วิศวะ</small>' : ''}
+      ${fm ? `<a class="btn solid${isLate ? '' : ' go'}" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ' : x.o.InspectionID ? 'แก้ผล' : 'เริ่มตรวจ'} · ${esc(fm.form.id)} รอบ ${esc(fm.period)}</a>` : `<button type="button" class="btn" data-pm="${esc(x.id)}">เปิดงาน</button>`}</div>`;
   };
   const sec = (title, list, html, cls) => list.length ? `<p class="pmme-h ${cls || ''}"><span>${title}</span><span>${list.length}</span></p>` + html : '';
   return `<div class="pmme-bar" role="img" aria-label="ทำแล้ว ${doneN} จาก ${month.length} งานเดือนนี้"><i style="width:${month.length ? Math.round(doneN / month.length * 100) : 0}%"></i></div>`
@@ -4715,7 +4715,7 @@ function pmChecklistHtml(x) {
 }
 // the Inspection page for a PM job: machine, factory and round filled in, results come back with op pmInspect
 function pmDraft(x, fm) {
-  try { const d = JSON.parse(localStorage.getItem('insp.draft.' + fm.form.id + '.' + x.id) || 'null'); return d && d.draftAt ? new Date(d.draftAt) : null; } catch { return null; }
+  try { const d = JSON.parse(localStorage.getItem('insp.draft.' + fm.form.id + '.' + x.id) || 'null'); return d && d.editedAt ? new Date(d.editedAt) : null; } catch { return null; }
 }
 const pmDraftTime = d => d.getDate() + ' ' + MON3[d.getMonth()] + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 function pmInspUrl(x, fm) {
@@ -4740,7 +4740,7 @@ function openPM(id) {
   if (work) {
     pmv.files = [];
     const fm = pmForm(x);
-    if (fm) f += `<div class="pmsec"><h3>ทำ Inspection</h3><div class="full pminsp"><a class="btn solid" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ (มีร่าง ' + esc(pmDraftTime(pmDraft(x, fm))) + ')' : 'เปิดฟอร์ม'} ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
+    if (fm) f += `<div class="pmsec"><h3>ทำ Inspection</h3><div class="full pminsp"><a class="btn solid" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ (ยังไม่ได้บันทึกผล)' : o.InspectionID ? 'แก้ผลที่บันทึก' : 'เปิดฟอร์ม'} ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
       ${o.InspectionID ? '<p class="pmok">✓ บันทึกผล Inspection แล้ว (ค่าวัดอยู่ด้านบน) · แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"</p>' : '<p>กรอกค่าวัดที่เครื่องบนมือถือ กด "บันทึกผล" แล้วกลับมาหน้านี้ แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"</p>'}</div></div>`;
     // no plan-date / done-date / abnormal fields: the date sent is today, abnormal comes from the Inspection sheet
     f += `<div class="pmsec pm-done${fm ? ' pm-hasform' : ''}"><h3>แนบไฟล์และรูป</h3>
@@ -4856,7 +4856,7 @@ async function pmDo(op) {
   if (op === 'schedule') p.date = v('pdate');
   if (op === 'submit') {
     const fm = pmForm(x);
-    if (fm && pmDraft(x, fm)) return msg('งานนี้มีร่าง Inspection ที่ยังไม่ได้บันทึกผล · เปิดฟอร์ม Inspection แล้วกด "บันทึกผล" ก่อน แล้วค่อยกดส่ง');
+    if (fm && pmDraft(x, fm)) return msg('มีค่า Inspection ที่กรอกในเครื่องนี้แต่ยังไม่ได้กดบันทึกผล · เปิดฟอร์ม Inspection แล้วกด "บันทึกผล" ก่อน แล้วค่อยกดส่ง');
     Object.assign(p, { date: isoDay(new Date()), remark: v('remark').trim(), abnormal: false, files: pmv.files.map(f => f.data) });
   }
   if (op === 'approve' || op === 'sendBack') { p.note = v('note').trim(); if (op === 'sendBack' && !p.note) return msg('กรุณาบอกเหตุผลที่ส่งกลับ'); }

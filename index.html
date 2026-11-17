@@ -1347,6 +1347,7 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmdlg i{width:12px;height:12px;border-radius:4px;flex:none}
 .pmdlg b{margin-left:auto;font-variant-numeric:tabular-nums}
 .pmtech{display:grid;gap:2px;max-height:300px;overflow:auto}
+.pmabn{display:grid;max-height:320px;overflow:auto}.pmcnt{font-style:normal;font-size:13px;background:#F1EAFD;color:#6B3FB8;border-radius:999px;padding:1px 8px;margin-left:4px;vertical-align:middle}
 .pmtr{display:grid;grid-template-columns:minmax(80px,1fr) 2fr 44px 86px;align-items:center;gap:10px;min-height:38px;border:0;border-radius:10px;background:none;padding:4px 8px;font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer}
 .pmtr:hover:not(:disabled){background:#F3F6FB}
 .pmtr:disabled{cursor:default;color:var(--muted)}
@@ -4308,7 +4309,7 @@ const PM_MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY
 const PM_S = { todo: 'INCOMPLETED', review: 'WAIT FOR APPROVE', done: 'COMPLETED' };
 const PM_ST = { done: 'เสร็จแล้ว', review: 'รออนุมัติ', todo: 'ยังไม่ทำ', late: 'เลยกำหนด' };
 const canPM = () => ['technician', 'engineer', 'admin'].includes(role());
-var pmv = { trend: {}, trendMc: '', cal: { mode: 'month', date: new Date() }, year: new Date().getFullYear(), month: new Date().getMonth() + 1, tab: 'list', f: { pic: '', theme: '', loc: '', mc: '' }, st: '', q: '', day: '', data: {}, loading: '', err: '', shown: 150, files: [], mineF: 'today' };
+var pmv = { cal: { mode: 'month', date: new Date() }, year: new Date().getFullYear(), month: new Date().getMonth() + 1, tab: 'list', f: { pic: '', theme: '', loc: '', mc: '' }, st: '', q: '', day: '', data: {}, loading: '', err: '', shown: 150, files: [], mineF: 'today' };
 try { const t = store.get('ct_pmTab'); if (t === 'cal' || t === 'list' || t === 'dash') pmv.tab = t; } catch {}
 // "narate.kap@murata.com" → "Narate"; a name stays as it is
 const pmPicName = v => { const s = String(v || '').trim(); if (!s.includes('@')) return s; const f = s.split('@')[0].split(/[._]/)[0]; return f.charAt(0).toUpperCase() + f.slice(1).toLowerCase(); };
@@ -4588,40 +4589,6 @@ function pmDonut(L) {
   const lg = K.map(k => `<button type="button" class="pmdlg" data-pmds="${k}"><i style="background:linear-gradient(135deg,${PM_GRAD[k][0]},${PM_GRAD[k][1]})"></i>${PM_ST[k]}<b>${n(k)}</b></button>`).join('');
   return `<div class="pmdonut"><svg viewBox="0 0 140 140" role="img" aria-label="สถานะงาน PM">${g}</svg><div>${lg}</div></div>`;
 }
-// one machine's values over time from the Inspection page: the item that is out of spec in the newest sheet
-function pmTrendHtml(mc) {
-  if (!mc) return '<p class="pmnone">เลือกเครื่องจากรายการ "เครื่องที่ต้องดู"</p>';
-  const d = pmv.trend[mc];
-  if (!d || d === 'loading') return '<p class="pmnone">กำลังโหลดค่าวัด…</p>';
-  if (d.err) return `<p class="pmnone">${esc(d.err)}</p>`;
-  const num = r => r.value !== '' && isFinite(parseFloat(r.value)), rows = d.rows.filter(num);
-  if (!rows.length) return `<p class="sub"><b>${esc(mc)}</b></p><p class="pmnone">ยังไม่มีผลตรวจจากเว็บของเครื่องนี้</p>`;
-  const last = rows.reduce((m, r) => r.sid > m ? r.sid : m, ''), now = rows.filter(r => r.sid === last);
-  const pick = now.find(r => r.result === 'นอกเกณฑ์') || now.find(r => r.result === 'เฝ้าระวัง') || now[0];
-  const key = r => r.no + '|' + r.field, sids = uniq(rows.map(r => r.sid)).sort();
-  const pts = sids.map(s => rows.find(r => r.sid === s && key(r) === key(pick))).filter(Boolean).slice(-10);
-  const form = PMF.FORMS.find(f => f.id === pick.form), item = form && form.m.find(i => i.id === pick.no);
-  const lim = [item && item.min, item && item.max].filter(v => v != null && isFinite(v));
-  const vals = pts.map(r => parseFloat(r.value)).concat(lim), lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo || 1) * 0.15;
-  const W = 360, H = 170, L = 34, R = 10, T = 12, B = 24, y0 = lo - pad, y1 = hi + pad;
-  const y = v => T + (H - T - B) * (1 - (v - y0) / (y1 - y0)), x = i => L + (pts.length < 2 ? (W - L - R) / 2 : (W - L - R) * i / (pts.length - 1));
-  let g = pmGradDefs();
-  [y0, (y0 + y1) / 2, y1].forEach(v => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF1F5"/><text x="${L - 5}" y="${y(v) + 4}" text-anchor="end">${+v.toFixed(1)}</text>`; });
-  lim.forEach(v => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#E31B23" stroke-dasharray="4 3"/><text x="${W - R}" y="${y(v) - 4}" text-anchor="end" style="fill:#C4141B">${v}</text>`; });
-  const P = pts.map((r, i) => [x(i), y(parseFloat(r.value))]);
-  if (P.length > 1) g += `<path d="${pmSmooth(P)}" fill="none" stroke="url(#pg-line)" stroke-width="2.5"/>`;
-  pts.forEach((r, i) => { const bad = r.result === 'นอกเกณฑ์';
-    g += `<circle cx="${P[i][0]}" cy="${P[i][1]}" r="${bad ? 5 : 4}" fill="${bad ? '#E31B23' : '#fff'}" stroke="${bad ? '#fff' : '#0E2F7A'}" stroke-width="2" data-tip="${esc(r.date)} · ${esc(r.value)} ${esc(item && item.unit || '')} ${esc(r.result)}"/>`; });
-  g += `<text x="${x(0)}" y="${H - 6}"${pts.length < 2 ? ' text-anchor="middle"' : ''}>${esc(pts[0].date)}</text>` + (pts.length > 1 ? `<text x="${x(pts.length - 1)}" y="${H - 6}" text-anchor="end">${esc(pts[pts.length - 1].date)}</text>` : '');
-  const name = (item ? item.label : 'ข้อ ' + pick.no) + (pick.field && pick.field !== 'ค่า' ? ' · ' + pick.field : '');
-  return `<p class="sub"><b>${esc(mc)}</b> · ${esc(name)}${item && item.spec ? ' · เกณฑ์ ' + esc(item.spec) : ''}</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ค่าวัดย้อนหลัง ${esc(mc)}">${g}</svg>`;
-}
-async function pmTrendLoad(mc) {
-  pmv.trend[mc] = 'loading';
-  try { const r = await api({ op: 'pmTrend', machine: mc }); pmv.trend[mc] = { rows: r.rows || [] }; }
-  catch (e) { pmv.trend[mc] = { err: e.handled ? 'โหลดค่าวัดไม่สำเร็จ' : friendly(e) }; }
-  if (state.view === 'pm' && pmv.tab === 'dash') renderPM();
-}
 function pmDashboard() {
   const base = pmBase(true), now = new Date();
   if (!base.length) return '<div class="pmempty">ไม่มีงาน PM ในปีนี้ตามตัวกรองที่เลือก</div>';
@@ -4630,7 +4597,7 @@ function pmDashboard() {
   const lateAll = base.filter(x => x.st === 'late').map(x => Object.assign({}, x, { wait: pmDaysSince(new Date(x.y, x.m, 0)) })).sort((a, b) => b.wait - a.wait);
   const review = base.filter(x => x.st === 'review').map(x => { const s = parseAny(x.o.SubmittedAt) || x.act; return Object.assign({}, x, { wait: s ? pmDaysSince(s) : 0 }); }).sort((a, b) => b.wait - a.wait);
   const byMc = {};
-  base.filter(x => x.o.Abnormal === '1').forEach(x => { const k = x.o.MachineID, d = x.act || x.day; const e = byMc[k] = byMc[k] || { mc: k, n: 0, last: null, type: x.o.MachineType, fac: x.o.FactoryID }; e.n++; if (d && (!e.last || d > e.last)) e.last = d; });
+  base.filter(x => x.o.Abnormal === '1').forEach(x => { const k = x.o.MachineID, d = x.act || x.day; const e = byMc[k] = byMc[k] || { mc: k, n: 0, last: null, id: x.id, type: x.o.MachineType, fac: x.o.FactoryID }; e.n++; if (d && (!e.last || d > e.last)) { e.last = d; e.id = x.id; } });
   const machines = Object.values(byMc).sort((a, b) => b.n - a.n || (b.last || 0) - (a.last || 0));
   const kpi = (cls, label, big, sub) => `<div class="pmk ${cls}"><small>${label}</small><b>${big}</b><span>${sub}</span></div>`;
   const kpis = kpi('nv', 'ทำตามแผน · ' + esc(period), pct == null ? '—' : pct + '%', `${mon.filter(pmDone).length}/${mon.length} งาน · เป้า 95%`)
@@ -4654,17 +4621,17 @@ function pmDashboard() {
     return `<td>${p == null ? '<span class="na">—</span>' : `<button type="button" class="${p >= 100 ? 'ok' : p >= 70 ? 'hi' : p >= 50 ? 'md' : 'lo'}" data-pmheat="${esc(f)}|${m}" data-tip="${esc(f)} · ${MON3[m - 1]} · ${L.filter(pmDone).length}/${L.length} งาน">${p}%</button>`}</td>`; }).join('')}</tr>`).join('')}</tbody></table>${pager}`;
   const chase = lateAll.slice(0, 4).map(x => ({ x, tag: `<span class="tg rd">เลย ${x.wait} วัน</span>` })).concat(review.slice(0, 3).map(x => ({ x, tag: `<span class="tg am">${x.wait ? `รอ ${x.wait} วัน` : `ส่งวันนี้`}</span>` })));
   const chaseRows = chase.length ? chase.map(({ x, tag }) => `<button type="button" class="pmfr" data-pm="${esc(x.id)}"><span><b>${esc(x.o.MachineID)}</b><small>${esc([x.theme, picOf(x)].join(' · '))}</small></span>${tag}</button>`).join('') : '<p class="pmnone">ไม่มีงานต้องตาม</p>';
-  const eng = isEngR(), tmc = eng ? (pmv.trendMc && byMc[pmv.trendMc] ? pmv.trendMc : (machines[0] || {}).mc) : '';
-  if (tmc && !pmv.trend[tmc]) setTimeout(() => pmTrendLoad(tmc));
-  const mcRows = machines.length ? machines.slice(0, 6).map(e => `<button type="button" class="pmfr${e.mc === tmc ? ' on' : ''}" ${eng ? `data-pmtrend="${esc(e.mc)}"` : 'disabled'}><span><b>${esc(e.mc)}</b><small>${esc([e.type, e.fac].filter(Boolean).join(' · '))}${e.last ? ' · ล่าสุด ' + esc(dShort(e.last)) : ''}</small></span><span class="tg pu">${e.n} ครั้ง</span></button>`).join('') : '<p class="pmnone">ไม่มีค่านอกเกณฑ์ในปีนี้</p>';
+  const mcRows = machines.length ? machines.slice(0, 6).map(e => `<button type="button" class="pmfr" data-pm="${esc(e.id)}" title="เปิดงานล่าสุดที่ค่านอกเกณฑ์"><span><b>${esc(e.mc)}</b><small>${esc([e.type, e.fac].filter(Boolean).join(' · '))}${e.last ? ' · ล่าสุด ' + esc(dShort(e.last)) : ''}</small></span><span class="tg pu">${e.n} ครั้ง</span></button>`).join('') : '<p class="pmnone">ไม่มีค่านอกเกณฑ์ในปีนี้</p>';
+  const abn = mon.filter(x => x.o.Abnormal === '1').sort((p, q) => (q.act || q.day || 0) - (p.act || p.day || 0));
+  const abnRows = abn.length ? abn.map(x => `<button type="button" class="pmfr" data-pm="${esc(x.id)}"><span><b>${esc(x.o.MachineID)}</b><small>${esc([x.theme, picOf(x), x.act ? dShort(x.act) : ''].filter(Boolean).join(' · '))}</small></span><span class="tg ${x.st === 'review' ? 'am' : 'pu'}">${x.st === 'review' ? 'รออนุมัติ' : PM_ST[x.st] || ''}</span></button>`).join('') : '<p class="pmnone">ไม่มีงานที่ค่านอกเกณฑ์</p>';
   return `<div class="pmdash">${kpis}
     <div class="pmc w8"><h3>แผนเทียบงานที่ทำแล้ว · ${pmv.year}</h3><p class="sub">${base.length ? `ทั้งปี ทำแล้ว <b>${base.filter(pmDone).length.toLocaleString()}</b> / ${base.length.toLocaleString()} งาน · <b>${pmPct(base)}%</b> · ` : ''}กดเดือนเพื่อดูเดือนนั้น</p><div class="lg"><span class="ln dash">แผน</span><span class="ln">ทำแล้ว (รวมรออนุมัติ)</span></div>${pmYearChart(base, M)}</div>
     <div class="pmc w4"><h3>สถานะงาน · ${esc(period)}</h3><p class="sub">กดเพื่อเปิดรายการ</p>${pmDonut(mon)}</div>
     <div class="pmc w6"><h3>ช่างผู้รับผิดชอบ · ${esc(period)}</h3><p class="sub">น้อยกว่า 50% เป็นสีแดง · กดชื่อเพื่อดูงาน</p><div class="pmtech">${techRows}</div></div>
     <div class="pmc w6"><h3>ทำตามแผนรายโรงงาน</h3><p class="sub"><i class="sw ok"></i>100% <i class="sw hi"></i>70–99% <i class="sw md"></i>50–69% <i class="sw lo"></i>&lt;50% · กดช่องเพื่อดูงาน</p>${heat}</div>
-    <div class="pmc ${eng ? 'w4' : 'w6'}"><h3>ต้องตามวันนี้</h3><p class="sub">เลยกำหนดนานสุด · รออนุมัตินานสุด</p>${chaseRows}</div>
-    <div class="pmc ${eng ? 'w4' : 'w6'}"><h3>เครื่องที่ต้องดู</h3><p class="sub">ค่านอกเกณฑ์บ่อยในปีนี้${eng ? ' · กดเพื่อดูค่าวัด' : ''}</p>${mcRows}</div>
-    ${eng ? `<div class="pmc w4"><h3>ค่าวัดย้อนหลัง</h3>${pmTrendHtml(tmc)}</div>` : ''}
+    <div class="pmc w4"><h3>ต้องตามวันนี้</h3><p class="sub">เลยกำหนดนานสุด · รออนุมัตินานสุด</p>${chaseRows}</div>
+    <div class="pmc w4"><h3>เครื่องที่ต้องดู</h3><p class="sub">ค่านอกเกณฑ์บ่อยในปีนี้ · กดเพื่อเปิดงานล่าสุด</p>${mcRows}</div>
+    <div class="pmc w4"><h3>งาน PM ค่านอกเกณฑ์ <em class="pmcnt">${abn.length}</em></h3><p class="sub">${esc(period)} · กดเพื่อดูค่าที่วัดได้</p><div class="pmabn">${abnRows}</div></div>
   </div>`;
 }
 // ---------- one PM job: details, files, and what this account can do with it ----------
@@ -4926,7 +4893,6 @@ $('pmView').addEventListener('click', e => {
   const ds = e.target.closest('[data-pmds]'); if (ds) { pmv.st = ds.dataset.pmds; toList(); return; }
   const pp = e.target.closest('[data-pmpic]'); if (pp) { pmv.f.pic = pp.dataset.pmpic; pmv.st = ''; toList(); return; }
   const ht = e.target.closest('[data-pmheat]'); if (ht) { const [loc, m] = ht.dataset.pmheat.split('|'); pmv.f.loc = loc; pmv.month = +m; pmv.st = ''; toList(); return; }
-  const tr = e.target.closest('[data-pmtrend]'); if (tr) { pmv.trendMc = tr.dataset.pmtrend; renderPM(); return; }
   const hp = e.target.closest('[data-pmhpg]'); if (hp) { pmv.heatPg = (pmv.heatPg || 0) + +hp.dataset.pmhpg; renderPM(); return; }
   if (e.target.closest('[data-pmtoday]')) { pmCalGo(new Date()); return; }
   const go = e.target.closest('[data-pmgo]'); if (go) { pmv.cal.mode = 'day'; pmCalGo(dateOf(go.dataset.pmgo)); return; }
@@ -5964,15 +5930,6 @@ async function demoApi(p) {
       demo.pm.filter(sees).forEach(x => { years[x.PlanYear] = (years[x.PlanYear] || 0) + 1; });
       return { ok: true, year, years, cols: COLS, rows: demo.pm.filter(x => sees(x) && +x.PlanYear === year).map(x => COLS.map(c => x[c] ?? '')),
         technicians: u.role === 'technician' ? [] : Object.values(demo.users).filter(t => t.role === 'technician').map(t => t.name) };
-    }
-    if (p.op === 'pmTrend') {
-      if (u.role === 'technician') return { error: 'บัญชีนี้ไม่มีสิทธิ์ดูข้อมูลนี้' };
-      const jobs = demo.pm.filter(j => j.MachineID === p.machine && j.ActualDate), j0 = jobs[0], fm = j0 && pmForm({ o: j0 });
-      const it = fm && fm.form.m.find(i => i.max != null || i.min != null);
-      if (!it) return { ok: true, machine: p.machine, rows: [] };
-      const lo = it.min != null ? it.min : it.max * 0.6, hi = it.max != null ? it.max : it.min * 1.6, mid = (lo + hi) / 2, span = hi - lo;
-      return { ok: true, machine: p.machine, rows: jobs.map((j, i) => { const v = +(mid - span * (i / Math.max(1, jobs.length - 1) * 0.75 + (i % 2 ? 0.08 : -0.05))).toFixed(1);   // drifts down out of spec
-        const [d, m, y] = j.ActualDate.split('/'); return { sid: 'S' + String(i).padStart(3, '0'), date: `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`, form: fm.form.id, no: it.id, field: (it.labels || [])[0] || 'ค่า', value: String(v), result: v > hi || v < lo ? 'นอกเกณฑ์' : 'ผ่าน' }; }) };
     }
     const x = demo.pm.find(j => j.PMID === String(p.id));
     if (!x || !sees(x)) return { error: 'ไม่พบงาน PM ' + p.id };

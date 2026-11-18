@@ -1900,7 +1900,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.10';
+const APP_VER = '0.0.0.11';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2284,7 +2284,7 @@ function render() {
   const phone = phoneOnly();
   document.body.classList.toggle('phone-req', phone);
   if (CONFIG.PM_ONLY && state.view !== 'pm') { state.view = 'pm'; history.replaceState(null, '', location.pathname + location.search + '#pm'); }
-  if (!CONFIG.PM_ONLY && state.view === 'pm' && state.user && !canPM()) { state.view = phone ? 'request' : 'list'; history.replaceState(null, '', location.pathname + location.search + (phone ? '#request' : '')); }   // customers have no PM tab
+  if (!CONFIG.PM_ONLY && state.view === 'pm' && state.user && !canPM()) { state.view = phone ? 'request' : 'list'; history.replaceState(null, '', location.pathname + location.search + (phone ? '#request' : '')); }   // accounts with no PM tab
   if (phone && state.view !== 'request' && state.view !== 'track' && state.view !== 'pm') { state.view = 'request'; if (location.hash !== '#request') history.replaceState(null, '', location.pathname + location.search + '#request'); }
   if (!phone && state.view === 'track') { state.view = 'list'; history.replaceState(null, '', location.pathname + location.search); }   // the tracking page is for phones; computers use the work list
   renderSync();
@@ -4325,7 +4325,7 @@ function syncUrl() {
 const PM_MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 const PM_S = { todo: 'INCOMPLETED', review: 'WAIT FOR APPROVE', done: 'COMPLETED' };
 const PM_ST = { done: 'เสร็จแล้ว', review: 'รออนุมัติ', todo: 'ยังไม่ทำ', late: 'เลยกำหนด' };
-const canPM = () => ['technician', 'engineer', 'admin'].includes(role());
+const canPM = () => ['technician', 'engineer', 'admin', 'customer'].includes(role());   // customer: view only, own factories
 var pmv = { cal: { mode: 'month', date: new Date() }, year: new Date().getFullYear(), month: new Date().getMonth() + 1, tab: 'list', f: { pic: '', theme: '', loc: '', mc: '' }, st: '', q: '', day: '', data: {}, loading: '', err: '', shown: 150, files: [], mineF: 'today' };
 try { const t = store.get('ct_pmTab'); if (t === 'cal' || t === 'list' || t === 'dash') pmv.tab = t; } catch {}
 // "narate.kap@murata.com" → "Narate"; a name stays as it is
@@ -4468,7 +4468,7 @@ function pmWeekHtml() {
   // jobs with no day yet (this month, and late ones): one tap books them on the day picked
   const none = pmBase(true).filter(x => !x.plan && (x.st === 'late' || (x.st === 'todo' && x.m === sel.getMonth() + 1 && x.y === sel.getFullYear())))
     .sort((a, b) => (a.st === 'late' ? 0 : 1) - (b.st === 'late' ? 0 : 1) || a.m - b.m || natural(a.o.MachineID, b.o.MachineID));
-  const book = none.length ? `<p class="pmwday pmwnone">ยังไม่นัดวัน · ${none.length} งาน</p><div class="pmwl2">${none.map(x => `<div class="pmwc ${x.st}"><button type="button" class="pmwo" data-pm="${esc(x.id)}"><b>${esc(x.o.MachineID)}</b><small>PM ${esc(x.theme)} · ${x.st === 'late' ? 'ของ ' + esc(MON3[x.m - 1] || '') + ' · เลยกำหนด' : esc(x.o.FactoryID || '')}</small></button><button type="button" class="pmwq" data-pmqs="${esc(x.id)}">นัด ${sel.getDate()} ${MON3[sel.getMonth()]}</button></div>`).join('')}</div>` : '';
+  const book = none.length ? `<p class="pmwday pmwnone">ยังไม่นัดวัน · ${none.length} งาน</p><div class="pmwl2">${none.map(x => `<div class="pmwc ${x.st}"><button type="button" class="pmwo" data-pm="${esc(x.id)}"><b>${esc(x.o.MachineID)}</b><small>PM ${esc(x.theme)} · ${x.st === 'late' ? 'ของ ' + esc(MON3[x.m - 1] || '') + ' · เลยกำหนด' : esc(x.o.FactoryID || '')}</small></button>${role() === 'customer' ? '' : `<button type="button" class="pmwq" data-pmqs="${esc(x.id)}">นัด ${sel.getDate()} ${MON3[sel.getMonth()]}</button>`}</div>`).join('')}</div>` : '';
   return `<div class="pmwk"><div class="pmwh"><button type="button" data-pmwk="-7" aria-label="สัปดาห์ก่อน">‹</button><b>${MON3[sel.getMonth()]} ${sel.getFullYear()}</b><button type="button" data-pmwk="7" aria-label="สัปดาห์ถัดไป">›</button>${sIso === tIso ? '' : '<button type="button" class="tdy" data-pmwk="0">วันนี้</button>'}</div>
     <div class="pmws">${strip}</div>
     <p class="pmwday">${PM_DOW[sel.getDay()]} ${esc(dShort(sel))}${sIso === tIso ? ' · วันนี้' : ''}</p>${wrongYear}${chips}<div class="pmwl">${list}</div>${book}</div>`;
@@ -4501,7 +4501,7 @@ function renderPM() {
   if (phoneMQ.matches && pmv.tab !== 'list') pmv.tab = 'list';   // phones have the list only (plus the week calendar below)
   pmNavMark();
   $('pmView').classList.toggle('mine', pmMine());
-  if (!canPM()) { $('pmKpi').innerHTML = ''; $('pmBar').innerHTML = ''; $('pmBar').dataset.html = ''; $('pmTabs').innerHTML = ''; $('pmSub').textContent = ''; $('pmBody').innerHTML = '<div class="pmempty"><b>บัญชีนี้ไม่มีสิทธิ์ใช้แผน PM</b><br>ใช้ได้เฉพาะช่าง วิศวะ และแอดมิน</div>'; return; }
+  if (!canPM()) { $('pmKpi').innerHTML = ''; $('pmBar').innerHTML = ''; $('pmBar').dataset.html = ''; $('pmTabs').innerHTML = ''; $('pmSub').textContent = ''; $('pmBody').innerHTML = '<div class="pmempty"><b>บัญชีนี้ไม่มีสิทธิ์ใช้แผน PM</b><br>ใช้ได้เฉพาะช่าง วิศวะ แอดมิน และลูกค้า</div>'; return; }
   const d = pmv.data[pmv.year];
   if (!d && !pmv.loading && !pmv.err) { loadPM(); return; }
   const items = d ? pmItems() : [];
@@ -5994,7 +5994,7 @@ async function demoApi(p) {
   }
   // ---------- แผน PM (demo: a made-up plan for this year and next) ----------
   if (/^pm/.test(p.op)) {
-    if (!['technician', 'engineer', 'admin'].includes(u.role)) return { error: 'บัญชีนี้ไม่มีสิทธิ์ดูแผน PM' };
+    if (!['technician', 'engineer', 'admin', 'customer'].includes(u.role)) return { error: 'บัญชีนี้ไม่มีสิทธิ์ดูแผน PM' };
     const COLS = ['PMID', 'Status', 'JobTheme', 'MachineID', 'PlanDate', 'PlanMonth', 'PlanYear', 'MachineState', 'ActualDate', 'Owner', 'PIC', 'TeamCode', 'MachineType', 'SystemID', 'MachineCode', 'FactoryID', 'Remark', 'Abnormal', 'ChecklistFile', 'InspectionFile', 'ApprovedBy', 'ApprovedAt', 'SubmittedAt'];
     if (!demo.pm) {
       const techs = Object.values(demo.users).filter(t => t.role === 'technician').map(t => t.name);
@@ -6018,7 +6018,7 @@ async function demoApi(p) {
         }
       });
     }
-    const sees = x => u.role !== 'technician' || sameName(x.PIC, u.name);
+    const sees = x => u.role === 'customer' ? !!u.factory && belongsTo(x.FactoryID, u.factory) : u.role !== 'technician' || sameName(x.PIC, u.name);
     if (p.op === 'pm') {
       const year = +p.year || new Date().getFullYear(), years = {};
       demo.pm.filter(sees).forEach(x => { years[x.PlanYear] = (years[x.PlanYear] || 0) + 1; });
@@ -6028,6 +6028,7 @@ async function demoApi(p) {
     const x = demo.pm.find(j => j.PMID === String(p.id));
     if (!x || !sees(x)) return { error: 'ไม่พบงาน PM ' + p.id };
     if (p.op === 'pmFile') return { error: 'โหมดตัวอย่าง: ไม่มีไฟล์จริงให้เปิด' };
+    if (u.role === 'customer' && p.op !== 'pmChecklist') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' };
     const dmy = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${+m[3]}/${+m[2]}/${m[1]}` : ''; };
     const eng = u.role === 'engineer' || u.role === 'admin';
     let detail = '';

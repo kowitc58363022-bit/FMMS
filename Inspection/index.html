@@ -1468,7 +1468,8 @@
       if (data.pmRow) { try { localStorage.setItem('pm_row_saved', JSON.stringify({ at: Date.now(), row: data.pmRow })); } catch (e) { /* the plan page reads it */ } }
       say('ok', `บันทึกผลเข้างาน PM ${esc(rec.pm)} แล้ว · กลับไปหน้างาน PM แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"${PMLINK.back ? ` · กำลังกลับไปหน้างาน PM…<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้างาน PM</a>` : ''}`);
       // the plan page opens this job by itself (pm_inspect_sent), ready for photos and the send button
-      if (PMLINK.back) location.href = PMLINK.back;
+      // opened as a new tab: close it, the plan tab underneath opens the job (storage event); a tab the browser will not close goes back itself
+      if (PMLINK.back) { window.close(); setTimeout(() => { location.href = PMLINK.back; }, 300); }
     } catch (e) {
       say('ng', `ส่งเข้าแผน PM ไม่สำเร็จ: ${esc(e instanceof TypeError ? 'เชื่อมต่อระบบไม่ได้ ตรวจอินเทอร์เน็ต' : e.message)} · ผลยังอยู่ในมือถือ${retry}`);
     }

@@ -1458,7 +1458,9 @@
       if (data.error) throw new Error(data.error);
       markSent(rec.id);
       try { localStorage.setItem('pm_inspect_sent', rec.pm + '|' + Date.now()); } catch (e) { /* the plan page refreshes on its own later */ }
-      say('ok', `บันทึกผลเข้างาน PM ${esc(rec.pm)} แล้ว · กลับไปหน้างาน PM แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"${PMLINK.back ? `<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้างาน PM</a>` : ''}`);
+      say('ok', `บันทึกผลเข้างาน PM ${esc(rec.pm)} แล้ว · กลับไปหน้างาน PM แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"${PMLINK.back ? ` · กำลังกลับไปหน้างาน PM…<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้างาน PM</a>` : ''}`);
+      // the plan page opens this job by itself (pm_inspect_sent), ready for photos and the send button
+      if (PMLINK.back) setTimeout(() => { location.href = PMLINK.back; }, 1500);
     } catch (e) {
       say('ng', `ส่งเข้าแผน PM ไม่สำเร็จ: ${esc(e instanceof TypeError ? 'เชื่อมต่อระบบไม่ได้ ตรวจอินเทอร์เน็ต' : e.message)} · ผลยังอยู่ในมือถือ${retry}`);
     }

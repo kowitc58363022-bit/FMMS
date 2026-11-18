@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.6';
+const APP_VER = '0.0.0.7';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2029,6 +2029,7 @@ const needsCode = () => !state.token || !state.user;
 function showGate(msg) {
   const wasOpen = !$('gate').hidden;
   if (state.token && !DEMO) fetch(CONFIG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ op: 'logout', token: state.token }) }).catch(() => {});
+  dropKeptPlans();
   setUser('', null);
   state.actions = {}; state.machines = null;
   state.rows = []; state.headers = []; state.meta = {}; state.ok = null; state.fac = ''; state.trackOpen = ''; state.trackQ = ''; state.trackTab = 'open';
@@ -4337,16 +4338,27 @@ function pmItems(yr = pmv.year) {
   });
   return d.items;
 }
-// the plan the Inspection page got back with its save (pm_plan_saved, at most 2 minutes old): used once, in place of waiting for op pm
-function takeSavedPlan() {
+// this device keeps the last plan of each year it read (per account): the page shows it at once, op pm then refreshes it
+const planKey = y => 'pm_plan:' + ((state.user && state.user.username) || '') + ':' + y;
+function keepPlan(y) {
+  const d = pmv.data[y];
+  if (!d || !state.user) return;
+  const text = JSON.stringify({ cols: d.cols, rows: d.rows, years: d.years, technicians: d.technicians });
+  if (text.length > 2e6) return;   // shortcut: a plan over ~2 MB is not kept, read each time
+  store.set(planKey(y), text);
+}
+function keptPlan(y) {
+  try { const d = JSON.parse(store.get(planKey(y)) || 'null'); if (d && d.rows) { d.kept = true; return d; } } catch {}
+  return null;
+}
+function dropKeptPlans() {
+  try { Object.keys(localStorage).filter(k => k.startsWith(skey('pm_plan:'))).forEach(k => localStorage.removeItem(k)); } catch {}
+}
+// the row the Inspection page got back with its save (pm_row_saved, at most 10 minutes old): put on the kept plan, once
+function takeSavedRow() {
   let k = null;
-  try { k = JSON.parse(localStorage.getItem('pm_plan_saved') || 'null'); localStorage.removeItem('pm_plan_saved'); } catch {}
-  const x = k && k.pm;
-  if (!x || !x.rows || !x.year || Date.now() - k.at > 120e3) return false;
-  pmv.ck = {};
-  pmv.data[x.year] = { cols: x.cols, rows: x.rows, years: x.years || {}, technicians: x.technicians || [] };
-  pmv.at = Date.now();
-  return true;
+  try { k = JSON.parse(localStorage.getItem('pm_row_saved') || 'null'); localStorage.removeItem('pm_row_saved'); } catch {}
+  if (k && k.row && Date.now() - k.at < 600e3) applyPMSaved({ pmRow: k.row }, true);
 }
 // the job the Inspection page just sent results for (pm_inspect_sent, within 30 minutes): open it
 function openSentPM() {
@@ -4357,9 +4369,9 @@ function openSentPM() {
 }
 async function loadPM(force) {
   const y = pmv.year;
-  if (takeSavedPlan() && pmv.data[y] && state.view === 'pm') { renderPM(); openSentPM(); }   // shown now; the read below refreshes it
+  if (!pmv.data[y]) { const d = keptPlan(y); if (d) { pmv.data[y] = d; takeSavedRow(); if (state.view === 'pm') { renderPM(); openSentPM(); } } }   // shown now; the read below refreshes it
   if (pmv.loading === String(y)) { if (force) pmv.again = true; return; }   // a write while a read is on the way: read once more after it
-  if (pmv.data[y] && !force) return;
+  if (pmv.data[y] && !pmv.data[y].kept && !force) return;
   pmv.loading = String(y); pmv.err = '';
   if (state.view === 'pm') renderPM();
   try {
@@ -4368,6 +4380,7 @@ async function loadPM(force) {
     pmv.ck = {};
     pmv.data[y] = { cols: r.cols, rows: r.rows, years: r.years || {}, technicians: r.technicians || [] };
     pmv.at = Date.now();
+    keepPlan(y);
   } catch (e) { if (!e.handled) pmv.err = friendly(e); }
   pmv.loading = '';
   if (pmv.again) { pmv.again = false; return loadPM(true); }
@@ -5117,14 +5130,23 @@ function applySaved(r) {
   updateAlerts();
   render();
 }
-function applyPMSaved(r) {
-  const x = r && r.pm;
-  if (!x || !x.rows) { loadPM(true); return; }
-  pmv.ck = {};
-  pmv.data[x.year] = { cols: x.cols, rows: x.rows, years: x.years || {}, technicians: x.technicians || [] };
-  pmv.at = Date.now();
+// a PM save's reply carries the saved row (Code.gs → pmRow, columns as op pm sends them): put it in place in every loaded year
+// (PlanYear may have changed). An older Code.gs sends none: the plan is read again, without making the person wait for it.
+function applyPMSaved(r, quiet) {
+  const row = r && r.pmRow;
+  if (!row) { if (!quiet) loadPM(true); return; }
+  Object.entries(pmv.data).forEach(([yr, d]) => {
+    if (!d || !d.rows || !d.cols) return;
+    const ci = d.cols.indexOf('PMID'), yi = d.cols.indexOf('PlanYear'), id = String(row[ci]).trim();
+    const at = d.rows.findIndex(x => String(x[ci]).trim() === id), mine = parseInt(row[yi], 10) === +yr;
+    if (at >= 0) { if (mine) d.rows[at] = row; else d.rows.splice(at, 1); }
+    else if (mine) d.rows.push(row);
+    delete d.items;   // pmItems() builds them again
+    if (pmv.ck) delete pmv.ck[id];
+    if (!d.kept) keepPlan(+yr);
+  });
   if (pmv.loading) pmv.again = true;
-  if (state.view === 'pm') renderPM();
+  if (!quiet && state.view === 'pm') renderPM();
 }
 
 // ---------- profile picture (Drive) ----------

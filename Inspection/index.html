@@ -1428,7 +1428,9 @@
     if (r) { r.sent = true; store.set(HIST, all); }
   }
   // A linked PM job's saved result comes back from the plan's sheet, so it can be edited on any phone or the PC until it is sent
-  const pmToken = () => { try { return localStorage.getItem('pm_ct_token') || localStorage.getItem('ct_token') || ''; } catch (e) { return ''; } };
+  // the sign-in of the page that opened this one: the repair site keeps ct_token, the separate PM test page (…/pm/) pm_ct_token,
+  // each for its own Apps Script; the other one's token is refused ("เข้าสู่ระบบใหม่")
+  const pmToken = () => { try { const pm = /\/pm\//.test(PMLINK && PMLINK.back || ''); return localStorage.getItem(pm ? 'pm_ct_token' : 'ct_token') || ''; } catch (e) { return ''; } };
   const pmOnline = () => linked(form) && form.kind === 'pm' && !S.editId && PMLINK.api && pmToken();
   async function pmCall(body) {
     const res = await fetch(PMLINK.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, token: pmToken(), id: PMLINK.id }) });
@@ -1452,8 +1454,7 @@
     const say = (cls, html) => { if (el) { el.className = 'pmsend ' + cls; el.innerHTML = html; } };
     const retry = `<button type="button" class="btn-block secondary" data-resend="${esc(rec.id)}">ส่งอีกครั้ง</button>`;
     if (!PMLINK || !PMLINK.api) { say('warn', 'ไม่ได้ส่งเข้าแผน PM (ลิงก์ไม่มีที่อยู่ระบบ หรือเป็นโหมดตัวอย่าง) · ผลเก็บในมือถือเครื่องนี้แล้ว'); return; }
-    let token = '';
-    try { token = localStorage.getItem('pm_ct_token') || localStorage.getItem('ct_token') || ''; } catch (e) { /* private mode */ }
+    const token = pmToken();
     if (!token) { say('warn', 'ยังไม่ได้เข้าสู่ระบบหน้าแผน PM ในเบราว์เซอร์นี้ · เข้าสู่ระบบที่หน้าแผน PM แล้วกดส่งอีกครั้ง (ผลยังอยู่ในมือถือ)' + retry); return; }
     say('', 'กำลังส่งผลเข้าแผน PM…');
     try {

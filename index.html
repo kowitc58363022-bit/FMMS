@@ -4375,7 +4375,7 @@ async function loadPM(force) {
   pmv.loading = String(y); pmv.err = '';
   if (state.view === 'pm') renderPM();
   try {
-    const r = await api({ op: 'pm', year: y, ver: APP_VER });   // ver: an admin on a new version gets the test job TEST_99 back fresh
+    const r = await api({ op: 'pm', year: y });
     if (r.token) { state.token = r.token; try { store.set('ct_token', r.token); } catch {} }
     pmv.ck = {};
     pmv.data[y] = { cols: r.cols, rows: r.rows, years: r.years || {}, technicians: r.technicians || [] };

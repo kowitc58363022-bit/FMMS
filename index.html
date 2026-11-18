@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.5';
+const APP_VER = '0.0.0.6';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4363,7 +4363,7 @@ async function loadPM(force) {
   pmv.loading = String(y); pmv.err = '';
   if (state.view === 'pm') renderPM();
   try {
-    const r = await api({ op: 'pm', year: y });
+    const r = await api({ op: 'pm', year: y, ver: APP_VER });   // ver: an admin on a new version gets the test job TEST_99 back fresh
     if (r.token) { state.token = r.token; try { store.set('ct_token', r.token); } catch {} }
     pmv.ck = {};
     pmv.data[y] = { cols: r.cols, rows: r.rows, years: r.years || {}, technicians: r.technicians || [] };

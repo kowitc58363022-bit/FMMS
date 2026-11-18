@@ -984,6 +984,10 @@ body[data-role="engineer"] .userchip .user-avatar{border-color:var(--red)}
 .stpop{position:absolute;top:calc(100% + 8px);left:0;z-index:30;width:max-content;max-width:min(760px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px -12px #16213E40;padding:12px;flex-wrap:wrap}
 .stpop[hidden]{display:none!important}
 .stlate{align-self:center;flex-wrap:nowrap!important}.stlate[hidden]{display:none!important}
+.stlate .chip:disabled{opacity:.45;pointer-events:none}
+/* the row must not shift when a factory is picked (counts change width) */
+.stpick .stbtn{min-width:200px;justify-content:space-between}
+#main .head:has(.facbar:not([hidden])){flex-wrap:wrap}.head .facbar{flex:1 1 360px;min-width:0}.facbar:not([hidden]) ~ #count{flex:0 0 12em}
 @media (max-width:700px){#main .head{position:relative}.stpick{position:static}.stpop{left:0;right:0;width:auto;max-width:none}}
 /* to-do bar + alerts */
 .todo{border:1px solid var(--line);border-left:4px solid var(--red);border-radius:14px;background:#fff;padding:14px 18px;margin-bottom:18px;box-shadow:0 1px 3px #16213E10}
@@ -1900,7 +1904,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.11';
+const APP_VER = '0.0.0.12';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2394,8 +2398,10 @@ function render() {
     + (hotN ? chip(HOT, 'hot', '<span class="cbolt" aria-hidden="true">' + BOLT + '</span>', 'High attention', 'งานด่วน', hotN) : '')
     + (c.status ? statuses.filter(s => !LATE.test(s)).map(s => fbtn(s, counts[s])).join('') : '');
   const lateSt = c.status ? statuses.filter(s => LATE.test(s) && counts[s]) : [];
-  $('lateOut').innerHTML = lateSt.map(s => fbtn(s, counts[s])).join('');
-  $('lateOut').hidden = !lateSt.length;
+  // a factory with no late job keeps the button (0, greyed) while other factories have some, so the row does not shift
+  const lateAny = c.status ? [...new Set(state.rows.map(r => r[c.status]).filter(s => LATE.test(s)))] : [];
+  $('lateOut').innerHTML = lateSt.length ? lateSt.map(s => fbtn(s, counts[s])).join('') : lateAny.slice(0, 1).map(s => fbtn(s, 0).replace('<button', '<button disabled')).join('');
+  $('lateOut').hidden = !lateSt.length && !lateAny.length;
 
   document.querySelectorAll('#sortBar [data-sort]').forEach(b => b.setAttribute('aria-pressed', String(state.sort === b.dataset.sort)));
   const cur = $('filters').querySelector('[aria-pressed="true"]') || $('filters').querySelector('[data-status=""]');

@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.4';
+const APP_VER = '0.0.0.5';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4337,8 +4337,27 @@ function pmItems(yr = pmv.year) {
   });
   return d.items;
 }
+// the plan the Inspection page got back with its save (pm_plan_saved, at most 2 minutes old): used once, in place of waiting for op pm
+function takeSavedPlan() {
+  let k = null;
+  try { k = JSON.parse(localStorage.getItem('pm_plan_saved') || 'null'); localStorage.removeItem('pm_plan_saved'); } catch {}
+  const x = k && k.pm;
+  if (!x || !x.rows || !x.year || Date.now() - k.at > 120e3) return false;
+  pmv.ck = {};
+  pmv.data[x.year] = { cols: x.cols, rows: x.rows, years: x.years || {}, technicians: x.technicians || [] };
+  pmv.at = Date.now();
+  return true;
+}
+// the job the Inspection page just sent results for (pm_inspect_sent, within 30 minutes): open it
+function openSentPM() {
+  let back = '';
+  try { back = localStorage.getItem('pm_inspect_sent') || ''; } catch {}
+  const [bid, bt] = back.split('|');
+  if (state.view === 'pm' && bid && Date.now() - +bt < 30 * 60000 && pmFind(bid)) { try { localStorage.removeItem('pm_inspect_sent'); } catch {} openPM(bid); }
+}
 async function loadPM(force) {
   const y = pmv.year;
+  if (takeSavedPlan() && pmv.data[y] && state.view === 'pm') { renderPM(); openSentPM(); }   // shown now; the read below refreshes it
   if (pmv.loading === String(y)) { if (force) pmv.again = true; return; }   // a write while a read is on the way: read once more after it
   if (pmv.data[y] && !force) return;
   pmv.loading = String(y); pmv.err = '';
@@ -4353,10 +4372,7 @@ async function loadPM(force) {
   pmv.loading = '';
   if (pmv.again) { pmv.again = false; return loadPM(true); }
   if (state.view === 'pm') renderPM();
-  let back = '';
-  try { back = localStorage.getItem('pm_inspect_sent') || ''; } catch {}
-  const [bid, bt] = back.split('|');
-  if (state.view === 'pm' && bid && Date.now() - +bt < 30 * 60000 && pmFind(bid)) { try { localStorage.removeItem('pm_inspect_sent'); } catch {} openPM(bid); }
+  openSentPM();
 }
 // everything but the status / day filters (the KPI cards count these)
 function pmBase(allMonths) {

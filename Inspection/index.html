@@ -275,6 +275,7 @@
     .rr .cells { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .rr .box input { font-size: var(--fs-1); }
     .rr .note { min-height: 48px; }
+    .note.mnote { min-height: 44px; }
     .auto-tag { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--svc-tint, var(--fill)); color: var(--svc, var(--accent)); font-size: var(--fs-2); font-weight: 600; }
     .auto-why { padding: 0 16px 12px; font-size: var(--fs-2); color: var(--label-2); }
 
@@ -783,7 +784,7 @@
       h: { machine: '', factory: last.factory || '', date: todayIso(), time: nowHm(), subtype: f.subtypes && f.subtypes.length === 1 ? f.subtypes[0] : '',
            job: f.kind === 'daily' ? 'daily' : '', period: '', models: {}, panel: '', phase: '3', vclass: '', refr: '', vpModel: '',
            pumpState: '', valveState: '', inspector: last.inspector || '', comment: '' },
-      v: {}, t: {}, tn: {}, rr: {}, autoWhy: ''
+      v: {}, mn: {}, t: {}, tn: {}, rr: {}, autoWhy: ''
     };
   }
   const editKey = (id) => `insp.edit.${id}`;
@@ -932,7 +933,7 @@
         if (PMLINK.inspector) S.h.inspector = PMLINK.inspector;
       }
     }
-    S.rr = S.rr || {}; delete S.rv;   // drafts from before section 3 / from when it had a 3.3 list
+    S.rr = S.rr || {}; S.mn = S.mn || {}; delete S.rv;   // drafts from before section 3 / from when it had a 3.3 list
     setNav(`${form.id} · ${form.name}`, form.code, !linked(form)); setFormChrome(true);   // a PM job has no way to other forms
     $('save').textContent = 'บันทึกผล';
     renderForm();
@@ -943,7 +944,7 @@
   function stateOf(rec) {
     const v = JSON.parse(JSON.stringify(rec.v || {}));
     const rr = Object.fromEntries(Object.entries(rec.rr || {}).map(([k, x]) => { const { st, ...rest } = x; return [k, rest]; }));
-    return { h: { ...blankState(form).h, ...rec.h, models: { ...(rec.h.models || {}) } }, v, t: { ...rec.t }, tn: { ...rec.tn }, rr, autoWhy: '' };
+    return { h: { ...blankState(form).h, ...rec.h, models: { ...(rec.h.models || {}) } }, v, mn: { ...rec.mn }, t: { ...rec.t }, tn: { ...rec.tn }, rr, autoWhy: '' };
   }
   // Edit a saved result in the same form; saving replaces it in place (same id, so its printout follows)
   // fresh = start from the saved result; otherwise continue unsaved edits kept under insp.edit.<id>
@@ -1034,7 +1035,8 @@
     const calcHtml = calc.length ? `<div class="calc" data-calc="${esc(item.id)}">${calcInner(calc)}</div>` : '';
     const extra = item.type === 'dosing' ? '<p class="hint">จับเวลา 2 ครั้งต่อปริมาณ · Avg. Dosing = ปริมาณ ÷ เวลาเฉลี่ย × 60</p>'
       : item.type === 'vunb' ? '<p class="hint">ใช้แรงดัน RS / ST / RT ของข้อ 1.1 (ค่าหลังทำงาน ถ้าไม่มีใช้ค่าก่อน) · Temp inc = 2 × Vunb² ตามกราฟในฟอร์ม</p>' : '';
-    return `<div class="item${needed ? '' : ' off'}" data-item="${esc(item.id)}" data-st="${st}">${head}${figHtml(item, vals)}${body}${calcHtml}${extra}${item.ref ? REF_HTML[item.ref]() : ''}</div>`;
+    return `<div class="item${needed ? '' : ' off'}" data-item="${esc(item.id)}" data-st="${st}">${head}${figHtml(item, vals)}${body}${calcHtml}${extra}${item.ref ? REF_HTML[item.ref]() : ''}
+      <textarea class="note mnote" data-mn="${esc(item.id)}" rows="1" maxlength="500" placeholder="หมายเหตุ (ไม่บังคับ) เช่น ไม่ได้วัดเพราะ…" aria-label="หมายเหตุข้อ ${esc(item.id)}">${esc((S.mn || {})[item.id] || '')}</textarea></div>`;
   }
 
   // First item that uses a diagram shows it; later items get a one-line link to the same picture
@@ -1259,6 +1261,8 @@
       refreshRR(el.dataset.rr);
     } else if (el.dataset.hm) {
       S.h.models[el.dataset.hm] = el.value;
+    } else if (el.dataset.mn) {
+      (S.mn = S.mn || {})[el.dataset.mn] = el.value;
     } else if (el.dataset.tn) {
       S.tn[el.dataset.tn] = el.value;
       el.classList.remove('is-invalid');
@@ -1385,6 +1389,7 @@
       form: form.id, formName: form.name, code: form.code, kind: form.kind,
       h: { ...h, machine: h.machine.trim().toUpperCase() },
       v: values,
+      mn: Object.fromEntries(Object.entries(S.mn || {}).filter(([id, t]) => keepIds.has(id) && String(t).trim()).map(([id, t]) => [id, String(t).trim()])),
       t: Object.fromEntries(Object.entries(S.t).filter(([id]) => taskIds.has(id))),
       tn: Object.fromEntries(Object.entries(S.tn).filter(([id]) => taskIds.has(id) && NEEDS_WHY(S.t[id]))),
       // 3.2 keeps what was typed plus the verdict and auto value as judged at save time; 3.3 keeps a snapshot of each finding
@@ -1475,8 +1480,13 @@
       Object.entries(vals).forEach(([k, v]) => {
         if (String(v).trim() === '') return;
         const st = item ? (k === 'v' && item.type === 'ok' ? (v === 'ผิดปกติ' ? 'ng' : 'ok') : judge(item, k, v, vals, r.h)) : '';
-        out.push({ no: id, topic: item ? item.label : '', field: labels[k] || k, value: v, result: SEND_ST[st] || '', note: '' });
+        out.push({ no: id, topic: item ? item.label : '', field: labels[k] || k, value: v, result: SEND_ST[st] || '', note: (r.mn || {})[id] || '' });
       });
+    });
+    Object.entries(r.mn || {}).forEach(([id, note]) => {
+      if (Object.values(r.v[id] || {}).some(v => String(v).trim() !== '')) return;
+      const item = f && f.m.find(i => i.id === id);
+      out.push({ no: id, topic: item ? item.label : '', field: 'หมายเหตุ', value: '', result: '', note });
     });
     Object.entries(r.t).forEach(([id, s]) => {
       const task = f && f.t && f.t.find(t => t.id === id);
@@ -1875,7 +1885,7 @@
         Object.entries(vals).forEach(([k, v]) => {
           if (String(v).trim() === '') return;
           const st = item ? (k === 'v' && item.type === 'ok' ? (v === 'ผิดปกติ' ? 'ng' : 'ok') : judge(item, k, v, vals, r.h)) : '';
-          rows.push([...base, id, item ? item.label : '', labels[k] || k, v, ST[st] || '', '', r.h.comment, r.savedAt]);
+          rows.push([...base, id, item ? item.label : '', labels[k] || k, v, ST[st] || '', (r.mn || {})[id] || '', r.h.comment, r.savedAt]);
         });
       });
       Object.entries(r.t).forEach(([id, s]) => {

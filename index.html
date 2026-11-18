@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.1';
+const APP_VER = '0.0.0.2';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4816,13 +4816,14 @@ async function pmLoadChecklist(x) {
 function pmWebHtml(w) {
   const cls = s => /นอกเกณฑ์|ไม่เสร็จ|ผิดปกติ/.test(s) ? 'pmbad' : /เฝ้าระวัง|ไม่ได้ทำ/.test(s) ? 'pmwarn' : s ? 'pmok' : '';
   const vals = w.rows.filter(i => i.field !== 'สถานะ' && i.field !== 'Review-Revise'), tasks = w.rows.filter(i => i.field === 'สถานะ'), rr = w.rows.filter(i => i.field === 'Review-Revise');
+  const n = vals.filter(i => i.value !== '').length;   // readings, not the rows that carry only a note
   let prev = '';
-  const vrows = vals.map(i => { const head = i.no + '|' + i.topic !== prev; prev = i.no + '|' + i.topic; return `<tr><td>${head ? esc(i.no + '. ' + i.topic) : ''}</td><td>${esc(i.field)}</td><td><span class="pmv">${esc(i.value)}</span></td><td>${i.result ? `<span class="${cls(i.result)}">${esc(i.result)}</span>` : ''}</td></tr>`; }).join('');
+  const vrows = vals.map(i => { const head = i.no + '|' + i.topic !== prev; prev = i.no + '|' + i.topic; return `<tr><td>${head ? esc(i.no + '. ' + i.topic) : ''}</td><td>${esc(i.field)}</td><td><span class="pmv">${esc(i.value)}</span></td><td>${i.result ? `<span class="${cls(i.result)}">${esc(i.result)}</span>` : ''}</td><td>${head ? esc(i.note) : ''}</td></tr>`; }).join('');
   const trows = tasks.map(i => `<tr><td>${esc(i.no + '. ' + i.topic)}</td><td><span class="${cls(i.value)}">${esc(i.value)}</span></td><td>${esc(i.note)}</td></tr>`).join('');
   const bad = w.rows.filter(i => /นอกเกณฑ์|ไม่เสร็จ/.test(i.result)).length, watch = vals.filter(i => /เฝ้าระวัง/.test(i.result)).length;
-  return `<div class="pmtbl-w"><h3>Inspection <em>${vals.length}</em> <small>${esc([w.form, w.period ? 'รอบ ' + w.period : '', w.date ? dShort(parseAny(w.date)) || w.date : '', w.inspector ? 'ผู้ตรวจ ' + w.inspector : ''].filter(Boolean).join(' · '))}</small></h3>
-      <p class="${bad ? 'pmbad' : vals.length ? 'pmok' : 'pmwarn'}">${bad ? 'นอกเกณฑ์ / ไม่เสร็จ ' + bad + ' รายการ' : vals.length ? 'ทุกค่าอยู่ในเกณฑ์' : 'ไม่ได้กรอกค่าวัด (ส่งมาเฉพาะผลหัวข้องาน)'}${watch ? ` <span class="pmwarn">· เฝ้าระวัง ${watch}</span>` : ''}</p>${w.comment ? `<p>Comment: ${esc(w.comment)}</p>` : ''}
-      ${vals.length ? `<div class="pmtbl"><table class="pmweb"><thead><tr><th>หัวข้อการตรวจ</th><th>ช่อง</th><th>ค่าที่วัด</th><th>ผล</th></tr></thead><tbody>${vrows}</tbody></table></div>` : ''}</div>
+  return `<div class="pmtbl-w"><h3>Inspection <em>${n}</em> <small>${esc([w.form, w.period ? 'รอบ ' + w.period : '', w.date ? dShort(parseAny(w.date)) || w.date : '', w.inspector ? 'ผู้ตรวจ ' + w.inspector : ''].filter(Boolean).join(' · '))}</small></h3>
+      <p class="${bad ? 'pmbad' : n ? 'pmok' : 'pmwarn'}">${bad ? 'นอกเกณฑ์ / ไม่เสร็จ ' + bad + ' รายการ' : n ? 'ทุกค่าอยู่ในเกณฑ์' : 'ไม่ได้กรอกค่าวัด (ส่งมาเฉพาะผลหัวข้องาน)'}${watch ? ` <span class="pmwarn">· เฝ้าระวัง ${watch}</span>` : ''}</p>${w.comment ? `<p>Comment: ${esc(w.comment)}</p>` : ''}
+      ${vals.length ? `<div class="pmtbl"><table class="pmweb"><thead><tr><th>หัวข้อการตรวจ</th><th>ช่อง</th><th>ค่าที่วัด</th><th>ผล</th><th>หมายเหตุ</th></tr></thead><tbody>${vrows}</tbody></table></div>` : ''}</div>
     ${tasks.length ? `<div class="pmtbl-w"><h3>Operation <em>${tasks.length}</em></h3><div class="pmtbl"><table class="pmweb ops"><thead><tr><th>Operation Item</th><th>Result</th><th>หมายเหตุ</th></tr></thead><tbody>${trows}</tbody></table></div></div>` : ''}
     ${rr.length ? `<div class="pmtbl-w"><h3>3 · Review-Revise <em>${rr.length}</em> <small>แนะนำ · ไม่นับในผลตรวจ</small></h3><div class="pmtbl"><table class="pmweb ops"><thead><tr><th>หัวข้อ</th><th>ค่า / ผล</th><th>หมายเหตุ</th></tr></thead><tbody>${rr.map(i => `<tr><td>${esc(i.no + '. ' + i.topic)}</td><td>${esc(i.value)}${i.result && i.result !== i.value ? ` <span class="${cls(i.result)}">${esc(i.result)}</span>` : ''}</td><td>${esc(i.note)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}`;
 }

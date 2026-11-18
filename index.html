@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.2';
+const APP_VER = '0.0.0.3';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4396,7 +4396,7 @@ function pmMineHtml() {
     return `<div class="pmme-c${isLate ? ' late' : ''}"><button type="button" class="top" data-pm="${esc(x.id)}"><b>${esc(x.o.MachineID)}</b>${pill}<i aria-hidden="true">›</i></button>
       <small>${esc([x.o.MachineType, x.o.FactoryID, 'PM ' + x.theme].filter(Boolean).join(' · '))}${x.stop ? ' · ต้องหยุดเครื่อง' : ''}</small>
       ${fm && pmDraft(x, fm) ? `<small class="pmme-d">ยังไม่ได้กดบันทึกผล · กรอกล่าสุด ${esc(pmDraftTime(pmDraft(x, fm)))}</small>` : x.st === 'todo' && x.o.InspectionID ? '<small class="pmme-d">บันทึกผลแล้ว · รอกดส่งให้วิศวะ</small>' : ''}
-      ${fm ? `<a class="btn solid${isLate ? '' : ' go'}" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ' : x.o.InspectionID ? 'แก้ผล' : 'เริ่มตรวจ'} · ${esc(fm.form.id)} รอบ ${esc(fm.period)}</a>` : `<button type="button" class="btn" data-pm="${esc(x.id)}">เปิดงาน</button>`}</div>`;
+      ${fm ? `<a class="btn solid${isLate ? '' : ' go'}" href="${esc(pmInspUrl(x, fm))}">${pmDraft(x, fm) ? 'ทำต่อ' : x.o.InspectionID ? 'แก้ผล' : 'เริ่มตรวจ'} · ${esc(fm.form.id)} รอบ ${esc(fm.period)}</a>` : `<button type="button" class="btn" data-pm="${esc(x.id)}">เปิดงาน</button>`}</div>`;
   };
   const sec = (title, list, html, cls) => list.length ? `<p class="pmme-h ${cls || ''}"><span>${title}</span><span>${list.length}</span></p>` + html : '';
   return `<div class="pmme-bar" role="img" aria-label="ทำแล้ว ${doneN} จาก ${month.length} งานเดือนนี้"><i style="width:${month.length ? Math.round(doneN / month.length * 100) : 0}%"></i></div>`
@@ -4746,7 +4746,7 @@ function openPM(id) {
   if (work) {
     pmv.files = [];
     const fm = pmForm(x);
-    if (fm) f += `<div class="pmsec"><h3>ทำ Inspection</h3><div class="full pminsp"><a class="btn solid" href="${esc(pmInspUrl(x, fm))}" target="_blank" rel="noopener">${pmDraft(x, fm) ? 'ทำต่อ (ยังไม่ได้บันทึกผล)' : o.InspectionID ? 'แก้ผลที่บันทึก' : 'เปิดฟอร์ม'} ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
+    if (fm) f += `<div class="pmsec"><h3>ทำ Inspection</h3><div class="full pminsp"><a class="btn solid" href="${esc(pmInspUrl(x, fm))}">${pmDraft(x, fm) ? 'ทำต่อ (ยังไม่ได้บันทึกผล)' : o.InspectionID ? 'แก้ผลที่บันทึก' : 'เปิดฟอร์ม'} ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
       ${o.InspectionID ? '<p class="pmok">✓ บันทึกผล Inspection แล้ว (ค่าวัดอยู่ด้านบน) · แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"</p>' : '<p>กรอกค่าวัดที่เครื่องบนมือถือ กด "บันทึกผล" แล้วกลับมาหน้านี้ แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"</p>'}</div></div>`;
     // no plan-date / done-date / abnormal fields: the date sent is today, abnormal comes from the Inspection sheet
     f += `<div class="pmsec pm-done${fm ? ' pm-hasform' : ''}"><h3>แนบไฟล์และรูป</h3>

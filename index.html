@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.7';
+const APP_VER = '0.0.0.8';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4763,7 +4763,7 @@ function openPM(id) {
   const work = tech && x.st !== 'done' && x.st !== 'review';
   const refs = k => String(o[k] || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
   const fileBtn = (ref, label) => `<button type="button" data-pmfile="${esc(ref)}" title="${esc(ref)}"><svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>${esc(label)}</button>`;
-  const files = refs('ChecklistFile').map(r => fileBtn(r, 'Checklist (AppSheet)')).concat(refs('InspectionFile').map((r, i, a) => fileBtn(r, 'ไฟล์แนบ AppSheet' + (a.length > 1 ? ' ' + (i + 1) : ''))));   // files attached in AppSheet (a PDF or a photo), not the sheet sent from the phone
+  const files = refs('ChecklistFile').map(r => fileBtn(r, 'Checklist (AppSheet)')).concat(refs('InspectionFile').map((r, i, a) => fileBtn(r, 'ไฟล์แนบ' + (a.length > 1 ? ' ' + (i + 1) : ''))));   // files attached in AppSheet (a PDF or a photo), not the sheet sent from the phone
   const info = [['Job theme', o.JobTheme], ['แผนเดือน', (MON3[x.m - 1] || o.PlanMonth) + ' ' + o.PlanYear], ['วันนัด', x.plan ? dShort(x.plan) : 'ยังไม่นัด'], ['วันที่ทำ', x.act ? dShort(x.act) : ''],
     ['PIC', x.pic], ['ผู้ทำ', /vendor/i.test(o.Owner) ? 'Vendor' : o.Owner ? 'ทีมช่าง (' + o.Owner + ')' : ''], ['เครื่องจักร', x.stop ? 'ต้องหยุดเครื่อง' : 'เดินเครื่องได้'],
     ['Machine type', o.MachineType], ['System', o.SystemID], ['Team', o.TeamCode], ['Remark', o.Remark], ['อนุมัติโดย', o.ApprovedBy ? pmPicName(o.ApprovedBy) + (o.ApprovedAt ? ' · ' + dWhen(o.ApprovedAt, true) : '') : '']].filter(([, v]) => v);
@@ -4827,7 +4827,7 @@ async function pmLoadChecklist(x) {
       pmv.rec = r.web.record;
       let files = document.querySelector('#pmDlgBody .pm-files .pmfiles');
       if (!files) { document.querySelector('#pmDlgBody .pmdl').insertAdjacentHTML('afterend', '<div class="pmtbl-w pm-files"><h3>Upload Inspection</h3><div class="pmfiles"></div></div>'); files = document.querySelector('#pmDlgBody .pm-files .pmfiles'); }
-      files.insertAdjacentHTML('afterbegin', `<button type="button" data-pmview><svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Inspection (PDF ใบตรวจ)</button>`);
+      files.insertAdjacentHTML('afterbegin', `<button type="button" data-pmview><svg class="ico-inline" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Inspection (PDF)</button>`);
     }
     return;
   }

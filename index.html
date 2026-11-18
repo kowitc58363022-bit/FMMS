@@ -1896,7 +1896,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.3';
+const APP_VER = '0.0.0.4';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4440,7 +4440,7 @@ function pmWeekHtml() {
 async function pmQuickSchedule(id, btn) {
   const date = pmv.wk || isoDay(new Date());
   btn.disabled = true; btn.textContent = 'กำลังนัด…';
-  try { await api({ op: 'pmSchedule', id, date }); toast('นัดวันทำ PM ' + dShort(dateOf(date)) + ' แล้ว'); await loadPM(true); }
+  try { const r = await api({ op: 'pmSchedule', id, date, year: pmv.year }); toast('นัดวันทำ PM ' + dShort(dateOf(date)) + ' แล้ว'); applyPMSaved(r); }
   catch (e) { btn.disabled = false; btn.textContent = 'ลองอีกครั้ง'; if (!e.handled) toast(friendly(e)); }
 }
 // swipe: on the week strip = a week, on the day's list = a day (a mostly sideways move of 50 px or more)
@@ -4859,7 +4859,7 @@ async function pmDo(op) {
     put('rqProblem', 'พบระหว่าง PM ' + x.theme + (v('remark') ? ': ' + v('remark') : ''));
     cbClose(); scrollTo(0, 0); return;
   }
-  const p = { op: { schedule: 'pmSchedule', submit: 'pmSubmit', approve: 'pmApprove', sendBack: 'pmSendBack', edit: 'pmEdit' }[op], id };
+  const p = { op: { schedule: 'pmSchedule', submit: 'pmSubmit', approve: 'pmApprove', sendBack: 'pmSendBack', edit: 'pmEdit' }[op], id, year: pmv.year };
   if (op === 'schedule') p.date = v('pdate');
   if (op === 'submit') {
     const fm = pmForm(x);
@@ -4880,10 +4880,10 @@ async function pmDo(op) {
   btns.forEach(b => { b.disabled = true; });
   msg(p.files && p.files.length ? 'กำลังอัปโหลดไฟล์…' : 'กำลังบันทึก…');
   try {
-    await api(p);
+    const r = await api(p);
     toast({ schedule: p.date ? 'นัดวันทำ PM ' + dShort(dateOf(p.date)) + ' แล้ว' : 'ยกเลิกวันนัดแล้ว', submit: 'ส่งงาน PM ' + x.o.MachineID + ' ให้วิศวะอนุมัติแล้ว', approve: 'อนุมัติงาน PM แล้ว', sendBack: 'ส่งงาน PM กลับให้ช่างแล้ว', edit: 'แก้ไขแผน PM แล้ว' }[op]);
     pmClose();
-    await loadPM(true);
+    applyPMSaved(r);
   } catch (e) { if (!e.handled) msg(friendly(e)); btns.forEach(b => { b.disabled = false; }); }
 }
 // wiring
@@ -5085,6 +5085,31 @@ async function api(payload) {
   return data;
 }
 const sendRequest = api;
+// a save's reply carries the saved job (Code.gs op writers → job) / the PM plan (→ pm): put it in place, no second request.
+// An older Code.gs sends neither: then the full list is read again, without making the person wait for it.
+function applySaved(r) {
+  const j = r && r.job, id = r && r.jobId;
+  if (!j || !id || !Array.isArray(j.rows)) { load(); return; }
+  const idc = (state.meta && state.meta.idColumn) || (j.meta && j.meta.idColumn);
+  const at = state.rows.findIndex(x => String(x[idc]).trim() === id);
+  if (j.rows[0]) { if (at >= 0) state.rows[at] = j.rows[0]; else state.rows.unshift(j.rows[0]); }
+  else if (at >= 0) state.rows.splice(at, 1);   // no longer shown to this account
+  if (j.headers && j.headers.length > state.headers.length) state.headers = j.headers;
+  state.actions[id] = (j.actions || {})[id] || [];
+  state.items[id] = (j.items || {})[id] || [];
+  if (state.loading) state.again = true;   // a refresh already on the way read the sheet before this save
+  updateAlerts();
+  render();
+}
+function applyPMSaved(r) {
+  const x = r && r.pm;
+  if (!x || !x.rows) { loadPM(true); return; }
+  pmv.ck = {};
+  pmv.data[x.year] = { cols: x.cols, rows: x.rows, years: x.years || {}, technicians: x.technicians || [] };
+  pmv.at = Date.now();
+  if (pmv.loading) pmv.again = true;
+  if (state.view === 'pm') renderPM();
+}
 
 // ---------- profile picture (Drive) ----------
 // asked once per login / page load; this device keeps the last picture, and the server only re-sends it when it changed
@@ -5371,12 +5396,12 @@ $('actForm').addEventListener('submit', async e => {
   $('actOk').disabled = true; $('actMsg').textContent = '';
   if (p.photos && p.photos.length) $('actOk').textContent = 'กำลังอัปโหลดรูป…';
   try {
-    await api(p);
+    const r = await api(p);
     $('actDlg').close();
     toast({ follow: 'ติดตามงาน ' + id + ' · คาดว่าเสร็จ ' + (p.date ? dShort(dateOf(p.date)) : ''), take: 'รับงาน ' + id + ' แล้ว · On Process', ack: 'รับทราบงาน ' + id + ' แล้ว', accept: 'มอบหมายงาน ' + id + ' ให้ ' + p.technician + ' แล้ว', action: 'บันทึก Action แล้ว', actionEdit: 'แก้ไข Action แล้ว', actionDelete: 'ลบ Action แล้ว', jobDue: 'กำหนดเสร็จ ' + (p.due ? dShort(dateOf(p.due)) : ''), actionRemark: p.remark ? 'บันทึกหมายเหตุแล้ว' : 'ลบหมายเหตุแล้ว', actionDone: 'บันทึกว่า Action เสร็จแล้ว' + (p.photos && p.photos.length ? ' พร้อมรูป ' + p.photos.length + ' รูป' : ''), submit: 'ส่งงาน ' + id + ' ให้วิศวะตรวจแล้ว' + (p.photos && p.photos.length ? ' พร้อมรูป ' + p.photos.length + ' รูป' : ''), approve: 'ยอมรับงาน ' + id + ' แล้ว', sendBack: 'ส่งงาน ' + id + ' กลับให้ช่างแล้ว' }[op]);
     state.selected = state.jumpTo = id;
     state.costsAt = 0;
-    await load();
+    applySaved(r);
   } catch (err) { if (!err.handled) $('actMsg').textContent = friendly(err); }
   $('actOk').disabled = false;
   $('actOk').textContent = ACTS[op].ok;
@@ -5794,11 +5819,11 @@ $('editForm').addEventListener('submit', async e => {
   if (!Object.keys(fields).length) { $('editMsg').textContent = 'ยังไม่ได้แก้ไขข้อมูลช่องไหน'; return; }
   $('editSave').disabled = true; $('editMsg').textContent = '';
   try {
-    await api({ op: 'update', id, fields });
+    const r = await api({ op: 'update', id, fields });
     $('editDlg').close();
     toast('บันทึกงาน ' + id + ' ลงชีตแล้ว');
     state.selected = state.jumpTo = id;
-    await load();
+    applySaved(r);
   } catch (err) { if (!err.handled) $('editMsg').textContent = friendly(err); }
   $('editSave').disabled = false;
 });
@@ -6162,7 +6187,7 @@ function jobClick(e) {
     const on = hb.getAttribute('aria-pressed') !== 'true';
     hb.disabled = true;
     api({ op: 'attention', id: hb.dataset.hot, on })
-      .then(() => { toast(on ? 'ตั้งงาน ' + hb.dataset.hot + ' เป็น High attention แล้ว' : 'ยกเลิก High attention แล้ว'); state.selected = state.jumpTo = hb.dataset.hot; return load(); })
+      .then(r => { toast(on ? 'ตั้งงาน ' + hb.dataset.hot + ' เป็น High attention แล้ว' : 'ยกเลิก High attention แล้ว'); state.selected = state.jumpTo = hb.dataset.hot; applySaved(r); })
       .catch(err => { if (!err.handled) toast(friendly(err)); hb.disabled = false; });
     return;
   }

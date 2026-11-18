@@ -1463,8 +1463,8 @@
       if (data.error) throw new Error(data.error);
       markSent(rec.id);
       try { localStorage.setItem('pm_inspect_sent', rec.pm + '|' + Date.now()); } catch (e) { /* the plan page refreshes on its own later */ }
-      // the plan as it is after this save (Code.gs sends it back): the plan page shows it at once instead of reading it again first
-      if (data.pm && data.pm.rows) { try { localStorage.setItem('pm_plan_saved', JSON.stringify({ at: Date.now(), pm: data.pm })); } catch (e) { /* too big / private mode: the plan page reads it */ } }
+      // the job's row as it is after this save (Code.gs sends it back): the plan page puts it on its kept copy of the plan at once
+      if (data.pmRow) { try { localStorage.setItem('pm_row_saved', JSON.stringify({ at: Date.now(), row: data.pmRow })); } catch (e) { /* the plan page reads it */ } }
       say('ok', `บันทึกผลเข้างาน PM ${esc(rec.pm)} แล้ว · กลับไปหน้างาน PM แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"${PMLINK.back ? ` · กำลังกลับไปหน้างาน PM…<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้างาน PM</a>` : ''}`);
       // the plan page opens this job by itself (pm_inspect_sent), ready for photos and the send button
       if (PMLINK.back) location.href = PMLINK.back;

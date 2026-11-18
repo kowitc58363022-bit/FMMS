@@ -983,6 +983,7 @@ body[data-role="engineer"] .userchip .user-avatar{border-color:var(--red)}
 .stpick .stbtn[aria-expanded="true"] .chev{transform:rotate(180deg)}
 .stpop{position:absolute;top:calc(100% + 8px);left:0;z-index:30;width:max-content;max-width:min(760px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px -12px #16213E40;padding:12px;flex-wrap:wrap}
 .stpop[hidden]{display:none!important}
+.stlate{align-self:center;flex-wrap:nowrap!important}.stlate[hidden]{display:none!important}
 @media (max-width:700px){#main .head{position:relative}.stpick{position:static}.stpop{left:0;right:0;width:auto;max-width:none}}
 /* to-do bar + alerts */
 .todo{border:1px solid var(--line);border-left:4px solid var(--red);border-radius:14px;background:#fff;padding:14px 18px;margin-bottom:18px;box-shadow:0 1px 3px #16213E10}
@@ -1239,6 +1240,9 @@ body.phone-req .trk:not([hidden]){display:block}
 .ttabs button span{display:inline-block;margin-left:4px;padding:0 7px;border-radius:999px;background:#EEF1F6;font-size:12.5px}
 .ttabs button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
 .ttabs button[aria-pressed="true"] span{background:#ffffff2e}
+.ttabs:has(.tlate){gap:6px}.ttabs:has(.tlate) button{white-space:nowrap;font-size:13px;padding:0 6px}.ttabs:has(.tlate) button span{margin-left:2px;padding:0 6px}
+.ttabs .tlate{color:#C4141B;border-color:#F3B4B6;background:#FFF4F4}.ttabs .tlate span{background:#FBD5D6}
+.ttabs .tlate[aria-pressed="true"]{background:#C4141B;border-color:#C4141B;color:#fff}
 .fwlist{display:flex;flex-direction:column;gap:18px}
 .fwgrp h2{display:flex;align-items:center;gap:8px;font-size:16px;margin:0 0 8px;color:var(--navy)}
 .fwgrp h2 span{font-size:12.5px;background:#EEF1F6;color:var(--ink-2);border-radius:999px;padding:1px 9px}
@@ -1688,7 +1692,7 @@ body.sheet-open{overflow:hidden}
     <label class="search"><span class="sr">ค้นหางาน</span><input id="search" name="q" type="search" placeholder="ค้นหารหัสงาน เครื่องจักร ชื่อช่าง…" autocomplete="off" spellcheck="false"></label>
   </div>
   <div class="xf" id="xFilters" role="group" aria-label="ตัวกรองเพิ่มเติม"></div>
-  <div class="head"><h1 id="hello">งานของคุณ</h1><div class="f stpick" id="stPick"><button type="button" class="chip c-all stbtn" id="stBtn" aria-expanded="false" aria-controls="filters" aria-haspopup="true"></button><div class="f stpop" id="filters" role="group" aria-label="กรองตามสถานะ" hidden></div></div><div class="facbar" id="facBar" role="group" aria-label="เลือกโรงงาน" hidden></div><p class="sub" id="count"></p>
+  <div class="head"><h1 id="hello">งานของคุณ</h1><div class="f stpick" id="stPick"><button type="button" class="chip c-all stbtn" id="stBtn" aria-expanded="false" aria-controls="filters" aria-haspopup="true"></button><div class="f stpop" id="filters" role="group" aria-label="กรองตามสถานะ" hidden></div></div><div class="f stlate" id="lateOut" role="group" aria-label="งานเกินกำหนด" hidden></div><div class="facbar" id="facBar" role="group" aria-label="เลือกโรงงาน" hidden></div><p class="sub" id="count"></p>
     <div class="sortbar" id="sortBar" role="group" aria-label="เรียงตามวันที่แจ้ง"><span>วันที่แจ้ง</span><span class="sgrp"><button type="button" data-sort="new" aria-pressed="false">ใหม่ → เก่า</button><button type="button" data-sort="old" aria-pressed="false">เก่า → ใหม่</button></span></div></div>
   <p class="notice err" id="errNote" role="alert" hidden></p>
   <section aria-labelledby="listTitle"><h2 class="sr" id="listTitle">รายการงาน</h2><div id="list"></div></section>
@@ -1896,7 +1900,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.9';
+const APP_VER = '0.0.0.10';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2388,7 +2392,10 @@ function render() {
   if (state.status === HOT && !hotN && state.ok) { state.status = ''; syncUrl(); }   // last ⚡ cleared → back to all jobs
   $('filters').innerHTML = chip('', 'all', '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>', 'ทั้งหมด', 'ทุกสถานะ', listRows().length)
     + (hotN ? chip(HOT, 'hot', '<span class="cbolt" aria-hidden="true">' + BOLT + '</span>', 'High attention', 'งานด่วน', hotN) : '')
-    + (c.status ? statuses.map(s => fbtn(s, counts[s])).join('') : '');
+    + (c.status ? statuses.filter(s => !LATE.test(s)).map(s => fbtn(s, counts[s])).join('') : '');
+  const lateSt = c.status ? statuses.filter(s => LATE.test(s) && counts[s]) : [];
+  $('lateOut').innerHTML = lateSt.map(s => fbtn(s, counts[s])).join('');
+  $('lateOut').hidden = !lateSt.length;
 
   document.querySelectorAll('#sortBar [data-sort]').forEach(b => b.setAttribute('aria-pressed', String(state.sort === b.dataset.sort)));
   const cur = $('filters').querySelector('[aria-pressed="true"]') || $('filters').querySelector('[data-status=""]');
@@ -2396,7 +2403,7 @@ function render() {
     const b = $('stBtn');
     b.className = cur.className.replace(/\bchip\b/, '').trim() + ' chip stbtn';
     b.innerHTML = cur.innerHTML + '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
-    b.setAttribute('aria-pressed', String(!!state.status));
+    b.setAttribute('aria-pressed', String(!!state.status && !LATE.test(state.status)));   // a late filter is picked outside the dropdown
     b.title = 'เลือกสถานะ · ตอนนี้: ' + (cur.title || '');
   }
   const rows = filtered(c);
@@ -3625,13 +3632,14 @@ function renderTrack() {
   if (!$('trackView')) return;
   if (state.ok === null && !state.rows.length) { $('trackList').innerHTML = '<p class="loading">กำลังโหลดข้อมูล…</p>'; return; }
   const { open, done } = trackJobs();
-  const tab = state.trackTab === 'done' ? 'done' : 'open';
+  const late = open.filter(x => x.late);
+  const tab = state.trackTab === 'done' ? 'done' : state.trackTab === 'late' && late.length ? 'late' : 'open';
   const facs = myFactories();
-  $('trackTabs').innerHTML = `<button type="button" data-ttab="open" aria-pressed="${tab === 'open'}">กำลังดำเนินการ <span>${open.length}</span></button><button type="button" data-ttab="done" aria-pressed="${tab === 'done'}">เสร็จแล้ว <span>${done.length}</span></button>`;
+  $('trackTabs').innerHTML = `<button type="button" data-ttab="open" aria-pressed="${tab === 'open'}">กำลังดำเนินการ <span>${open.length}</span></button>${late.length ? `<button type="button" class="tlate" data-ttab="late" aria-pressed="${tab === 'late'}">เกินกำหนด <span>${late.length}</span></button>` : ''}<button type="button" data-ttab="done" aria-pressed="${tab === 'done'}">เสร็จแล้ว <span>${done.length}</span></button>`;
   $('trackFac').hidden = facs.length < 2;
   if (facs.length > 1) $('trackFac').innerHTML = [''].concat(facs.slice().sort(natural)).map(v => `<button type="button" class="facb" data-fac="${esc(v)}" aria-pressed="${upper(state.fac) === upper(v)}">${v ? esc(v) : 'ทุกโรงงาน'}</button>`).join('');
   document.querySelectorAll('#trackSort [data-tsort]').forEach(b => b.setAttribute('aria-pressed', String(state.trackSort === b.dataset.tsort)));
-  const list = tab === 'done' ? done : open;
+  const list = tab === 'done' ? done : tab === 'late' ? late : open;
   $('trackList').innerHTML = list.length ? list.map(trackCard).join('')
     : `<p class="tempty">${state.trackQ ? 'ไม่พบงานที่ค้นหา' : tab === 'done' ? 'ยังไม่มีงานที่เสร็จใน 30 วันที่ผ่านมา' : 'ไม่มีงานค้าง'}</p>`;
   if (tab === 'done' && list.length) $('trackList').insertAdjacentHTML('beforeend', '<p class="tnote">แสดงงานที่เสร็จใน 30 วันล่าสุด</p>');
@@ -6210,6 +6218,10 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('filter
 $('filters').addEventListener('click', e => {
   const b = e.target.closest('[data-status]');
   if (b) { state.status = b.dataset.status; state.page = 1; syncUrl(); render(); stOpen(false); $('stBtn').focus(); }
+});
+$('lateOut').addEventListener('click', e => {
+  const b = e.target.closest('[data-status]');
+  if (b) { state.status = state.status === b.dataset.status ? '' : b.dataset.status; state.page = 1; syncUrl(); render(); }
 });
 $('list').addEventListener('click', e => jobClick(e));
 function jobClick(e) {

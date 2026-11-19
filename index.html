@@ -1341,12 +1341,16 @@ body.tvmode .shell{margin-left:0!important}
 .tvc.p1{border-left:6px solid #E31B23}
 .tvc em.bad{font-style:normal;color:#C4141B;font-weight:700}
 .tvtag{justify-self:start;font-size:.75em;font-weight:700;color:#fff;background:#E31B23;border-radius:999px;padding:.05em .6em}
+.tvtag.rev{background:#8E44AD}.tvc em.warn{font-style:normal;color:#B35C00;font-weight:700}
 .tvnone{color:var(--muted);text-align:center;margin:1em 0}
-.tvtick{overflow:hidden;white-space:nowrap;border:1px solid #BFE5CC;background:#EEF9F2;color:#1E7A45;border-radius:10px;padding:.45em 0;font-weight:600}
+.tvtick{display:flex;flex-wrap:wrap;align-items:center;gap:.5em .7em;border:1px solid var(--line);background:#F7F9FC;border-radius:12px;padding:.5em .8em}
 .tvtick:empty{display:none}
-.tvrun{display:inline-flex;gap:3em;padding-left:100%;animation:tvrun var(--dur,40s) linear infinite}
-@keyframes tvrun{to{transform:translateX(-100%)}}
-@media (prefers-reduced-motion:reduce){.tvrun{animation:none;padding-left:1em}}
+.tvth{font-weight:700;color:var(--muted);margin-right:.3em}
+.tvt{display:inline-flex;align-items:baseline;gap:.45em;background:#fff;border:1px solid var(--line);border-radius:999px;padding:.2em .8em}
+.tvt b{font-weight:600;color:var(--ink)}.tvt em{font-style:normal;font-weight:800;font-size:1.35em;color:#1B3F96}
+.tvt i{font-style:normal;font-size:.85em;font-weight:700}.tvt i.bad{color:#C4141B}.tvt i.ok{color:#1E9152}
+.tvt.none{border-color:#F3B4B6;background:#FFF4F4}.tvt.none em{color:#C4141B}
+
 .monfacsel{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--ink-2)}.monfacsel select{font:inherit;font-weight:500;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:200px}
 body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-only #todo{display:none!important}
 .pmhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:0 0 14px}
@@ -1983,7 +1987,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.20';
+const APP_VER = '0.0.0.23';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2731,23 +2735,32 @@ function renderTV() {
   $('tvKpi').innerHTML = k('งานในสาย', open.length) + k('P1 ด่วน', open.filter(x => x.p1).length, open.some(x => x.p1) ? 'bad' : '')
     + k('เกินกำหนด', open.filter(x => x.late).length, open.some(x => x.late) ? 'bad' : '') + k('รอตรวจรับ', open.filter(x => x.stage === 'review').length) + k('เสร็จวันนี้', doneToday.length, doneToday.length ? 'ok' : '');
   const ord = (a, b) => (b.p1 - a.p1) || (b.late - a.late) || ((a.due || a.rep || 0) - (b.due || b.rep || 0));
-  const card = (x, tag) => {
+  const card = (x, tag, cls) => {
     const m = String(x.r[K.m] || '').trim(), prob = String(x.r[c.title] || '').trim(), fac = K.fac ? String(x.r[K.fac] || '').trim() : '';
-    const when = x.late ? `<em class="bad">เกิน ${lateDays(x)} วัน</em>` : x.due ? 'ครบ ' + dShort(x.due) : x.rep ? 'แจ้ง ' + dShort(x.rep) : '';
-    return `<div class="tvc${x.p1 ? ' p1' : ''}${x.late ? ' late' : ''}">${tag ? `<span class="tvtag">${tag}</span>` : ''}<b>${esc(m || x.r[c.id])}</b><span class="tvp">${esc(prob)}</span>
+    const left = x.due ? Math.round((x.due - today) / DAY) : null;
+    const when = x.late ? `<em class="bad">เกิน ${lateDays(x)} วัน</em>` : x.due ? (left <= 0 ? '<em class="warn">ครบวันนี้</em>' : left <= 7 ? `<em class="warn">อีก ${left} วัน</em>` : 'ครบ ' + dShort(x.due)) : x.rep ? 'แจ้ง ' + dShort(x.rep) : '';
+    return `<div class="tvc${x.p1 ? ' p1' : ''}${x.late ? ' late' : ''}">${tag ? `<span class="tvtag${cls ? ' ' + cls : ''}">${tag}</span>` : ''}<b>${esc(m || x.r[c.id])}</b><span class="tvp">${esc(prob)}</span>
       <small>${esc([tvv.fac ? '' : fac, x.tech || 'ยังไม่มีช่าง'].filter(Boolean).join(' · '))}${when ? ' · ' + when : ''}</small></div>`;
   };
-  const lane = s => { const L = open.filter(x => x.stage === s.key).sort(ord); return `<div class="tvlane" style="--sc:${s.color}"><h2>${esc(s.name)} <span>${L.length}</span></h2><div class="tvlist" data-lane="${s.key}">${L.map(x => card(x)).join('') || '<p class="tvnone">ไม่มีงาน</p>'}</div></div>`; };
+  const lane = (key, name, color, L, none) => `<div class="tvlane" style="--sc:${color}"><h2>${esc(name)} <span>${L.length}</span></h2><div class="tvlist" data-lane="${key}">${L.map(x => card(x, x.stage === 'review' && key === 'work' ? 'รอตรวจรับ' : '', 'rev')).join('') || `<p class="tvnone">${none}</p>`}</div></div>`;
+  const soon = open.filter(x => !x.late && x.due && x.due < new Date(+today + 8 * DAY)).sort((a, b) => a.due - b.due || (b.p1 - a.p1));   // today and the next 7 days
   const urgent = open.filter(x => x.p1 || x.late || (x.stage === 'new' && !x.tech)).sort(ord);
   const why = x => x.p1 ? 'P1' : x.late ? 'เกินกำหนด' : 'ไม่มีช่างรับ';
   // keep each list's scroll position through the refresh
   document.querySelectorAll('#tvMain .tvlist').forEach(el => { tvv.scroll[el.dataset.lane] = el.scrollTop; });
-  $('tvMain').innerHTML = PSTAGES.filter(s => s.key !== 'done').map(lane).join('')
+  $('tvMain').innerHTML = lane('new', 'รับแจ้ง', PSTAGES[0].color, open.filter(x => x.stage === 'new').sort(ord), 'ไม่มีงาน')
+    + lane('work', 'กำลังซ่อม', PSTAGES[1].color, open.filter(x => x.stage === 'work' || x.stage === 'review').sort((a, b) => (a.stage === 'review') - (b.stage === 'review') || ord(a, b)), 'ไม่มีงาน')
+    + lane('soon', 'ใกล้ครบกำหนด', '#E8742C', soon, 'ไม่มีงานใกล้ครบกำหนด')
     + `<div class="tvlane urgent"><h2>ต้องดูด่วน <span>${urgent.length}</span></h2><div class="tvlist" data-lane="urgent">${urgent.map(x => card(x, why(x))).join('') || '<p class="tvnone">ไม่มีงานด่วน</p>'}</div></div>`;
   document.querySelectorAll('#tvMain .tvlist').forEach(el => { el.scrollTop = tvv.scroll[el.dataset.lane] || 0; });
-  const last = jobs.filter(x => x.stage === 'done' && x.fin).sort((a, b) => b.fin - a.fin).slice(0, 12);
-  const tick = last.map(x => `<span>✓ ${esc(String(x.r[K.m] || x.r[c.id]))} · ${esc(x.tech || '-')} · ${dShort(x.fin)}</span>`).join('');
-  if ($('tvTick').dataset.h !== tick) { $('tvTick').innerHTML = last.length ? `<div class="tvrun">${tick}${tick}</div>` : ''; $('tvTick').dataset.h = tick; $('tvTick').style.setProperty('--dur', Math.max(30, last.length * 6) + 's'); }
+  // open jobs per technician (the same person written differently counts once), most first; late and done today beside it
+  const by = {};
+  open.concat(doneToday).forEach(x => {
+    const key = x.tech ? personKey(x.tech) : '-', t = by[key] = by[key] || { name: x.tech || 'ยังไม่มีช่าง', open: 0, late: 0, done: 0 };
+    if (x.stage === 'done') t.done++; else { t.open++; if (x.late) t.late++; }
+  });
+  const techs = Object.values(by).filter(t => t.open || t.done).sort((a, b) => b.open - a.open || a.name.localeCompare(b.name));
+  $('tvTick').innerHTML = techs.length ? '<span class="tvth">งานค้างของช่าง</span>' + techs.map(t => `<span class="tvt${t.name === 'ยังไม่มีช่าง' ? ' none' : ''}"><b>${esc(t.name)}</b><em>${t.open}</em>${t.late ? `<i class="bad">เกิน ${t.late}</i>` : ''}${t.done ? `<i class="ok">เสร็จวันนี้ ${t.done}</i>` : ''}</span>`).join('') : '';
   $('tvSync').textContent = state.lastOk ? 'อัปเดต ' + state.lastOk.toTimeString().slice(0, 5) + (state.ok === false ? ' · เชื่อมต่อไม่ได้' : '') : '';
 }
 // sound: browsers play audio only after a tap on the page, so "เสียง: เปิด" is a tap that also unlocks it (remembered; after a reload one tap anywhere unlocks again)

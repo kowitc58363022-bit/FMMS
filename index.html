@@ -1304,6 +1304,7 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
+.mrange select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 /* ---------- จอทีวี ---------- */
 body.tvmode .nav,body.tvmode .hero,body.tvmode .top,body.tvmode #phoneNav{display:none!important}
 body.tvmode .shell{margin-left:0!important}
@@ -1342,6 +1343,30 @@ body.tvmode .shell{margin-left:0!important}
 .tvc em.bad{font-style:normal;color:#C4141B;font-weight:700}
 .tvtag{justify-self:start;font-size:.75em;font-weight:700;color:#fff;background:#E31B23;border-radius:999px;padding:.05em .6em}
 .tvtag.rev{background:#8E44AD}.tvc em.warn{font-style:normal;color:#B35C00;font-weight:700}
+.tvk small{display:block;color:var(--muted);font-size:.8em}.tvk small i{font-style:normal;font-weight:700}.tvk small i.ok{color:#1E9152}.tvk small i.bad{color:#C4141B}
+.tvv.dash .tvmain{display:block}
+.tvv.dash .tvkpi{grid-template-columns:repeat(6,minmax(0,1fr))}
+.tvbtn{white-space:nowrap}.tvbtn[hidden]{display:none}.tvhead h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.tvhead>*:not(h1){flex-shrink:0}
+.tvd{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);gap:1vw;min-height:0;height:100%}
+.tvp{border:1px solid var(--line);border-radius:12px;background:#F7F9FC;padding:.7em 1em;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tvp.wide{grid-column:span 2}
+.tvp h2{margin:0 0 .4em;font-size:1.2em;color:var(--ink)}.tvp h2 small{font-weight:500;color:var(--muted);font-size:.75em}
+.tvbars{flex:1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.6em;min-height:0}
+.tvbars>div{display:flex;flex-direction:column;align-items:center;min-height:0}
+.tvbars .v{font-size:.8em;color:var(--muted);white-space:nowrap}
+.tvbars .pair{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;min-height:0}
+.tvbars .pair i{width:42%;border-radius:4px 4px 0 0;min-height:2px}
+.tvbars small{color:var(--muted);font-weight:600}
+.in{background:#1B3F96}.out{background:#2EAA62}
+.tvleg{margin:.4em 0 0;display:flex;align-items:center;gap:.4em 1.2em;flex-wrap:wrap;color:var(--muted);font-size:.85em}
+.tvleg i{display:inline-block;width:.9em;height:.9em;border-radius:3px;margin-right:-.8em;vertical-align:-1px}.tvleg i.g{background:#2EAA62}.tvleg i.a{background:#E8A33C}.tvleg i.r{background:#E31B23}
+.tvfs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.4em;align-content:start}
+.tvf{font:inherit;display:grid;justify-items:center;border-radius:8px;padding:.3em 0;cursor:pointer;border:2px solid transparent}
+.tvf b{font-size:1.05em}.tvf span{font-size:1.3em;font-weight:800}
+.tvf.ok{background:#EEF9F2;color:#1E7A45}.tvf.warn{background:#FFF6E5;color:#8A5300}.tvf.bad{background:#FFF0F0;color:#C4141B}
+.tvf.on{border-color:var(--ink)}
+.tvr{display:flex;justify-content:space-between;gap:1em;padding:.35em 0;border-bottom:1px solid var(--line)}
+.tvr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tvr b{white-space:nowrap}
 .tvnone{color:var(--muted);text-align:center;margin:1em 0}
 .tvtick{display:flex;flex-wrap:wrap;align-items:center;gap:.5em .7em;border:1px solid var(--line);background:#F7F9FC;border-radius:12px;padding:.5em .8em}
 .tvtick:empty{display:none}
@@ -1892,7 +1917,7 @@ body.sheet-open{overflow:hidden}
     <label class="tvfac">โรงงาน<select id="tvFac"></select></label>
     <span class="tvsync" id="tvSync"></span>
     <b class="tvclock" id="tvClock"></b>
-    <button type="button" class="tvbtn" id="tvSound" aria-pressed="false">เสียง: ปิด</button><button type="button" class="tvbtn" id="tvFull" title="เต็มจอ (F)">เต็มจอ</button>
+    <button type="button" class="tvbtn" id="tvPage" hidden>หน้า: งาน</button><button type="button" class="tvbtn" id="tvRot" aria-pressed="true" hidden>สลับอัตโนมัติ: เปิด</button><button type="button" class="tvbtn" id="tvSound" aria-pressed="false">เสียง: ปิด</button><button type="button" class="tvbtn" id="tvFull" title="เต็มจอ (F)">เต็มจอ</button>
     <a class="tvbtn" href="#monitor" id="tvExit" title="กลับหน้าเว็บ">ออก</a>
   </div>
   <div class="tvnew" id="tvNew" role="alert" hidden></div>
@@ -1987,7 +2012,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.23';
+const APP_VER = '0.0.0.24';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2702,7 +2727,10 @@ const PSTAGES = [
 ];
 const AGE_BUCKETS = [{ max: 7, name: '≤ 7 วัน', color: '#2EAA62' }, { max: 30, name: '8–30 วัน', color: '#E8B33C' }, { max: 90, name: '31–90 วัน', color: '#E8742C' }, { max: Infinity, name: '> 90 วัน', color: '#C4141B' }];
 // ---------- จอทีวี (#tv) ----------
-const tvv = { fac: '', scroll: {}, seen: null, sound: false, ctx: null };
+// page 2 (dashboard) is built but not switched on yet: rotate off, buttons hidden (TV_DASH = true to show them)
+const TV_DASH = false;
+const tvv = { fac: '', scroll: {}, seen: null, sound: false, ctx: null, page: 'jobs', rotate: false };
+if (TV_DASH) try { tvv.rotate = store.get('ct_tvRot') !== '0'; if (store.get('ct_tvPage') === 'dash') tvv.page = 'dash'; $('tvPage').hidden = $('tvRot').hidden = false; } catch {}
 try { tvv.fac = new URLSearchParams(location.search).get('tvfac') || store.get('ct_tvFac') || ''; } catch {}
 const tvP1 = r => isHot(r) || /^\s*A\b/i.test(String(r.Rank || ''));
 function renderTV() {
@@ -2730,6 +2758,9 @@ function renderTV() {
     if (fresh.length) tvAlert(fresh.map(x => ({ m: String(x.r[K.m] || x.r[c.id]), prob: String(x.r[c.title] || ''), fac: K.fac ? String(x.r[K.fac] || '') : '', p1: x.p1 })));
   }
   const doneToday = jobs.filter(x => x.stage === 'done' && x.fin && x.fin >= today);
+  $('tvView').classList.toggle('dash', tvv.page === 'dash');
+  $('tvPage').textContent = tvv.page === 'dash' ? 'หน้า: Dashboard' : 'หน้า: งาน';
+  if (tvv.page === 'dash') { renderTVDash(jobs, open, K, c, now, today, facs); return; }
   const lateDays = x => x.due ? Math.max(1, Math.ceil((today - x.due) / DAY)) : 0;
   const k = (label, n, cls) => `<div class="tvk${cls ? ' ' + cls : ''}"><span>${label}</span><b>${fmt(n)}</b></div>`;
   $('tvKpi').innerHTML = k('งานในสาย', open.length) + k('P1 ด่วน', open.filter(x => x.p1).length, open.some(x => x.p1) ? 'bad' : '')
@@ -2775,6 +2806,15 @@ function tvChime(times) {
     o.start(t + at); o.stop(t + at + 0.5);
   }), t += 0.9;
 }
+// speech after the chime (about 0.9 s per chime); said twice for P1 · no Thai voice on this device = chime only
+function tvSpeak(text, chimes) {
+  if (!tvv.sound || !('speechSynthesis' in window)) return;
+  const th = speechSynthesis.getVoices().find(v => /^th/i.test(v.lang));
+  if (!th) return;
+  const go = () => { const u = new SpeechSynthesisUtterance(text); u.voice = th; u.lang = th.lang; u.rate = 0.95; speechSynthesis.speak(u); };
+  setTimeout(() => { speechSynthesis.cancel(); go(); if (/ด่วน/.test(text)) setTimeout(go, 400); }, chimes * 900 + 200);
+}
+if ('speechSynthesis' in window) speechSynthesis.getVoices();   // some browsers load the voice list on first ask
 function tvAlert(list) {
   const p1 = list.some(x => x.p1), box = $('tvNew');
   box.className = 'tvnew' + (p1 ? ' p1' : '');
@@ -2782,14 +2822,72 @@ function tvAlert(list) {
   box.hidden = false;
   clearTimeout(tvv.newT); tvv.newT = setTimeout(() => { box.hidden = true; }, 20000);
   tvChime(p1 ? 3 : 2);
+  const say = m => String(m).replace(/[-_/]+/g, ' ');   // "PC-12-40" reads as "PC 12 40", not "PC ลบ 12 ลบ 40"
+  const one = list[0];
+  tvSpeak(list.length > 1 ? (p1 ? 'มีงานด่วน ' : 'มีงานแจ้งซ่อมใหม่ ') + list.length + ' งาน'
+    : (one.p1 ? 'มีงานด่วน พี วัน ' : 'มีงานแจ้งซ่อมใหม่ ') + 'เครื่อง ' + say(one.m) + (one.fac ? ' โรงงาน ' + say(one.fac) : ''), p1 ? 3 : 2);
 }
 function tvSoundUi() { const b = $('tvSound'), on = tvv.sound && tvv.ctx && tvv.ctx.state === 'running'; b.textContent = tvv.sound ? (on ? 'เสียง: เปิด' : 'แตะเพื่อเปิดเสียง') : 'เสียง: ปิด'; b.setAttribute('aria-pressed', String(!!tvv.sound)); b.classList.toggle('on', !!on); }
 function tvUnlock() { if (!tvv.sound) return; try { tvv.ctx = tvv.ctx || new (window.AudioContext || window.webkitAudioContext)(); tvv.ctx.resume().then(tvSoundUi); } catch {} tvSoundUi(); }
 try { tvv.sound = store.get('ct_tvSound') === '1'; } catch {}
-$('tvSound').addEventListener('click', () => { tvv.sound = !tvv.sound; store.set('ct_tvSound', tvv.sound ? '1' : ''); tvUnlock(); tvSoundUi(); if (tvv.sound) setTimeout(() => tvChime(1), 150); });
+$('tvSound').addEventListener('click', () => { tvv.sound = !tvv.sound; store.set('ct_tvSound', tvv.sound ? '1' : ''); tvUnlock(); tvSoundUi(); if (tvv.sound) { setTimeout(() => tvChime(1), 150); tvSpeak('เปิดเสียงแจ้งเตือนแล้ว', 1); } });
 addEventListener('pointerdown', tvUnlock, { passive: true });
 addEventListener('keydown', tvUnlock);
 tvSoundUi();
+// ---- page 2: this month's repair numbers, 12 months in/out, factories, repeat machines, technicians, systems ----
+function renderTVDash(jobs, open, K, c, now, today, facs) {
+  const m0 = new Date(now.getFullYear(), now.getMonth(), 1), p0 = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const inM = (d, a, b) => d && d >= a && d < b;
+  const repM = jobs.filter(x => inM(x.rep, m0, now)), repP = jobs.filter(x => inM(x.rep, p0, m0));
+  const finM = jobs.filter(x => x.stage === 'done' && inM(x.fin, m0, now)), finP = jobs.filter(x => x.stage === 'done' && inM(x.fin, p0, m0));
+  const onTime = L => { const d = L.filter(x => x.due); return d.length ? d.filter(x => x.fin <= new Date(+x.due + DAY - 1)).length / d.length * 100 : null; };
+  const lead = L => { const v = L.filter(x => x.rep && x.fin >= x.rep).map(x => (x.fin - x.rep) / DAY); return v.length ? avg(v) : null; };
+  const allP1 = jobs.filter(x => tvP1(x.r) && x.rep).sort((a, b) => b.rep - a.rep);
+  const sinceP1 = allP1.length ? Math.floor((today - new Date(allP1[0].rep.getFullYear(), allP1[0].rep.getMonth(), allP1[0].rep.getDate())) / DAY) : null;
+  const n1 = v => v === null ? '—' : (Math.round(v * 10) / 10).toLocaleString('th-TH');
+  const diff = (a, b, unit, lowerGood) => { if (a === null || b === null) return ''; const d = a - b; if (Math.abs(d) < 0.05) return 'เท่าเดือนก่อน'; const good = lowerGood ? d < 0 : d > 0; return `<i class="${good ? 'ok' : 'bad'}">${d > 0 ? '▲' : '▼'} ${n1(Math.abs(d))}${unit}</i> จากเดือนก่อน`; };
+  const T = CONFIG.TARGETS || {}, ot = onTime(finM);
+  const k = (label, val, sub, cls) => `<div class="tvk${cls ? ' ' + cls : ''}"><span>${label}</span><b>${val}</b><small>${sub || ''}</small></div>`;
+  $('tvKpi').innerHTML = k('แจ้งเดือนนี้', fmt(repM.length), diff(repM.length, repP.length, '', true))
+    + k('ปิดงานเดือนนี้', fmt(finM.length), diff(finM.length, finP.length, '', false), 'ok')
+    + k('ทันกำหนด', ot === null ? '—' : Math.round(ot) + '%', T.onTime ? 'เป้า ' + T.onTime + '%' : 'ของงานที่ปิดเดือนนี้', ot !== null && T.onTime && ot < T.onTime ? 'bad' : '')
+    + k('เวลาเฉลี่ย/งาน', lead(finM) === null ? '—' : n1(lead(finM)) + ' วัน', diff(lead(finM), lead(finP), ' วัน', true))
+    + k('งานค้างตอนนี้', fmt(open.length), fmt(open.filter(x => x.late).length) + ' เกินกำหนด', open.some(x => x.late) ? 'bad' : '')
+    + k('ไม่มี P1 มาแล้ว', sinceP1 === null ? '—' : fmt(sinceP1) + ' วัน', allP1.length ? 'ล่าสุด ' + dShort(allP1[0].rep) : '', 'ok');
+  // 12 months: reported vs closed
+  const months = Array.from({ length: 12 }, (_, i) => new Date(now.getFullYear(), now.getMonth() - 11 + i, 1));
+  const cnt = (key, a) => { const b = new Date(a.getFullYear(), a.getMonth() + 1, 1); return jobs.filter(x => (key === 'in' || x.stage === 'done') && inM(key === 'in' ? x.rep : x.fin, a, b)).length; };
+  const ser = months.map(a => ({ a, i: cnt('in', a), o: cnt('out', a) })), top = Math.max(1, ...ser.map(s => Math.max(s.i, s.o)));
+  const chart = `<div class="tvbars">${ser.map(s => `<div><span class="v">${s.i}/${s.o}</span><div class="pair"><i class="in" style="height:${s.i / top * 100}%"></i><i class="out" style="height:${s.o / top * 100}%"></i></div><small>${MON3[s.a.getMonth()]}</small></div>`).join('')}</div>
+    <p class="tvleg"><i class="in"></i>แจ้งเข้า <i class="out"></i>ปิดงาน</p>`;
+  // factories: open jobs, red when P1 or late
+  const facTiles = (facs.length ? facs : []).map(v => {
+    const L = state.rows.filter(r => belongsTo(r[K.fac], v)).map(r => { const st = statusOf(r), sg = stageOf(st); return { sg, bad: sg && sg !== 'done' && (tvP1(r) || isLate(r, c) || LATE.test(st)) }; }).filter(x => x.sg && x.sg !== 'done');
+    const cls = L.some(x => x.bad) ? 'bad' : L.length ? 'warn' : 'ok';
+    return `<button type="button" class="tvf ${cls}${upper(v) === upper(tvv.fac) ? ' on' : ''}" data-tvfac="${esc(v)}"><b>${esc(v.replace(/^MTL-/i, ''))}</b><span>${L.length}</span></button>`;
+  }).join('');
+  const topList = (rows, none) => rows.length ? rows.map(([name, n, extra]) => `<div class="tvr"><span>${esc(name)}</span><b>${fmt(n)}${extra || ''}</b></div>`).join('') : `<p class="tvnone">${none}</p>`;
+  const tally = (L, key) => { const o = {}; L.forEach(x => { const v = key(x); if (v) { const k2 = personKey(v) || v; (o[k2] = o[k2] || [v, 0])[1]++; } }); return Object.values(o).sort((a, b) => b[1] - a[1]); };
+  const d30 = jobs.filter(x => x.rep && now - x.rep <= 30 * DAY);
+  const repeat = tally(d30, x => String(x.r[K.m] || '').trim()).filter(x => x[1] > 1).slice(0, 6).map(x => [x[0], x[1], ' ครั้ง']);
+  const sysK = findCol(CONFIG.SYSTEM_COLUMN);
+  $('tvMain').innerHTML = `<div class="tvd">
+    <div class="tvp wide"><h2>แจ้งเข้า vs ปิดงาน · 12 เดือน</h2>${chart}</div>
+    <div class="tvp"><h2>สถานะโรงงาน <small>งานค้าง</small></h2><div class="tvfs">${facTiles}</div><p class="tvleg"><i class="g"></i>ไม่มีค้าง <i class="a"></i>มีค้าง <i class="r"></i>P1 / เกินกำหนด</p></div>
+    <div class="tvp"><h2>เครื่องเสียซ้ำ <small>30 วัน</small></h2>${topList(repeat, 'ไม่มีเครื่องที่เสียซ้ำ')}</div>
+    <div class="tvp"><h2>ปิดงานเดือนนี้ <small>ตามช่าง</small></h2>${topList(tally(finM, x => x.tech).slice(0, 6), 'ยังไม่มีงานปิดเดือนนี้')}</div>
+    <div class="tvp"><h2>งานแจ้งเดือนนี้ <small>ตามระบบ</small></h2>${topList(sysK ? tally(repM, x => String(x.r[sysK] || '').trim()).slice(0, 6) : [], 'ยังไม่มีงานแจ้งเดือนนี้')}</div>
+  </div>`;
+  $('tvTick').innerHTML = '';
+  $('tvSync').textContent = state.lastOk ? 'อัปเดต ' + state.lastOk.toTimeString().slice(0, 5) + (state.ok === false ? ' · เชื่อมต่อไม่ได้' : '') : '';
+}
+function tvRotUi() { $('tvRot').textContent = 'สลับอัตโนมัติ: ' + (tvv.rotate ? 'เปิด' : 'ปิด'); $('tvRot').setAttribute('aria-pressed', String(tvv.rotate)); $('tvRot').classList.toggle('on', tvv.rotate); }
+const tvGo = p => { tvv.page = p; store.set('ct_tvPage', p); if (state.view === 'tv') renderTV(); };
+$('tvPage').addEventListener('click', () => { tvGo(tvv.page === 'dash' ? 'jobs' : 'dash'); tvv.turn = Date.now(); });
+$('tvRot').addEventListener('click', () => { tvv.rotate = !tvv.rotate; store.set('ct_tvRot', tvv.rotate ? '1' : '0'); tvv.turn = Date.now(); tvRotUi(); });
+tvRotUi();
+setInterval(() => { if (state.view === 'tv' && tvv.rotate && Date.now() - (tvv.turn || 0) >= 30000) { tvv.turn = Date.now(); tvGo(tvv.page === 'dash' ? 'jobs' : 'dash'); } }, 1000);
+$('tvView').addEventListener('click', e => { const b = e.target.closest('[data-tvfac]'); if (!b) return; tvv.fac = upper(tvv.fac) === upper(b.dataset.tvfac) ? '' : b.dataset.tvfac; store.set('ct_tvFac', tvv.fac); renderTV(); });
 $('tvFac').addEventListener('change', e => { tvv.fac = e.target.value; store.set('ct_tvFac', tvv.fac); tvv.scroll = {}; e.target.blur(); renderTV(); });
 const tvFull = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => toast('เบราว์เซอร์นี้เปิดเต็มจอไม่ได้ · กด F11')); };
 $('tvFull').addEventListener('click', tvFull);
@@ -2859,6 +2957,10 @@ function renderMonitor(force) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const now = new Date();
   const from = dateOf(state.monFrom), to = dateOf(state.monTo);
+  const firstRep = state.rows.reduce((m, r) => { const d = parseAny(r[dcol]); return d && (!m || d < m) ? d : m; }, null) || now;
+  const monList = [];
+  for (let d = new Date(now.getFullYear(), now.getMonth(), 1); d >= new Date(firstRep.getFullYear(), firstRep.getMonth(), 1) && monList.length < 120; d = new Date(d.getFullYear(), d.getMonth() - 1, 1)) monList.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+  const monOpts = (cur, blank) => `<option value="">— ${blank} —</option>` + monList.map(v => `<option value="${v}"${String(cur || '').slice(0, 7) === v ? ' selected' : ''}>${MON3[+v.slice(5) - 1]} ${v.slice(0, 4)}</option>`).join('');
   const inRange = d => !!d && (!from || d >= from) && (!to || d <= new Date(+to + DAY - 1));
   const all = scopeRows(facs).map(r => {
     const st = statusOf(r), stage = stageOf(st);
@@ -2982,9 +3084,9 @@ function renderMonitor(force) {
   }).join('');
 
   $('monBody').innerHTML = `<div class="pd">
-    <section class="card a-date"><h2>ช่วงวันที่แจ้ง</h2>
-      <div class="drange"><label><span>ตั้งแต่</span><input type="date" class="dpick" id="monFrom" aria-label="ตั้งแต่วันที่" value="${esc(state.monFrom || '')}" max="${dateIn(today)}"><span class="dshow" aria-hidden="true">${dayLabel(state.monFrom)}</span></label><label><span>ถึง</span><input type="date" class="dpick" id="monTo" aria-label="ถึงวันที่" value="${esc(state.monTo || '')}" max="${dateIn(today)}"><span class="dshow" aria-hidden="true">${dayLabel(state.monTo)}</span></label></div>
-      <div class="dquick"><button class="link" data-range="30">30 วัน</button><button class="link" data-range="90">90 วัน</button><button class="link" data-range="365">1 ปี</button><button class="link" data-range="">ทั้งหมด</button></div></section>
+    <section class="card a-date"><h2>ช่วงเดือนที่แจ้ง</h2>
+      <div class="drange mrange"><label><span>ตั้งแต่</span><select id="monFrom" aria-label="ตั้งแต่เดือน">${monOpts(state.monFrom, 'แรกสุด')}</select></label><label><span>ถึง</span><select id="monTo" aria-label="ถึงเดือน">${monOpts(state.monTo, 'ล่าสุด')}</select></label></div>
+      <div class="dquick"><button class="link" data-mrange="1">เดือนนี้</button><button class="link" data-mrange="3">3 เดือน</button><button class="link" data-mrange="y">ปีนี้</button><button class="link" data-mrange="">ทั้งหมด</button></div></section>
     <section class="card pk a-k1"><h2 class="kt">งานในสาย (ยังไม่เสร็จ)</h2><b class="kv">${fmt(open.length)} <small>งาน</small></b><p class="ks"><span class="kpi-badge ${hotN ? 'warn' : 'neutral'}">${hotN ? BOLT + 'ด่วน ' + fmt(hotN) : 'ปกติ'}</span> จากทั้งหมด ${fmt(total)} งาน</p>
       <p class="ks kcmp">${delta(open.length - openAgo, ' งาน', true, fmt)} เทียบ 30 วันก่อน (${fmt(openAgo)} งาน)</p></section>
     <section class="card pk a-k2${lateN ? ' warn' : ''}"><h2 class="kt">เกินกำหนด</h2><b class="kv">${fmt(lateN)} <small>งาน</small></b><p class="ks"><span class="kpi-badge ${lateN ? 'up' : 'down'}">${pct(lateN, open.length)}</span> ของงานในสาย</p>
@@ -3008,15 +3110,19 @@ function renderMonitor(force) {
 // date range: pick dates or a quick range
 $('monitorView').addEventListener('change', e => {
   if (e.target.id !== 'monFrom' && e.target.id !== 'monTo') return;
-  state[e.target.id] = e.target.value;
+  const v = e.target.value, last = m => { const [y, mo] = m.split('-').map(Number); return dateIn(new Date(y, mo, 0)); };
+  // "from" = the 1st of that month, "to" = its last day; picked the wrong way round = swapped
+  if (e.target.id === 'monFrom') state.monFrom = v ? v + '-01' : ''; else state.monTo = v ? last(v) : '';
+  if (state.monFrom && state.monTo && state.monFrom > state.monTo) [state.monFrom, state.monTo] = [state.monTo.slice(0, 8) + '01', last(state.monFrom.slice(0, 7))];
+  e.target.blur();
   renderMonitor(true);
 });
 $('monitorView').addEventListener('click', e => {
-  const b = e.target.closest('[data-range]');
+  const b = e.target.closest('[data-mrange]');
   if (!b) return;
-  const d = new Date(); d.setHours(0, 0, 0, 0);
-  state.monTo = b.dataset.range ? dateIn(d) : '';
-  state.monFrom = b.dataset.range ? dateIn(new Date(d - (b.dataset.range - 1) * DAY)) : '';
+  const d = new Date(), k = b.dataset.mrange;
+  state.monTo = k ? dateIn(new Date(d.getFullYear(), d.getMonth() + 1, 0)) : '';
+  state.monFrom = !k ? '' : k === 'y' ? d.getFullYear() + '-01-01' : dateIn(new Date(d.getFullYear(), d.getMonth() - (+k - 1), 1));
   renderMonitor(true);
 });
 

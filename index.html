@@ -1304,6 +1304,7 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
+.monfacsel{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--ink-2)}.monfacsel select{font:inherit;font-weight:500;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:200px}
 body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-only #todo{display:none!important}
 .pmhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:0 0 14px}
 .pmhead h1{margin:0}
@@ -1923,7 +1924,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.18';
+const APP_VER = '0.0.0.19';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2031,6 +2032,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const phoneMQ = matchMedia('(max-width: ' + ((typeof CONFIG === 'object' && CONFIG.PHONE_MAX_WIDTH) || 700) + 'px)');
 const phoneOnly = () => !!(CONFIG.PHONE_REQUEST_ONLY && phoneMQ.matches);
+document.addEventListener('change', e => { if (e.target.id === 'monFacSel') { state.fac = e.target.value; e.target.blur(); render(); } });
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-fac]');
   if (!b) return;
@@ -2204,8 +2206,10 @@ function renderSync() {
 // factory buttons: '' = every factory of this account
 const myFactories = () => { const n = state.meta && state.meta.customer && state.meta.customer.name; return n ? factoryList(n) : []; };
 const facCol = () => findCol(['FactoryID', 'Location']);
-function scopeRows() {
-  if (!state.fac || myFactories().length < 2) return state.rows;
+// staff on the monitor: every factory that has a job (customers: their own, from myFactories)
+const monFactories = () => { if (myFactories().length || role() === 'customer') return myFactories(); const k = facCol(); return k ? uniq(state.rows.flatMap(r => factoryList(r[k]).map(upper))).sort(natural) : []; };
+function scopeRows(facs = myFactories()) {
+  if (!state.fac || facs.length < 2) return state.rows;
   const k = facCol();
   return state.rows.filter(r => belongsTo(r[k], state.fac));
 }
@@ -2663,13 +2667,14 @@ const stackBar = (parts, max) => `<span class="hbt">${parts.filter(x => x.n > 0)
 
 function renderMonitor(force) {
   // keep an open date picker alive through the 20-second refresh
-  if (!force && ['monFrom', 'monTo'].includes(document.activeElement && document.activeElement.id)) return;
+  if (!force && ['monFrom', 'monTo', 'monFacSel'].includes(document.activeElement && document.activeElement.id)) return;
   const name = state.meta.customer && state.meta.customer.name;
-  const facs = myFactories();
+  const facs = monFactories(), staff = !myFactories().length;
   if (state.fac && !facs.some(x => upper(x) === upper(state.fac))) state.fac = '';
   $('monTitle').textContent = facs.length > 1 ? 'Pipeline งานซ่อม' : name ? 'Pipeline งานซ่อม · ' + name : 'Pipeline งานซ่อม';
   $('monFac').hidden = facs.length < 2;   // several factories: buttons instead of the long list in the title (same choice as the work list)
-  if (facs.length > 1) { const k = facCol(), n = v => v ? state.rows.filter(r => belongsTo(r[k], v)).length : state.rows.length; $('monFac').innerHTML = [''].concat(facs.slice().sort(natural)).map(v => `<button type="button" class="facb" data-fac="${esc(v)}" aria-pressed="${upper(state.fac) === upper(v)}">${v ? esc(v) : 'ทุกโรงงาน'}<span>${n(v)}</span></button>`).join(''); }
+  if (facs.length > 1 && staff) { const k = facCol(), n = v => v ? state.rows.filter(r => belongsTo(r[k], v)).length : state.rows.length; $('monFac').innerHTML = `<label class="monfacsel">โรงงาน<select id="monFacSel">${[''].concat(facs).map(v => `<option value="${esc(v)}"${upper(state.fac) === upper(v) ? ' selected' : ''}>${v ? esc(v) : 'ทุกโรงงาน'} (${n(v)})</option>`).join('')}</select></label>`; }
+  else if (facs.length > 1) { const k = facCol(), n = v => v ? state.rows.filter(r => belongsTo(r[k], v)).length : state.rows.length; $('monFac').innerHTML = [''].concat(facs.slice().sort(natural)).map(v => `<button type="button" class="facb" data-fac="${esc(v)}" aria-pressed="${upper(state.fac) === upper(v)}">${v ? esc(v) : 'ทุกโรงงาน'}<span>${n(v)}</span></button>`).join(''); }
   if (state.ok === null && !state.rows.length) { $('monBody').innerHTML = '<p class="loading">กำลังโหลดข้อมูล…</p>'; $('monSub').textContent = ''; return; }
   const c = columns();
   const dcol = findCol(CONFIG.DATE_COLUMN) || c.keys.reported;
@@ -2682,7 +2687,7 @@ function renderMonitor(force) {
   const now = new Date();
   const from = dateOf(state.monFrom), to = dateOf(state.monTo);
   const inRange = d => !!d && (!from || d >= from) && (!to || d <= new Date(+to + DAY - 1));
-  const all = scopeRows().map(r => {
+  const all = scopeRows(facs).map(r => {
     const st = statusOf(r), stage = stageOf(st);
     const rep = parseAny(r[dcol]), asg = acol ? parseAny(r[acol]) : null, ins = icol ? parseAny(r[icol]) : null;
     const fin = fcols.map(k => parseAny(r[k])).find(Boolean) || null;

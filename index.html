@@ -1304,6 +1304,10 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
+.lwvt{color:#6B4FA3;font-weight:600}.lwt .lwvt{display:block;font-size:13px}.lwp>small.lwvt{display:block;font-size:12.5px;font-weight:500}.lwp>small.lwvt b{font-weight:700}
+.lwmh small.lwvt{font-size:13px;font-weight:500;margin-left:10px}
+.lmteam tr.vend td{background:#F6F3FB;color:#4B3B6B}.lst.vend{background:#EFE8FA;color:#5B3B8C}
+.lwvend{margin-top:16px}.lmv th,.lmv td{padding:6px 8px;white-space:nowrap}.lmv th.now{color:#B45309}
 .mrange{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center}.mrange>span{color:var(--muted);font-size:14px}.mrange select{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}.mrange select:disabled{opacity:.5}
 /* ---------- จอทีวี ---------- */
 body.tvmode .nav,body.tvmode .hero,body.tvmode .top,body.tvmode #phoneNav{display:none!important}
@@ -2013,7 +2017,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.27';
+const APP_VER = '0.0.0.30';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -3573,7 +3577,7 @@ function renderLoadMonths() {
   const wd = [], we = [];
   LV.months.forEach(ym => { const yy = +ym.slice(0, 4), mm = +ym.slice(5) - 1; let a = 0, b = 0; for (let d = 1, n = new Date(yy, mm + 1, 0).getDate(); d <= n; d++) { const k = new Date(yy, mm, d).getDay(); k === 0 || k === 6 ? b++ : a++; } wd.push(a); we.push(b); });
   const MN = LV.months.map(ym => MON3[+ym.slice(5) - 1] + ' ' + ym.slice(2, 4));   // "Apr 26"
-  const RB = LV.rows.filter(r => r[4] === 'MT1800');
+  const RB = LV.rows.filter(r => r[4] === 'MT1800'), RV = LV.rows.filter(r => r[4] === 'VENDOR');
   const hrsOf = rows => { const o = Array(12).fill(0), s = Array(12).fill(0); rows.forEach(r => { (r[2] === 'MC-STOPPED' ? s : o)[r[0]] += r[5] / 60; }); return { o, s }; };
   const lvl = p => p > 100 ? 'hi' : p >= 85 ? 'md' : 'lo';
   // one team (or everybody): its hours, the people, the % used on weekdays and on weekends
@@ -3587,6 +3591,16 @@ function renderLoadMonths() {
   const selT = TM.find(t => t.code === sel), cur = sel ? calc(RB.filter(r => r[7] === sel), tSize(selT)) : calc(RB, allMen);
   $('loadSub').textContent = `${sel ? 'ทีม ' + sel + (selT.lead ? ' · ' + selT.lead : '') : 'ทั้งแผนก'} · ทีมช่าง (MT1800) · งาน PM จากแผนในระบบ × เวลามาตรฐาน + CHECK DAILY`;
   const pct = p => p === Infinity ? 'ไม่มีคน' : f0(p) + '%';
+  // vendor: hours and jobs only (their people are not ours, so no % and no status)
+  const vH = hrsOf(RV), vJ = Array(12).fill(0); RV.forEach(r => { vJ[r[0]] += r[6]; });
+  const vRow = RV.length ? `<tr class="vend"><td class="tm"><b>Vendor</b><small>ผู้รับเหมา · ${f0(sumOf(vJ))} งาน</small></td><td class="num">—</td>
+      <td class="num gO">${f0(sumOf(vH.o))}</td><td class="num gO">—</td><td class="num gO">—</td><td class="num gO">—</td>
+      <td class="num gS">${f0(sumOf(vH.s))}</td><td class="num gS">—</td><td class="num gS">—</td><td class="num gS">—</td><td class="st"><span class="lst vend">Vendor</span></td></tr>` : '';
+  const vTable = RV.length ? `<div class="pmc lwvend"><h3>งาน Vendor รายเดือน · ปีแผน Apr ${Y} – Mar ${Y + 1}</h3><p class="sub">งาน PM ที่ผู้ทำเป็น Vendor · ไม่นับในกำลังคนของทีมช่าง</p>
+    <div class="tscroll"><table class="lmteam lmv"><thead><tr><th></th>${MN.map((m, i) => `<th class="num${i === LV.cur ? ' now' : ''}">${m}</th>`).join('')}<th class="num">รวม</th></tr></thead><tbody>
+    <tr><td>งาน</td>${vJ.map(n => `<td class="num">${n || '·'}</td>`).join('')}<td class="num"><b>${f0(sumOf(vJ))}</b></td></tr>
+    <tr><td>ชม. จ.–ศ.</td>${vH.o.map(n => `<td class="num">${n ? f0(n) : '·'}</td>`).join('')}<td class="num"><b>${f0(sumOf(vH.o))}</b></td></tr>
+    <tr><td>ชม. ส.–อา.</td>${vH.s.map(n => `<td class="num">${n ? f0(n) : '·'}</td>`).join('')}<td class="num"><b>${f0(sumOf(vH.s))}</b></td></tr></tbody></table></div></div>` : '';
   // team table: a row per team for the year, the row picks the team
   const teamRows = TM.map(t => {
     const c = calc(RB.filter(r => r[7] === t.code), tSize(t)), yO = sumOf(c.o), yS = sumOf(c.s), aO = sumOf(c.cO), aS = sumOf(c.cS);
@@ -3602,15 +3616,20 @@ function renderLoadMonths() {
     <div class="tscroll"><table class="lmteam"><colgroup><col style="width:14%"><col style="width:7%"><col span="8" style="width:9%"><col style="width:7%"></colgroup>
     <thead><tr class="g"><th rowspan="2">ทีม</th><th rowspan="2" class="num">คน</th><th colspan="4" class="gO">จ.–ศ. · งานเครื่องเดิน</th><th colspan="4" class="gS">ส.–อา. · งานหยุดเครื่อง</th><th rowspan="2" class="st">สถานะ</th></tr>
     <tr><th class="num gO">ชม.งาน</th><th class="num gO">ใช้กำลังคน</th><th class="num gO">เดือนที่เกิน</th><th class="num gO">ต้องใช้สูงสุด (คน)</th><th class="num gS">ชม.งาน</th><th class="num gS">ใช้กำลังคน</th><th class="num gS">เดือนที่เกิน</th><th class="num gS">ต้องใช้สูงสุด (คน)</th></tr></thead>
-    <tbody>${teamRows}</tbody></table></div></div>` : '';
+    <tbody>${teamRows}${vRow}</tbody></table></div></div>` : '';
   // month blocks of the team picked (or everybody)
   const c = cur, tt = c.o.map((h, i) => h + c.s[i]);
-  const part = (name, d, h, cap, p) => `<div class="lwp ${lvl(p)}"><div><span>${name} <small>${d} วัน</small></span><b>${pct(p)}</b></div><span class="lwuse"><i style="width:${Math.min(100, p === Infinity ? 100 : p).toFixed(0)}%"></i></span><small>งาน <b>${f0(h)}</b> / มี ${f0(cap)} ชม. · ${h > cap ? 'ขาด' : 'เหลือ'} ${f0(Math.abs(cap - h))}</small></div>`;
+  const vc = hrsOf(sel ? RV.filter(r => r[7] === sel) : RV);   // vendor hours of the same team (or all)
+  // vendor = hours our team does not have to do: shown as "ลดงาน N ชม. (−x%)" and what the % would be without them
+  const vp = (v, cap) => { const x = v / (cap || 1) * 100; return x > 0 && x < 1 ? '<1' : f0(x); };   // "−0%" reads wrong for a few hours
+  const vline = (vh, cap, h) => vh ? `<small class="lwvt">Vendor ช่วยลด <b>${f0(vh)}</b> ชม.${cap ? ` (−${vp(vh, cap)}%) · ถ้าทำเอง ${vp(h + vh, cap)}%` : ''}</small>` : '';
+  const part = (name, d, h, cap, p, vh) => { const w = Math.min(100, p === Infinity ? 100 : p);
+    return `<div class="lwp ${lvl(p)}"><div><span>${name} <small>${d} วัน</small></span><b>${pct(p)}</b></div><span class="lwuse"><i style="width:${w.toFixed(0)}%"></i></span><small>งาน <b>${f0(h)}</b> / มี ${f0(cap)} ชม. · ${h > cap ? 'ขาด' : 'เหลือ'} ${f0(Math.abs(cap - h))}</small>${vline(vh, cap, h)}</div>`; };
   const blocks = LV.months.map((_, i) => {
     const k = lvl(Math.max(c.pO[i], c.pS[i]));
     return `<div class="lwb ${k}${i === LV.cur ? ' now' : ''}"><div class="lwh"><b>${MN[i]}</b>${i === LV.cur ? '<span class="lnow">เดือนนี้</span>' : ''}<span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}" style="margin-left:auto">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></div>
-      <div class="lwt"><small>เวลาทั้งหมด</small><b>${f0(tt[i])}</b><em>ชม. / มี ${f0(c.cO[i] + c.cS[i])}</em></div>
-      ${part('เวลาทำงาน จ.–ศ.', wd[i], c.o[i], c.cO[i], c.pO[i])}${part('เวลาวันหยุด ส.–อา.', we[i], c.s[i], c.cS[i], c.pS[i])}</div>`;
+      <div class="lwt"><small>เวลาทั้งหมด</small><b>${f0(tt[i])}</b><em>ชม. / มี ${f0(c.cO[i] + c.cS[i])}</em>${vc.o[i] + vc.s[i] ? `<span class="lwvt">Vendor ช่วยลด ${f0(vc.o[i] + vc.s[i])} ชม. (−${vp(vc.o[i] + vc.s[i], c.cO[i] + c.cS[i])}%)</span>` : ''}</div>
+      ${part('เวลาทำงาน จ.–ศ.', wd[i], c.o[i], c.cO[i], c.pO[i], vc.o[i])}${part('เวลาวันหยุด ส.–อา.', we[i], c.s[i], c.cS[i], c.pS[i], vc.s[i])}</div>`;
   }).join('');
   const overO = c.pO.filter(p => p > 100).length, overS = c.pS.filter(p => p > 100).length;
   // % of the people used each month: Mon–Fri and Sat–Sun side by side, the 100% line dashed; over 100% in red
@@ -3640,9 +3659,9 @@ function renderLoadMonths() {
   box.innerHTML = `<div class="lwtop"><div class="lwyear" role="group" aria-label="ปี"><button type="button" data-loadyear="-1" aria-label="ปีก่อน">‹</button><b>Apr ${Y} – Mar ${Y + 1}</b><button type="button" data-loadyear="1" aria-label="ปีถัดไป">›</button></div>
     <div class="ldby" role="group" aria-label="ทีม"><button type="button" data-loadteam="" aria-pressed="${!sel}">ทั้งแผนก</button>${TM.map(t => `<button type="button" data-loadteam="${t.code}" aria-pressed="${sel === t.code}">${esc(t.code)}</button>`).join('')}</div>
     ${sel ? `<span class="lwmen">ทีม ${esc(sel)} มี <b>${c.men}</b> คน</span>` : `<label class="lwmen">กำลังคนทั้งแผนก <input type="number" min="0" max="999" data-lset="men" value="${allMen}" aria-label="จำนวนคนทั้งแผนก"> คน</label>`}
-    <div class="lwsum"><span>งานทั้งปี <b>${f0(sumOf(tt))}</b> ชม.</span><span>จ.–ศ. เกิน <b class="${overO ? 'neg' : 'pos'}">${overO}</b> เดือน</span><span>ส.–อา. เกิน <b class="${overS ? 'neg' : 'pos'}">${overS}</b> เดือน</span></div></div>
-    ${teams}${pchart}
-    <h3 class="lwmh">รายเดือน · ${sel ? 'ทีม ' + esc(sel) : 'ทั้งแผนก'}</h3>
+    <div class="lwsum"><span>งานทั้งปี <b>${f0(sumOf(tt))}</b> ชม.</span>${RV.length && !sel ? `<span>Vendor <b>${f0(sumOf(vH.o) + sumOf(vH.s))}</b> ชม. · ${f0(sumOf(vJ))} งาน</span>` : ''}<span>จ.–ศ. เกิน <b class="${overO ? 'neg' : 'pos'}">${overO}</b> เดือน</span><span>ส.–อา. เกิน <b class="${overS ? 'neg' : 'pos'}">${overS}</b> เดือน</span></div></div>
+    ${teams}${vTable}${pchart}
+    <h3 class="lwmh">รายเดือน · ${sel ? 'ทีม ' + esc(sel) : 'ทั้งแผนก'}${RV.length ? ' <small class="lwvt">Vendor ช่วยลด = ชั่วโมงที่ผู้รับเหมาทำแทน · ไม่นับใน % กำลังคน</small>' : ''}</h3>
     <div class="lwgrid">${blocks}</div>
     <p class="fnote">ชั่วโมงงาน = งาน PM ในแผน × เวลามาตรฐานของงานนั้น (คน × นาที ÷ 60) + CHECK DAILY · งานเครื่องเดิน (MC-OPERATED) ทำ จ.–ศ. · งานหยุดเครื่อง (MC-STOPPED) ทำ ส.–อา. · กำลังคน = จำนวนวันตามปฏิทิน × คน × ${hpd} ชม. (ไม่หักวันนักขัตฤกษ์ วันลา และงานซ่อม) · ทีมดูจาก TeamCode ในแผน PM · ขอบสี: เขียว ใช้ไม่ถึง 85%, ส้ม 85–100%, แดง เกิน${LV.miss ? ` · ${LV.miss} งานไม่มีเวลามาตรฐาน นับ 0 ชม.` : ''}</p>`;
 }

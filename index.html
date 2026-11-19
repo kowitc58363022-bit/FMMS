@@ -2012,7 +2012,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.25';
+const APP_VER = '0.0.0.26';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2806,13 +2806,12 @@ function tvChime(times) {
     o.start(t + at); o.stop(t + at + 0.5);
   }), t += 0.9;
 }
-// speech after the chime (about 0.9 s per chime); said twice for P1 · no Thai voice on this device = chime only
-function tvSpeak(text, chimes) {
+// speech after the chime (about 0.9 s per chime), in English (TVs often have no Thai voice); P1 said twice
+function tvSpeak(text, chimes, twice) {
   if (!tvv.sound || !('speechSynthesis' in window)) return;
-  const th = speechSynthesis.getVoices().find(v => /^th/i.test(v.lang));
-  if (!th) return;
-  const go = () => { const u = new SpeechSynthesisUtterance(text); u.voice = th; u.lang = th.lang; u.rate = 0.95; speechSynthesis.speak(u); };
-  setTimeout(() => { speechSynthesis.cancel(); go(); if (/ด่วน/.test(text)) setTimeout(go, 400); }, chimes * 900 + 200);
+  const vs = speechSynthesis.getVoices(), en = vs.find(v => /^en-US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang));
+  const go = () => { const u = new SpeechSynthesisUtterance(text); if (en) u.voice = en; u.lang = en ? en.lang : 'en-US'; u.rate = 0.95; speechSynthesis.speak(u); };
+  setTimeout(() => { speechSynthesis.cancel(); go(); if (twice) setTimeout(go, 400); }, chimes * 900 + 200);
 }
 if ('speechSynthesis' in window) speechSynthesis.getVoices();   // some browsers load the voice list on first ask
 function tvAlert(list) {
@@ -2822,15 +2821,12 @@ function tvAlert(list) {
   box.hidden = false;
   clearTimeout(tvv.newT); tvv.newT = setTimeout(() => { box.hidden = true; }, 20000);
   tvChime(p1 ? 3 : 2);
-  const say = m => String(m).replace(/[-_/]+/g, ' ');   // "PC-12-40" reads as "PC 12 40", not "PC ลบ 12 ลบ 40"
-  const one = list[0];
-  tvSpeak(list.length > 1 ? (p1 ? 'มีงานด่วน ' : 'มีงานแจ้งซ่อมใหม่ ') + list.length + ' งาน'
-    : (one.p1 ? 'มีงานด่วน พี วัน ' : 'มีงานแจ้งซ่อมใหม่ ') + 'เครื่อง ' + say(one.m) + (one.fac ? ' โรงงาน ' + say(one.fac) : ''), p1 ? 3 : 2);
+  tvSpeak(p1 ? 'Priority one repair.' : 'New repair request.', p1 ? 3 : 2, p1);
 }
 function tvSoundUi() { const b = $('tvSound'), on = tvv.sound && tvv.ctx && tvv.ctx.state === 'running'; b.textContent = tvv.sound ? (on ? 'เสียง: เปิด' : 'แตะเพื่อเปิดเสียง') : 'เสียง: ปิด'; b.setAttribute('aria-pressed', String(!!tvv.sound)); b.classList.toggle('on', !!on); }
 function tvUnlock() { if (!tvv.sound) return; try { tvv.ctx = tvv.ctx || new (window.AudioContext || window.webkitAudioContext)(); tvv.ctx.resume().then(tvSoundUi); } catch {} tvSoundUi(); }
 try { tvv.sound = store.get('ct_tvSound') === '1'; } catch {}
-$('tvSound').addEventListener('click', () => { tvv.sound = !tvv.sound; store.set('ct_tvSound', tvv.sound ? '1' : ''); tvUnlock(); tvSoundUi(); if (tvv.sound) { setTimeout(() => tvChime(1), 150); tvSpeak('เปิดเสียงแจ้งเตือนแล้ว', 1); } });
+$('tvSound').addEventListener('click', () => { tvv.sound = !tvv.sound; store.set('ct_tvSound', tvv.sound ? '1' : ''); tvUnlock(); tvSoundUi(); if (tvv.sound) { setTimeout(() => tvChime(1), 150); tvSpeak('New repair request.', 1); } });
 addEventListener('pointerdown', tvUnlock, { passive: true });
 addEventListener('keydown', tvUnlock);
 tvSoundUi();

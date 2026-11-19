@@ -1507,6 +1507,20 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmme-r{display:flex;justify-content:space-between;gap:8px;width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 14px;margin-bottom:8px;font:inherit;font-size:14px;color:var(--muted);text-align:left;cursor:pointer}.pmme-r b{color:var(--ink);font-weight:600}
 .pmme-all{display:block;width:100%;margin:18px 0 6px;min-height:44px;border:1px dashed var(--line);border-radius:12px;background:none;font:inherit;color:var(--navy);font-weight:600;cursor:pointer}
 /* phones: a job shows its details and ทำ Inspection only (no files, scheduling, manual submit when there is a form, plan edit) */
+.pmmon{display:grid;gap:16px}
+.pmmcs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.pmmc{display:grid;gap:2px;text-align:left;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;cursor:pointer;font:inherit;color:var(--ink)}
+.pmmc b{font-size:24px;line-height:1.1}.pmmc span{font-weight:600}.pmmc small{color:var(--muted);font-size:12px}
+.pmmc.hot b{color:#C4141B}.pmmc.on{border-color:#E31B23;box-shadow:0 0 0 2px #E31B2333}
+.pmmt{width:100%;border-collapse:collapse;font-size:13.5px}.pmmt th,.pmmt td{padding:7px 10px;border-bottom:1px solid #EEF1F6;text-align:left;white-space:nowrap}
+.pmmt tr.on td{background:#FFF4F4}.pmmt td.bar{width:30%}.pmmt td.bar i{display:block;height:8px;border-radius:4px;background:#E31B23;opacity:.75;min-width:2px}
+.pmmt .lnk,.pmtbl-w h3 .lnk{background:none;border:0;padding:0;color:#1E6FE8;cursor:pointer;font:inherit;text-decoration:underline}
+.pmtbl-w h3 a.lnk{float:right;font-size:13px;font-weight:500}
+.pmbulk{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:end;margin:6px 0 10px}.pmbulk label{display:grid;gap:2px;font-size:12.5px;color:var(--muted)}.pmbulk b{align-self:center;margin-right:6px}
+.pmbulk .btn.pmdel{color:#C4141B;border-color:#F3B4B6}
+@media (max-width:1100px){.pmmcs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pmtabs .pmaddb{margin-left:8px;background:#E31B23;color:#fff;border-color:#E31B23}.pmtabs .pmaddb:hover{background:#C4141B}
+#pmDlgBody .pm-add .chk{display:flex;gap:8px;align-items:center;flex-direction:row}#pmDlgBody .pm-add .chk input{width:auto}
 #pmDlgBody .btn.pmdel{color:#C4141B;border-color:#F3B4B6}#pmDlgBody .btn.pmdel:hover{background:#FFF4F4}
 @media (max-width:700px){#pmDlgBody .pm-edit{display:none}
   /* phones: the job panel stays the width of the screen, one column, vertical scroll only (iPhone Safari let it slide sideways) */
@@ -4340,7 +4354,7 @@ const PM_S = { todo: 'INCOMPLETED', review: 'WAIT FOR APPROVE', done: 'COMPLETED
 const PM_ST = { done: 'เสร็จแล้ว', review: 'รออนุมัติ', todo: 'ยังไม่ทำ', late: 'เลยกำหนด' };
 const canPM = () => !!state.user && ['technician', 'engineer', 'admin', 'customer'].includes(role());   // customer: view only, own factories · signed out: role() says customer, so check the user (else the plan page keeps calling op pm with no token and logs the next sign-in out)
 var pmv = { cal: { mode: 'month', date: new Date() }, year: new Date().getFullYear(), month: new Date().getMonth() + 1, tab: 'list', f: { pic: '', theme: '', loc: '', mc: '' }, st: '', q: '', day: '', data: {}, loading: '', err: '', shown: 150, files: [], mineF: 'today' };
-try { const t = store.get('ct_pmTab'); if (t === 'cal' || t === 'list' || t === 'dash') pmv.tab = t; } catch {}
+try { const t = store.get('ct_pmTab'); if (t === 'cal' || t === 'list' || t === 'dash' || t === 'mon') pmv.tab = t; } catch {}
 // "narate.kap@murata.com" → "Narate"; a name stays as it is
 const pmPicName = v => { const s = String(v || '').trim(); if (!s.includes('@')) return s; const f = s.split('@')[0].split(/[._]/)[0]; return f.charAt(0).toUpperCase() + f.slice(1).toLowerCase(); };
 const pmTheme = v => String(v || '').replace(/^PM\s+/i, '').toLowerCase().replace(/(^|-)\w/g, c => c.toUpperCase());
@@ -4532,7 +4546,7 @@ function renderPM() {
     + (any ? '<button type="button" class="xclear" data-pmclear>ล้างตัวกรอง</button>' : '');
   const box = $('pmBar');
   if (box.dataset.html !== bar) { box.innerHTML = bar; box.dataset.html = bar; }
-  $('pmTabs').innerHTML = `<button type="button" data-pmtab="list" aria-pressed="${pmv.tab === 'list'}">รายการ</button><button type="button" data-pmtab="cal" aria-pressed="${pmv.tab === 'cal'}">ปฏิทิน</button><button type="button" data-pmtab="dash" aria-pressed="${pmv.tab === 'dash'}">Dashboard</button>`;
+  $('pmTabs').innerHTML = `<button type="button" data-pmtab="list" aria-pressed="${pmv.tab === 'list'}">รายการ</button><button type="button" data-pmtab="cal" aria-pressed="${pmv.tab === 'cal'}">ปฏิทิน</button><button type="button" data-pmtab="dash" aria-pressed="${pmv.tab === 'dash'}">Dashboard</button>${role() === 'admin' ? `<button type="button" data-pmtab="mon" aria-pressed="${pmv.tab === 'mon'}">จัดการงาน</button><button type="button" class="pmaddb" data-pmadd>+ ลงทะเบียนงาน PM</button>` : ''}`;
   if (pmv.loading && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = '<p class="loading">กำลังโหลดแผน PM…</p>'; $('pmSub').textContent = ''; return; }
   if (pmv.err && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = `<div class="pmempty"><b>ยังโหลดแผน PM ไม่ได้</b><br>${esc(pmv.err)}<br><button type="button" class="btn" data-pmretry>ลองอีกครั้ง</button></div>`; return; }
   // phones: the week calendar only (the รายการ / ปฏิทิน switch below is kept off)
@@ -4554,7 +4568,76 @@ function renderPM() {
   $('pmTitle').textContent = 'แผน PM';
   const base = pmBase();
   $('pmSub').textContent = (pmv.month ? MON3[pmv.month - 1] + ' ' : 'ทั้งปี ') + pmv.year + ' · ' + base.length + ' งาน' + (role() === 'technician' ? ' ของคุณ' : '');
-  $('pmBody').innerHTML = seg + (pmv.tab === 'cal' ? pmCalendar() : pmv.tab === 'dash' ? pmDashboard() : pmListHtml());
+  $('pmBody').innerHTML = seg + (pmv.tab === 'mon' && role() === 'admin' ? pmMonitor() : pmv.tab === 'cal' ? pmCalendar() : pmv.tab === 'dash' ? pmDashboard() : pmListHtml());
+}
+// ---- admin: จัดการงาน (the filters above apply: year, month, PIC, type, location) ----
+const PM_GROUPS = [
+  ['late', 'เลยกำหนด', 'เดือนแผนผ่านไปแล้ว ยังไม่ส่ง', x => x.st === 'late'],
+  ['nopic', 'ไม่มี PIC', 'ยังไม่ได้มอบให้ช่าง', x => x.st !== 'done' && !x.o.PIC],
+  ['nodate', 'ยังไม่นัดวัน', 'ยังไม่ทำและไม่มีวันนัด', x => (x.st === 'todo' || x.st === 'late') && !x.plan],
+  ['review', 'รออนุมัติ', 'ช่างส่งแล้ว รอวิศวะ', x => x.st === 'review'],
+  ['back', 'ถูกส่งกลับ', 'วิศวะส่งกลับให้แก้', x => x.st !== 'done' && /^ส่งกลับ:/.test(x.o.Remark)],
+  ['open', 'งานค้างทั้งหมด', 'ทุกงานที่ยังไม่เสร็จ', x => x.st !== 'done'],
+];
+pmv.mon = { g: 'late', pic: '', sel: new Set() };
+// standard man-minutes of a job (workload.js), 0 when not known
+const pmMinutes = x => { const W = window.WORKLOAD; if (!W) return 0; const th = upper(x.o.JobTheme); return W.std[upper(x.o.MachineID) + '|' + th] ?? W.stdType[upper(x.o.MachineType) + '|' + th] ?? 0; };
+function pmMonList() {
+  const g = PM_GROUPS.find(a => a[0] === pmv.mon.g) || PM_GROUPS[0], ORD = { late: 0, todo: 1, review: 2, done: 3 };
+  return pmBase().filter(x => g[3](x) && (!pmv.mon.pic || (pmv.mon.pic === '-' ? !x.o.PIC : samePerson(x.pic, pmv.mon.pic))))
+    .sort((a, b) => ORD[a.st] - ORD[b.st] || a.m - b.m || natural(a.o.MachineID, b.o.MachineID));
+}
+function pmMonitor() {
+  const base = pmBase(), M = pmv.mon, techs = (pmv.data[pmv.year] || {}).technicians || [], hasW = !!window.WORKLOAD;
+  const cards = PM_GROUPS.map(([k, label, hint, fn]) => { const n = base.filter(fn).length; return `<button type="button" class="pmmc${M.g === k ? ' on' : ''}${n && k !== 'open' ? ' hot' : ''}" data-pmmon="${k}"><b>${n}</b><span>${label}</span><small>${hint}</small></button>`; }).join('');
+  // per technician: every name in Web_Users plus any PIC on the plan
+  const by = {};
+  techs.forEach(t => { by[personKey(t)] = { name: t, n: 0, open: 0, late: 0, review: 0, min: 0 }; });
+  base.forEach(x => {
+    const k = x.o.PIC ? personKey(x.pic) : '-';
+    const r = by[k] = by[k] || { name: x.o.PIC ? x.pic : 'ไม่มี PIC', n: 0, open: 0, late: 0, review: 0, min: 0 };
+    r.n++; if (x.st !== 'done') { r.open++; r.min += pmMinutes(x); } if (x.st === 'late') r.late++; if (x.st === 'review') r.review++;
+  });
+  const rows = Object.entries(by).sort((a, b) => b[1].open - a[1].open || natural(a[1].name, b[1].name)), top = Math.max(1, ...rows.map(([, r]) => r.open));
+  const load = `<table class="pmmt"><thead><tr><th>ช่าง</th><th>งานค้าง</th><th></th><th>เลยกำหนด</th><th>รออนุมัติ</th><th>ทั้งหมด</th>${hasW ? '<th>ชม. งานค้าง</th>' : ''}</tr></thead><tbody>${rows.map(([k, r]) => `<tr class="${M.pic === (k === '-' ? '-' : r.name) ? 'on' : ''}">
+      <td><button type="button" class="lnk" data-pmmonpic="${esc(k === '-' ? '-' : r.name)}">${esc(r.name)}</button></td><td><b>${r.open}</b></td>
+      <td class="bar"><i style="width:${Math.round(r.open / top * 100)}%"></i></td><td>${r.late ? `<span class="pmbad">${r.late}</span>` : '0'}</td><td>${r.review}</td><td>${r.n}</td>${hasW ? `<td>${(r.min / 60).toFixed(1)}</td>` : ''}</tr>`).join('')}</tbody></table>`;
+  const list = pmMonList(), shown = list.slice(0, 500);
+  [...M.sel].forEach(id => { if (!list.some(x => x.id === id)) M.sel.delete(id); });   // a picked job that left the list is not changed
+  const g = PM_GROUPS.find(a => a[0] === M.g) || PM_GROUPS[0], n = M.sel.size;
+  const bar = `<div class="pmbulk">${n ? `<b>เลือก ${n} งาน</b>` : '<span class="pmnone">ติ๊กงานที่จะเปลี่ยน</span>'}
+      <label>ย้าย PIC<select name="bPIC"><option value="">— เลือกช่าง —</option>${techs.map(t => `<option${t === M.bPIC ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label><button type="button" class="btn" data-pmbulk="pic"${n ? '' : ' disabled'}>ย้าย PIC</button>
+      <label>ย้ายไปเดือน<select name="bMonth"><option value="">— เดือน —</option>${PM_MONTHS.map((mm, i) => `<option value="${mm}"${mm === M.bMonth ? ' selected' : ''}>${MON3[i]}</option>`).join('')}</select></label><button type="button" class="btn" data-pmbulk="month"${n ? '' : ' disabled'}>ย้ายเดือน</button>
+      <button type="button" class="btn pmdel" data-pmbulk="delete"${n ? '' : ' disabled'}>ลบ</button></div>`;
+  const table = list.length ? `<div class="pmtbl"><table class="pmmt"><thead><tr><th><input type="checkbox" data-pmselall aria-label="เลือกทั้งหมด"${n && n === list.length ? ' checked' : ''}></th><th>เครื่อง</th><th>PM</th><th>เดือน</th><th>วันนัด</th><th>PIC</th><th>โรงงาน</th><th>สถานะ</th></tr></thead><tbody>${shown.map(x => `<tr${M.sel.has(x.id) ? ' class="on"' : ''}>
+      <td><input type="checkbox" data-pmsel="${esc(x.id)}" aria-label="เลือก ${esc(x.o.MachineID)}"${M.sel.has(x.id) ? ' checked' : ''}></td><td><button type="button" class="lnk" data-pm="${esc(x.id)}">${esc(x.o.MachineID)}</button></td><td>${esc(x.theme)}</td><td>${MON3[x.m - 1] || ''}</td><td>${x.plan ? dShort(x.plan) : '<span class="pmnone">—</span>'}</td>
+      <td>${esc(x.pic) || '<span class="pmwarn">ไม่มี</span>'}</td><td>${esc(x.o.FactoryID)}</td><td><span class="pst ${x.st}">${PM_ST[x.st]}</span></td></tr>`).join('')}</tbody></table></div>${list.length > shown.length ? `<p class="pmnone">แสดง ${shown.length} จาก ${list.length} งาน · ใช้ตัวกรองด้านบนเพื่อให้แคบลง</p>` : ''}`
+    : '<div class="pmempty">ไม่มีงานในกลุ่มนี้</div>';
+  return `<div class="pmmon">
+    <div class="pmmcs">${cards}</div>
+    <div class="pmtbl-w"><h3>ภาระงานตามช่าง <small>งานค้าง = ยังไม่เสร็จ${hasW ? ' · ชม. จากเวลามาตรฐาน (workload)' : ''} · กดชื่อเพื่อดูงานของช่างคนนั้น</small> <a class="lnk" href="#load" data-view="load">ภาระงานทั้งทีม →</a></h3><div class="pmtbl">${load}</div></div>
+    <div class="pmtbl-w"><h3>${esc(g[1])} <em>${list.length}</em>${M.pic ? ` <small>· ${esc(M.pic === '-' ? 'ไม่มี PIC' : M.pic)} <button type="button" class="lnk" data-pmmonpic="">ล้าง</button></small>` : ''}</h3>${bar}${table}</div>
+  </div>`;
+}
+async function pmBulkDo(action) {
+  const M = pmv.mon, ids = [...M.sel], box = $('pmBody'), v = n => (box.querySelector(`[name="${n}"]`) || {}).value || '';
+  if (!ids.length) return;
+  const p = { op: 'pmBulk', ids, action };
+  if (action === 'pic') { p.value = v('bPIC'); if (!p.value) return toast('เลือกช่างที่จะย้ายไปให้'); if (!confirm('ย้าย ' + ids.length + ' งานให้ ' + p.value + '?\n(งานที่เสร็จแล้วจะไม่ถูกย้าย)')) return; }
+  if (action === 'month') { p.value = v('bMonth'); if (!p.value) return toast('เลือกเดือน'); if (!confirm('ย้าย ' + ids.length + ' งานไปเดือน ' + MON3[PM_MONTHS.indexOf(p.value)] + ' ' + pmv.year + '?\nวันนัดของงานเหล่านี้จะถูกล้าง')) return; }
+  if (action === 'delete') {
+    const why = prompt('ลบ ' + ids.length + ' งาน PM ออกจากแผน\nกรุณาบอกเหตุผลที่ลบ:');
+    if (why === null) return;
+    if (!why.trim()) return toast('กรุณาบอกเหตุผลที่ลบ');
+    p.note = why.trim();
+  }
+  box.querySelectorAll('[data-pmbulk]').forEach(b => { b.disabled = true; });
+  try {
+    const r = await api(p);
+    toast((action === 'delete' ? 'ลบ ' : action === 'pic' ? 'ย้าย PIC ' : 'ย้ายเดือน ') + r.changed + ' งานแล้ว' + (r.skipped ? ' · ข้ามงานที่เสร็จแล้ว ' + r.skipped : ''));
+    M.sel.clear();
+    await loadPM(true);
+  } catch (e) { if (!e.handled) toast(friendly(e)); renderPM(); }
 }
 function pmListHtml() {
   const list = pmFiltered();
@@ -4906,6 +4989,7 @@ async function pmOpenFile(id, ref) {
   } catch (e) { if (w) w.close(); if (!e.handled) toast(friendly(e)); }
 }
 async function pmDo(op) {
+  if (op === 'add') return pmAddDo();
   const id = $('pmDlg').dataset.id, x = pmFind(id), box = $('pmDlgBody'), v = n => (box.querySelector(`[name="${n}"]`) || {}).value || '';
   const msg = t => { $('pmMsg').textContent = t; };
   if (op === 'report') {   // a problem found during PM → the request form with this machine filled in
@@ -4951,6 +5035,7 @@ async function pmDo(op) {
 }
 // wiring
 $('pmView').addEventListener('change', e => {
+  if (e.target.name === 'bPIC' || e.target.name === 'bMonth') { pmv.mon[e.target.name] = e.target.value; return; }
   const s = e.target.closest('[data-pmf]'); if (!s) return;
   const k = s.dataset.pmf;
   if (k === 'year') { pmv.year = +s.value; pmv.day = ''; pmv.cal.date = new Date(pmv.year, (pmv.month || 1) - 1, 1); loadPM(); }
@@ -4961,6 +5046,12 @@ $('pmView').addEventListener('change', e => {
 });
 $('pmSearch').addEventListener('input', e => { pmv.q = e.target.value; pmv.shown = 150; renderPM(); });
 $('pmView').addEventListener('click', e => {
+  if (e.target.closest('[data-pmadd]')) { openPMAdd(); return; }
+  const mg = e.target.closest('[data-pmmon]'); if (mg) { pmv.mon.g = mg.dataset.pmmon; pmv.mon.sel.clear(); renderPM(); return; }
+  const mp = e.target.closest('[data-pmmonpic]'); if (mp) { pmv.mon.pic = pmv.mon.pic === mp.dataset.pmmonpic ? '' : mp.dataset.pmmonpic; pmv.mon.sel.clear(); renderPM(); return; }
+  const bk = e.target.closest('[data-pmbulk]'); if (bk && !bk.disabled) { pmBulkDo(bk.dataset.pmbulk); return; }
+  const sa = e.target.closest('[data-pmselall]'); if (sa) { const l = pmMonList(); if (sa.checked) l.forEach(x => pmv.mon.sel.add(x.id)); else pmv.mon.sel.clear(); renderPM(); return; }
+  const sl = e.target.closest('[data-pmsel]'); if (sl) { if (sl.checked) pmv.mon.sel.add(sl.dataset.pmsel); else pmv.mon.sel.delete(sl.dataset.pmsel); renderPM(); return; }
   const t = e.target.closest('[data-pmtab]'); if (t) { pmv.tab = t.dataset.pmtab; store.set('ct_pmTab', pmv.tab); renderPM(); return; }
   const dy = e.target.closest('[data-pmday]'); if (dy) { pmv.day = dy.dataset.pmday; if (pmv.day) { pmv.tab = 'list'; if (pmv.day !== 'none' && !pmv.month) pmv.month = dateOf(pmv.day).getMonth() + 1; } renderPM(); scrollTo(0, $('pmView').offsetTop - 80); return; }
   const md = e.target.closest('[data-pmmode]'); if (md) { pmv.cal.mode = md.dataset.pmmode; pmCalGo(pmv.cal.date); return; }
@@ -4991,6 +5082,78 @@ $('pmView').addEventListener('click', e => {
   const r = e.target.closest('[data-pm]'); if (r) openPM(r.dataset.pm);
 });
 // one way to close the PM panel (the dialog close event does not fire everywhere, so the page margin is reset here)
+// admin: new PM jobs for a machine (a new machine too) · lists come from the loaded plan; a known machine fills in its details
+const PM_THEMES = [['PM MONTHLY', 'Monthly · ทุกเดือน'], ['PM QUARTERLY', 'Quarterly · ทุก 3 เดือน'], ['PM SEMI-ANNUALLY', 'Semi-annually · ทุก 6 เดือน'], ['PM ANNUALLY', 'Annually · ปีละครั้ง']];
+const PM_EVERY = { 'PM MONTHLY': 1, 'PM QUARTERLY': 3, 'PM SEMI-ANNUALLY': 6, 'PM ANNUALLY': 12 };
+function pmKnown() {
+  const by = {};
+  Object.keys(pmv.data).sort().forEach(y => pmItems(+y).forEach(x => { by[upper(x.o.MachineID)] = x.o; }));   // the latest year wins
+  return by;
+}
+function openPMAdd() {
+  const known = pmKnown(), all = Object.values(known), dl = (id, k) => `<datalist id="${id}">${uniq(all.map(o => o[k]).filter(Boolean)).sort(natural).map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
+  const techs = (pmv.data[pmv.year] || {}).technicians || [], y = pmv.year, m = new Date().getFullYear() === y ? new Date().getMonth() + 1 : 1;
+  $('pmDlgTitle').textContent = 'ลงทะเบียนงาน PM';
+  $('pmDlgSub').textContent = 'เครื่องใหม่หรือเครื่องที่มีอยู่ · สร้างงานตามรอบ PM ถึงเดือนธันวาคม';
+  $('pmDlgBody').innerHTML = `<div class="pmsec pm-add">
+      <label>เลขเครื่อง *<input name="aMachineID" list="dlMc" required autocomplete="off" spellcheck="false" placeholder="เช่น AHU-16-30"></label>
+      <label>โรงงาน *<input name="aFactoryID" list="dlFac" required autocomplete="off" placeholder="MTL-16"></label>
+      <label>Machine type<input name="aMachineType" list="dlType" autocomplete="off"></label>
+      <label>System<input name="aSystemID" list="dlSys" autocomplete="off"></label>
+      <label>Team<input name="aTeamCode" list="dlTeam" autocomplete="off" placeholder="M1"></label>
+      <label>PIC<select name="aPIC"><option value="">— ยังไม่กำหนด —</option>${techs.map(t => `<option>${esc(t)}</option>`).join('')}</select></label>
+      <label>ประเภท PM *<select name="aJobTheme">${PM_THEMES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
+      <label>เครื่องจักร<select name="aMachineState"><option value="MC-OPERATED">เดินเครื่องได้</option><option value="MC-STOPPED">ต้องหยุดเครื่อง</option></select></label>
+      <label>ปี *<input name="aPlanYear" inputmode="numeric" maxlength="4" value="${y}"></label>
+      <label>เริ่มเดือน *<select name="aStart">${PM_MONTHS.map((mm, i) => `<option value="${i + 1}"${i + 1 === m ? ' selected' : ''}>${MON3[i]}</option>`).join('')}</select></label>
+      <label class="full chk"><input type="checkbox" name="aRepeat" checked> ทำซ้ำตามรอบ PM จนถึงเดือนธันวาคม (ไม่ติ๊ก = งานเดียว)</label>
+      <label class="full">Remark<input name="aRemark" maxlength="2000" autocomplete="off"></label>
+      <p class="full pmok" id="pmAddPrev"></p>
+      <div class="btns"><button type="button" class="btn solid" data-pmdo="add">ลงทะเบียน</button></div>
+    </div>${dl('dlMc', 'MachineID')}${dl('dlFac', 'FactoryID')}${dl('dlType', 'MachineType')}${dl('dlSys', 'SystemID')}${dl('dlTeam', 'TeamCode')}`;
+  $('pmMsg').textContent = '';
+  const dlg = $('pmDlg'), side = !phoneMQ.matches;
+  dlg.dataset.id = '';
+  if (dlg.open && dlg.classList.contains('side') !== side) dlg.close();
+  dlg.classList.toggle('side', side); document.body.classList.toggle('pm-side', side);
+  if (!dlg.open) { if (side) dlg.show(); else dlg.showModal(); }
+  const box = $('pmDlgBody'), q = n => box.querySelector(`[name="${n}"]`);
+  const prev = () => {
+    const th = q('aJobTheme').value, s = +q('aStart').value, months = [];
+    for (let k = s; k <= 12; k += q('aRepeat').checked ? PM_EVERY[th] : 13) months.push(MON3[k - 1]);
+    const mc = upper(q('aMachineID').value), dup = mc ? pmItems(+q('aPlanYear').value || 0).filter(x => upper(x.o.MachineID) === mc && upper(x.o.JobTheme) === th).map(x => MON3[x.m - 1]) : [];
+    $('pmAddPrev').innerHTML = `จะสร้าง ${months.length} งาน: ${months.join(' · ')} ${esc(q('aPlanYear').value)}` + (mc && !known[mc] ? ' · <b>เครื่องใหม่</b>' : '')
+      + (dup.length ? ` <span class="pmwarn">· มี ${esc(th)} ของเครื่องนี้แล้ว: ${dup.join(' ')}</span>` : '');
+  };
+  box.oninput = e => {   // a property, not addEventListener: opened again = replaced, not stacked
+    if (!box.querySelector('.pm-add')) return;
+    if (e.target.name === 'aMachineID') {
+      const o = known[upper(e.target.value)];
+      if (o) [['aFactoryID', 'FactoryID'], ['aMachineType', 'MachineType'], ['aSystemID', 'SystemID'], ['aTeamCode', 'TeamCode']].forEach(([n, k]) => { if (!q(n).value) q(n).value = o[k] || ''; });
+      if (o && /STOP/i.test(o.MachineState)) q('aMachineState').value = 'MC-STOPPED';
+    }
+    prev();
+  };
+  box.onchange = () => { if (box.querySelector('.pm-add')) prev(); };
+  prev();
+  q('aMachineID').focus();
+}
+async function pmAddDo() {
+  const box = $('pmDlgBody'), v = n => ((box.querySelector(`[name="${n}"]`) || {}).value || '').trim(), msg = t => { $('pmMsg').textContent = t; };
+  const job = { MachineID: v('aMachineID'), FactoryID: v('aFactoryID'), MachineType: v('aMachineType'), SystemID: v('aSystemID'), TeamCode: v('aTeamCode'), PIC: v('aPIC'),
+    JobTheme: v('aJobTheme'), MachineState: v('aMachineState'), PlanYear: v('aPlanYear'), startMonth: +v('aStart'), repeat: box.querySelector('[name="aRepeat"]').checked, Remark: v('aRemark') };
+  if (!job.MachineID) return msg('กรุณาใส่เลขเครื่อง');
+  if (!job.FactoryID) return msg('กรุณาใส่โรงงาน');
+  if (!/^\d{4}$/.test(job.PlanYear)) return msg('ปีไม่ถูกต้อง');
+  const b = box.querySelector('[data-pmdo="add"]'); b.disabled = true; msg('กำลังบันทึก…');
+  try {
+    const r = await api({ op: 'pmAdd', job });
+    toast('ลงทะเบียน ' + upper(job.MachineID) + ' · ' + r.added + ' งานแล้ว');
+    pmClose();
+    if (+job.PlanYear !== pmv.year) { pmv.year = +job.PlanYear; pmv.cal.date = new Date(pmv.year, job.startMonth - 1, 1); }
+    await loadPM(true);
+  } catch (e) { if (!e.handled) msg(friendly(e)); b.disabled = false; }
+}
 function pmClose() { const d = $('pmDlg'); if (d.open) d.close(); document.body.classList.remove('pm-side'); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('pmDlg').open && $('pmDlg').classList.contains('side')) pmClose(); });
 $('pmDlg').addEventListener('click', e => {
@@ -6059,6 +6222,28 @@ async function demoApi(p) {
       demo.pm.filter(sees).forEach(x => { years[x.PlanYear] = (years[x.PlanYear] || 0) + 1; });
       return { ok: true, year, years, cols: COLS, rows: demo.pm.filter(x => sees(x) && +x.PlanYear === year).map(x => COLS.map(c => x[c] ?? '')),
         technicians: u.role === 'customer' ? [] : Object.values(demo.users).filter(t => t.role === 'technician').map(t => t.name) };
+    }
+    if (p.op === 'pmBulk') {
+      if (u.role !== 'admin') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' };
+      const ids = new Set(p.ids || []), list = demo.pm.filter(x => ids.has(x.PMID));
+      if (!list.length) return { error: 'ยังไม่ได้เลือกงาน' };
+      if (p.action === 'delete') { if (!String(p.note || '').trim()) return { error: 'กรุณาบอกเหตุผลที่ลบ' }; demo.pm = demo.pm.filter(x => !ids.has(x.PMID)); return { ok: true, changed: list.length, skipped: 0 }; }
+      const todo = list.filter(x => x.Status !== 'COMPLETED');
+      todo.forEach(x => { if (p.action === 'pic') x.PIC = p.value; else { x.PlanMonth = p.value; x.PlanDate = ''; } });
+      return { ok: true, changed: todo.length, skipped: list.length - todo.length };
+    }
+    if (p.op === 'pmAdd') {
+      if (u.role !== 'admin') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' };
+      const j = p.job || {}, mc = String(j.MachineID || '').trim().toUpperCase(), th = String(j.JobTheme || '').toUpperCase(), y = String(j.PlanYear), ev = { 'PM MONTHLY': 1, 'PM QUARTERLY': 3, 'PM SEMI-ANNUALLY': 6, 'PM ANNUALLY': 12 }[th];
+      if (!mc || !j.FactoryID || !ev) return { error: 'กรุณาใส่เลขเครื่อง โรงงาน และประเภท PM' };
+      const months = []; for (let m = +j.startMonth; m <= 12; m += j.repeat ? ev : 13) months.push(m);
+      const clash = months.filter(m => demo.pm.some(x => x.MachineID.toUpperCase() === mc && x.JobTheme === th && x.PlanMonth === PM_MONTHS[m - 1] && x.PlanYear === y));
+      if (clash.length) return { error: 'มีงาน ' + th + ' ของ ' + mc + ' อยู่แล้ว: ' + clash.map(m => PM_MONTHS[m - 1]).join(', ') + ' ' + y };
+      const ids = months.map(m => { const id = 'pm' + String(demo.pm.length + 1).padStart(5, '0'); demo.pm.push({ PMID: id, Status: 'INCOMPLETED', JobTheme: th, MachineID: mc, PlanDate: '', PlanMonth: PM_MONTHS[m - 1], PlanYear: y,
+        MachineState: /STOP/.test(j.MachineState) ? 'MC-STOPPED' : 'MC-OPERATED', ActualDate: '', Owner: 'MTC10', PIC: j.PIC || '', TeamCode: String(j.TeamCode || '').toUpperCase(), MachineType: String(j.MachineType || '').toUpperCase(),
+        SystemID: String(j.SystemID || '').toUpperCase(), MachineCode: mc.split('-')[0], FactoryID: String(j.FactoryID).toUpperCase(), Remark: j.Remark || '', Abnormal: '', ChecklistFile: '', InspectionFile: '', ApprovedBy: '', ApprovedAt: '', SubmittedAt: '' }); return id; });
+      log('PM:' + ids.join(','), 'pmAdd', 'ลงทะเบียนงาน PM ' + mc);
+      return { ok: true, added: ids.length, ids };
     }
     const x = demo.pm.find(j => j.PMID === String(p.id));
     if (!x || !sees(x)) return { error: 'ไม่พบงาน PM ' + p.id };

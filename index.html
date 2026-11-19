@@ -1304,7 +1304,7 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
-.lwvt{color:#6B4FA3;font-weight:600}.lwt .lwvt{display:block;font-size:13px}.lwp>small.lwvt{display:block;font-size:12.5px;font-weight:500}.lwp>small.lwvt b{font-weight:700}
+.lwvt{color:#6B4FA3;font-weight:600}.lwt .lwvt{display:block;font-size:13px}.lwt .lwall{display:block;font-size:13px;color:var(--muted)}.lwp>small.lwvt{display:block;font-size:12.5px;font-weight:500}.lwp>small.lwvt b{font-weight:700}
 .lwmh small.lwvt{font-size:13px;font-weight:500;margin-left:10px}
 .lmteam tr.vend td{background:#F6F3FB;color:#4B3B6B}.lst.vend{background:#EFE8FA;color:#5B3B8C}
 .lwvend{margin-top:16px}.lmv th,.lmv td{padding:6px 8px;white-space:nowrap}.lmv th.now{color:#B45309}
@@ -2017,7 +2017,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.30';
+const APP_VER = '0.0.0.31';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -3628,7 +3628,7 @@ function renderLoadMonths() {
   const blocks = LV.months.map((_, i) => {
     const k = lvl(Math.max(c.pO[i], c.pS[i]));
     return `<div class="lwb ${k}${i === LV.cur ? ' now' : ''}"><div class="lwh"><b>${MN[i]}</b>${i === LV.cur ? '<span class="lnow">เดือนนี้</span>' : ''}<span class="lst ${k === 'hi' ? 'over' : k === 'md' ? 'tight' : 'ok'}" style="margin-left:auto">${k === 'hi' ? 'ไม่ทัน' : k === 'md' ? 'ตึง' : 'ทัน'}</span></div>
-      <div class="lwt"><small>เวลาทั้งหมด</small><b>${f0(tt[i])}</b><em>ชม. / มี ${f0(c.cO[i] + c.cS[i])}</em>${vc.o[i] + vc.s[i] ? `<span class="lwvt">Vendor ช่วยลด ${f0(vc.o[i] + vc.s[i])} ชม. (−${vp(vc.o[i] + vc.s[i], c.cO[i] + c.cS[i])}%)</span>` : ''}</div>
+      <div class="lwt"><small>งานของทีมเรา</small><b>${f0(tt[i])}</b><em>ชม. / มี ${f0(c.cO[i] + c.cS[i])}</em>${vc.o[i] + vc.s[i] ? `<span class="lwall">งานทั้งแผน ${f0(tt[i] + vc.o[i] + vc.s[i])} ชม.</span><span class="lwvt">Vendor ช่วยลด ${f0(vc.o[i] + vc.s[i])} ชม. (−${vp(vc.o[i] + vc.s[i], c.cO[i] + c.cS[i])}%)</span>` : ''}</div>
       ${part('เวลาทำงาน จ.–ศ.', wd[i], c.o[i], c.cO[i], c.pO[i], vc.o[i])}${part('เวลาวันหยุด ส.–อา.', we[i], c.s[i], c.cS[i], c.pS[i], vc.s[i])}</div>`;
   }).join('');
   const overO = c.pO.filter(p => p > 100).length, overS = c.pS.filter(p => p > 100).length;

@@ -2012,7 +2012,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.24';
+const APP_VER = '0.0.0.25';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -5093,7 +5093,11 @@ function pmForm(x) {
   // T_PMJob MachineCode picks the sheet: LVP = low vacuum (water ring), HVP = high vacuum, MX = agitator mixer, BL = blower pump
   const byCode = { LVP: 'VPL', HVP: 'VP', MX: 'MX', BL: 'BP' }[code];
   let form = /CHEMICAL/.test(type) ? pm.find(fm => fm.id === 'CFP') : byCode ? pm.find(fm => fm.id === byCode) : null;
-  form = form || pm.find(fm => fm.subtypes.some(s => upper(s) === code)) || pm.find(fm => fm.subtypes.some(s => code.startsWith(upper(s))));
+  // a code on several sheets (WP / CP are on both CFP and WP): the sheet named like the machine type ("WATER PUMP" → Water Pump),
+  // else not CFP (chemical pumps were picked above)
+  const pick = L => L.find(fm => type.includes(upper(fm.name))) || L.find(fm => fm.id !== 'CFP') || L[0];
+  form = form || pick(pm.filter(fm => fm.subtypes.some(s => upper(s) === code))) || pick(pm.filter(fm => fm.subtypes.some(s => code.startsWith(upper(s)))))
+    || pm.find(fm => fm.id !== 'CFP' && type.includes(upper(fm.name)));   // no code match ("DI14-WP-…"): the machine type alone
   if (!form) return null;
   const t = upper(x.o.JobTheme), want = /SEMI|BI-QUARTER/.test(t) ? '6M' : /QUARTER/.test(t) ? '3M' : /ANNUAL/.test(t) ? '1Y' : '1M';
   const order = ['1M', '3M', '6M', '1Y'], ps = form.periods || [];

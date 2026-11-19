@@ -1581,11 +1581,12 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmme-all{display:block;width:100%;margin:18px 0 6px;min-height:44px;border:1px dashed var(--line);border-radius:12px;background:none;font:inherit;color:var(--navy);font-weight:600;cursor:pointer}
 /* phones: a job shows its details and ทำ Inspection only (no files, scheduling, manual submit when there is a form, plan edit) */
 .pmmon{display:grid;gap:16px}
-.pmmcs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.pmmcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .pmmc{display:grid;gap:2px;text-align:left;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;cursor:pointer;font:inherit;color:var(--ink)}
 .pmmc b{font-size:24px;line-height:1.1}.pmmc span{font-weight:600}.pmmc small{color:var(--muted);font-size:12px}
 .pmmc.hot b{color:#C4141B}.pmmc.on{border-color:#E31B23;box-shadow:0 0 0 2px #E31B2333}
 .pmmt{width:100%;border-collapse:collapse;font-size:13.5px}.pmmt th,.pmmt td{padding:7px 10px;border-bottom:1px solid #EEF1F6;text-align:left;white-space:nowrap}
+.pmmt td.tc{white-space:normal;min-width:180px;max-width:260px}
 .pmmt tr.on td{background:#FFF4F4}.pmmt td.bar{width:30%}.pmmt td.bar i{display:block;height:8px;border-radius:4px;background:#E31B23;opacity:.75;min-width:2px}
 .pmmt .lnk,.pmtbl-w h3 .lnk{background:none;border:0;padding:0;color:#1E6FE8;cursor:pointer;font:inherit;text-decoration:underline}
 .pmtbl-w h3 a.lnk{float:right;font-size:13px;font-weight:500}
@@ -2012,7 +2013,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.26';
+const APP_VER = '0.0.0.27';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4867,8 +4868,12 @@ const PM_GROUPS = [
   ['review', 'รออนุมัติ', 'ช่างส่งแล้ว รอวิศวะ', x => x.st === 'review'],
   ['back', 'ถูกส่งกลับ', 'วิศวะส่งกลับให้แก้', x => x.st !== 'done' && /^ส่งกลับ:/.test(x.o.Remark)],
   ['open', 'งานค้างทั้งหมด', 'ทุกงานที่ยังไม่เสร็จ', x => x.st !== 'done'],
+  ['noform', 'ไม่มีฟอร์ม Inspection', 'ประเภท / code ไม่ตรงฟอร์มไหน', x => !pmForm(x)],
+  ['badcode', 'MachineCode ไม่ตรง', 'ว่าง หรือไม่อยู่ในเลขเครื่อง', x => pmBadCode(x)],
 ];
 pmv.mon = { g: 'late', pic: '', sel: new Set() };
+// MachineCode empty, or not one of the parts of MachineID ("DI14-WP-203A" has DI14, WP, 203A), or no MachineID
+const pmBadCode = x => { const id = upper(x.o.MachineID), code = upper(x.o.MachineCode); return !id || !code || !(id.split(/[-_\s]+/).includes(code) || id.startsWith(code)); };
 // standard man-minutes of a job (workload.js), 0 when not known
 const pmMinutes = x => { const W = window.WORKLOAD; if (!W) return 0; const th = upper(x.o.JobTheme); return W.std[upper(x.o.MachineID) + '|' + th] ?? W.stdType[upper(x.o.MachineType) + '|' + th] ?? 0; };
 function pmMonList() {
@@ -4898,8 +4903,8 @@ function pmMonitor() {
       <label>ย้าย PIC<select name="bPIC"><option value="">— เลือกช่าง —</option>${techs.map(t => `<option${t === M.bPIC ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label><button type="button" class="btn" data-pmbulk="pic"${n ? '' : ' disabled'}>ย้าย PIC</button>
       <label>ย้ายไปเดือน<select name="bMonth"><option value="">— เดือน —</option>${PM_MONTHS.map((mm, i) => `<option value="${mm}"${mm === M.bMonth ? ' selected' : ''}>${MON3[i]}</option>`).join('')}</select></label><button type="button" class="btn" data-pmbulk="month"${n ? '' : ' disabled'}>ย้ายเดือน</button>
       <button type="button" class="btn pmdel" data-pmbulk="delete"${n ? '' : ' disabled'}>ลบ</button></div>`;
-  const table = list.length ? `<div class="pmtbl"><table class="pmmt"><thead><tr><th><input type="checkbox" data-pmselall aria-label="เลือกทั้งหมด"${n && n === list.length ? ' checked' : ''}></th><th>เครื่อง</th><th>PM</th><th>เดือน</th><th>วันนัด</th><th>PIC</th><th>โรงงาน</th><th>สถานะ</th></tr></thead><tbody>${shown.map(x => `<tr${M.sel.has(x.id) ? ' class="on"' : ''}>
-      <td><input type="checkbox" data-pmsel="${esc(x.id)}" aria-label="เลือก ${esc(x.o.MachineID)}"${M.sel.has(x.id) ? ' checked' : ''}></td><td><button type="button" class="lnk" data-pm="${esc(x.id)}">${esc(x.o.MachineID)}</button></td><td>${esc(x.theme)}</td><td>${MON3[x.m - 1] || ''}</td><td>${x.plan ? dShort(x.plan) : '<span class="pmnone">—</span>'}</td>
+  const table = list.length ? `<div class="pmtbl"><table class="pmmt"><thead><tr><th><input type="checkbox" data-pmselall aria-label="เลือกทั้งหมด"${n && n === list.length ? ' checked' : ''}></th><th>เครื่อง</th><th>ประเภท · code</th><th>PM</th><th>เดือน</th><th>วันนัด</th><th>PIC</th><th>โรงงาน</th><th>สถานะ</th></tr></thead><tbody>${shown.map(x => `<tr${M.sel.has(x.id) ? ' class="on"' : ''}>
+      <td><input type="checkbox" data-pmsel="${esc(x.id)}" aria-label="เลือก ${esc(x.o.MachineID)}"${M.sel.has(x.id) ? ' checked' : ''}></td><td><button type="button" class="lnk" data-pm="${esc(x.id)}">${esc(x.o.MachineID)}</button></td><td class="tc">${esc(x.o.MachineType || '—')} · <span class="${pmBadCode(x) ? 'pmbad' : ''}">${esc(x.o.MachineCode || 'ไม่มี code')}</span>${pmForm(x) ? '' : '<br><span class="pmwarn">ไม่มีฟอร์ม Inspection</span>'}</td><td>${esc(x.theme)}</td><td>${MON3[x.m - 1] || ''}</td><td>${x.plan ? dShort(x.plan) : '<span class="pmnone">—</span>'}</td>
       <td>${esc(x.pic) || '<span class="pmwarn">ไม่มี</span>'}</td><td>${esc(x.o.FactoryID)}</td><td><span class="pst ${x.st}">${PM_ST[x.st]}</span></td></tr>`).join('')}</tbody></table></div>${list.length > shown.length ? `<p class="pmnone">แสดง ${shown.length} จาก ${list.length} งาน · ใช้ตัวกรองด้านบนเพื่อให้แคบลง</p>` : ''}`
     : '<div class="pmempty">ไม่มีงานในกลุ่มนี้</div>';
   return `<div class="pmmon">
@@ -5093,7 +5098,8 @@ function pmForm(x) {
   // else not CFP (chemical pumps were picked above)
   const pick = L => L.find(fm => type.includes(upper(fm.name))) || L.find(fm => fm.id !== 'CFP') || L[0];
   form = form || pick(pm.filter(fm => fm.subtypes.some(s => upper(s) === code))) || pick(pm.filter(fm => fm.subtypes.some(s => code.startsWith(upper(s)))))
-    || pm.find(fm => fm.id !== 'CFP' && type.includes(upper(fm.name)));   // no code match ("DI14-WP-…"): the machine type alone
+    || pm.find(fm => fm.id !== 'CFP' && type.includes(upper(fm.name)))   // no code match ("DI14-WP-…"): the machine type alone
+    || (/PUMP/.test(type) && !/VACUUM|CHEMICAL|BLOWER/.test(type) ? pm.find(fm => fm.id === 'WP') : null);   // booster, chilled / condenser water … pumps
   if (!form) return null;
   const t = upper(x.o.JobTheme), want = /SEMI|BI-QUARTER/.test(t) ? '6M' : /QUARTER/.test(t) ? '3M' : /ANNUAL/.test(t) ? '1Y' : '1M';
   const order = ['1M', '3M', '6M', '1Y'], ps = form.periods || [];

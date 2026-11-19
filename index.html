@@ -1519,7 +1519,9 @@ body.pm-only .nav a:not(.pmnav),body.pm-only #phoneNav a:not(.pmnav),body.pm-onl
 .pmbulk{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:end;margin:6px 0 10px}.pmbulk label{display:grid;gap:2px;font-size:12.5px;color:var(--muted)}.pmbulk b{align-self:center;margin-right:6px}
 .pmbulk .btn.pmdel{color:#C4141B;border-color:#F3B4B6}
 @media (max-width:1100px){.pmmcs{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.pmtabs .pmaddb{margin-left:8px;background:#E31B23;color:#fff;border-color:#E31B23}.pmtabs .pmaddb:hover{background:#C4141B}
+#pmAddBtn{margin-left:auto;align-self:center;padding:9px 16px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer;border:1px solid}
+.pmtabs .pmaddb{margin-left:8px;background:#E31B23;color:#fff;border-color:#E31B23}.pmtabs .pmaddb:hover,#pmAddBtn:hover{background:#C4141B}
+#pmAddBtn{background:#E31B23;color:#fff;border-color:#E31B23}#pmAddBtn[hidden]{display:none}
 #pmDlgBody .pm-add .chk{display:flex;gap:8px;align-items:center;flex-direction:row}#pmDlgBody .pm-add .chk input{width:auto}
 #pmDlgBody .btn.pmdel{color:#C4141B;border-color:#F3B4B6}#pmDlgBody .btn.pmdel:hover{background:#FFF4F4}
 @media (max-width:700px){#pmDlgBody .pm-edit{display:none}
@@ -1830,7 +1832,7 @@ body.sheet-open{overflow:hidden}
 </section>
 <section class="mon pmv" id="pmView" hidden aria-labelledby="pmTitle">
   <span id="pm" class="sr"></span>
-  <div class="pmhead"><h1 id="pmTitle">แผน PM</h1><p class="sub" id="pmSub"></p><div class="pmtabs" id="pmTabs" role="group" aria-label="มุมมอง"></div></div>
+  <div class="pmhead"><h1 id="pmTitle">แผน PM</h1><p class="sub" id="pmSub"></p><button type="button" class="pmaddb" id="pmAddBtn" data-pmadd hidden>+ ลงทะเบียนงาน PM</button><div class="pmtabs" id="pmTabs" role="group" aria-label="มุมมอง"></div></div>
   <div class="pmbar"><label class="wide">ค้นหา<input id="pmSearch" type="search" placeholder="เลขเครื่อง ประเภท โรงงาน…" autocomplete="off" spellcheck="false"></label><span id="pmBar" style="display:contents"></span></div>
   <div class="pmkpi" id="pmKpi" role="group" aria-label="กรองตามสถานะ"></div>
   <div id="pmBody"></div>
@@ -1853,6 +1855,7 @@ body.sheet-open{overflow:hidden}
   <a href="#pm" data-view="pm" data-pmtab="list" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" stroke-width="3"/></svg><span class="lbl">รายการ<small>งาน PM ตามแผน · บันทึกผล · Inspection</small></span></a>
   <a href="#pm" data-view="pm" data-pmtab="cal" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg><span class="lbl">ปฏิทิน<small>วัน / สัปดาห์ / เดือน</small></span></a>
   <a href="#pm" data-view="pm" data-pmtab="dash" class="pmnav" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg><span class="lbl">ภาพรวม<small>Plan · Result · Performance</small></span></a>
+  <a href="#pm" data-view="pm" data-pmtab="mon" class="pmnav pmadm" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h7M4 18h10"/><circle cx="18" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="lbl">จัดการงาน<small>งานมีปัญหา · ภาระช่าง · แก้หลายงาน</small></span></a>
   <div class="navgrp g-ad" id="adGrp" hidden><span>แอดมิน</span></div>
   <a class="adnav" href="#finance" data-view="finance" id="finNav"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 7.5v9M9.5 7.5h3.2a2 2 0 0 1 0 4.2H9.5m0 0h3.6a2.2 2.2 0 0 1 0 4.4H9.5M11 6v1.5M11 16.5V18"/></svg><span class="lbl">ค่าใช้จ่าย<small>สรุปเงินตามโรงงาน / เครื่องจักร</small></span></a>
   <a class="adnav" href="#follow" data-view="follow" id="followNav" hidden><span class="nbadge" id="followBadge" hidden></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span class="lbl">งานที่ติดตาม<small>แอดมิน · วันที่คาดว่าจะเสร็จ</small></span></a>
@@ -1920,7 +1923,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.17';
+const APP_VER = '0.0.0.18';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2328,7 +2331,7 @@ function render() {
   if (!canFollow() && $('followBody').innerHTML) $('followBody').innerHTML = '';   // another account signed in on this page
   followBadge();
   $('pmView').hidden = gate || !pmo;
-  document.querySelectorAll('.pmnav').forEach(a => { a.hidden = !canPM(); });
+  document.querySelectorAll('.pmnav').forEach(a => { a.hidden = !canPM() || (a.classList.contains('pmadm') && role() !== 'admin'); });
   $('pmGrp').hidden = !canPM();
   if (!pmo && $('pmDlg').open) pmClose();
   $('trackView').hidden = gate || !trk;
@@ -4527,6 +4530,7 @@ function pmWkGo(n) {
 function renderPM() {
   if (phoneMQ.matches && pmv.tab !== 'list') pmv.tab = 'list';   // phones have the list only (plus the week calendar below)
   pmNavMark();
+  $('pmAddBtn').hidden = role() !== 'admin' || phoneMQ.matches;
   $('pmView').classList.toggle('mine', pmMine());
   if (!canPM()) { $('pmKpi').innerHTML = ''; $('pmBar').innerHTML = ''; $('pmBar').dataset.html = ''; $('pmTabs').innerHTML = ''; $('pmSub').textContent = ''; $('pmBody').innerHTML = '<div class="pmempty"><b>บัญชีนี้ไม่มีสิทธิ์ใช้แผน PM</b><br>ใช้ได้เฉพาะช่าง วิศวะ แอดมิน และลูกค้า</div>'; return; }
   const d = pmv.data[pmv.year];
@@ -4546,7 +4550,7 @@ function renderPM() {
     + (any ? '<button type="button" class="xclear" data-pmclear>ล้างตัวกรอง</button>' : '');
   const box = $('pmBar');
   if (box.dataset.html !== bar) { box.innerHTML = bar; box.dataset.html = bar; }
-  $('pmTabs').innerHTML = `<button type="button" data-pmtab="list" aria-pressed="${pmv.tab === 'list'}">รายการ</button><button type="button" data-pmtab="cal" aria-pressed="${pmv.tab === 'cal'}">ปฏิทิน</button><button type="button" data-pmtab="dash" aria-pressed="${pmv.tab === 'dash'}">Dashboard</button>${role() === 'admin' ? `<button type="button" data-pmtab="mon" aria-pressed="${pmv.tab === 'mon'}">จัดการงาน</button><button type="button" class="pmaddb" data-pmadd>+ ลงทะเบียนงาน PM</button>` : ''}`;
+  $('pmTabs').innerHTML = `<button type="button" data-pmtab="list" aria-pressed="${pmv.tab === 'list'}">รายการ</button><button type="button" data-pmtab="cal" aria-pressed="${pmv.tab === 'cal'}">ปฏิทิน</button><button type="button" data-pmtab="dash" aria-pressed="${pmv.tab === 'dash'}">Dashboard</button>${role() === 'admin' ? `<button type="button" data-pmtab="mon" aria-pressed="${pmv.tab === 'mon'}">จัดการงาน</button>` : ''}`;
   if (pmv.loading && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = '<p class="loading">กำลังโหลดแผน PM…</p>'; $('pmSub').textContent = ''; return; }
   if (pmv.err && !d) { $('pmKpi').innerHTML = ''; $('pmBody').innerHTML = `<div class="pmempty"><b>ยังโหลดแผน PM ไม่ได้</b><br>${esc(pmv.err)}<br><button type="button" class="btn" data-pmretry>ลองอีกครั้ง</button></div>`; return; }
   // phones: the week calendar only (the รายการ / ปฏิทิน switch below is kept off)
@@ -4565,7 +4569,7 @@ function renderPM() {
     $('pmBody').innerHTML = seg + pmMineHtml();
     return;
   }
-  $('pmTitle').textContent = 'แผน PM';
+  $('pmTitle').textContent = pmv.tab === 'mon' && role() === 'admin' ? 'จัดการงาน PM' : 'แผน PM';
   const base = pmBase();
   $('pmSub').textContent = (pmv.month ? MON3[pmv.month - 1] + ' ' : 'ทั้งปี ') + pmv.year + ' · ' + base.length + ' งาน' + (role() === 'technician' ? ' ของคุณ' : '');
   $('pmBody').innerHTML = seg + (pmv.tab === 'mon' && role() === 'admin' ? pmMonitor() : pmv.tab === 'cal' ? pmCalendar() : pmv.tab === 'dash' ? pmDashboard() : pmListHtml());

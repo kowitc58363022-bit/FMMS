@@ -1304,7 +1304,7 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
-.mrange select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.mrange{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center}.mrange>span{color:var(--muted);font-size:14px}.mrange select{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}.mrange select:disabled{opacity:.5}
 /* ---------- จอทีวี ---------- */
 body.tvmode .nav,body.tvmode .hero,body.tvmode .top,body.tvmode #phoneNav{display:none!important}
 body.tvmode .shell{margin-left:0!important}
@@ -2938,7 +2938,7 @@ const stackBar = (parts, max) => `<span class="hbt">${parts.filter(x => x.n > 0)
 
 function renderMonitor(force) {
   // keep an open date picker alive through the 20-second refresh
-  if (!force && ['monFrom', 'monTo', 'monFacSel'].includes(document.activeElement && document.activeElement.id)) return;
+  if (!force && ['monFM', 'monFY', 'monTM', 'monTY', 'monFacSel'].includes(document.activeElement && document.activeElement.id)) return;
   const name = state.meta.customer && state.meta.customer.name;
   const facs = monFactories(), staff = !myFactories().length;
   if (state.fac && !facs.some(x => upper(x) === upper(state.fac))) state.fac = '';
@@ -2958,9 +2958,11 @@ function renderMonitor(force) {
   const now = new Date();
   const from = dateOf(state.monFrom), to = dateOf(state.monTo);
   const firstRep = state.rows.reduce((m, r) => { const d = parseAny(r[dcol]); return d && (!m || d < m) ? d : m; }, null) || now;
-  const monList = [];
-  for (let d = new Date(now.getFullYear(), now.getMonth(), 1); d >= new Date(firstRep.getFullYear(), firstRep.getMonth(), 1) && monList.length < 120; d = new Date(d.getFullYear(), d.getMonth() - 1, 1)) monList.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
-  const monOpts = (cur, blank) => `<option value="">— ${blank} —</option>` + monList.map(v => `<option value="${v}"${String(cur || '').slice(0, 7) === v ? ' selected' : ''}>${MON3[+v.slice(5) - 1]} ${v.slice(0, 4)}</option>`).join('');
+  const yearList = []; for (let y = now.getFullYear(); y >= firstRep.getFullYear(); y--) yearList.push(y);
+  // the selects back from monFrom / monTo ('YYYY-MM-DD'): year and month of each end, blank = open end
+  const part = v => v ? { y: +v.slice(0, 4), m: +v.slice(5, 7) } : { y: 0, m: 0 }, fromP = part(state.monFrom), toP = part(state.monTo);
+  const mSel = (id, label, p) => `<select id="${id}" aria-label="${label}"${p.y ? '' : ' disabled'}>${MON3.map((n, i) => `<option value="${i + 1}"${p.m === i + 1 ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  const ySel = (id, label, p, blank) => `<select id="${id}" aria-label="${label}"><option value="">${blank}</option>${yearList.map(y => `<option${p.y === y ? ' selected' : ''}>${y}</option>`).join('')}</select>`;
   const inRange = d => !!d && (!from || d >= from) && (!to || d <= new Date(+to + DAY - 1));
   const all = scopeRows(facs).map(r => {
     const st = statusOf(r), stage = stageOf(st);
@@ -3085,7 +3087,7 @@ function renderMonitor(force) {
 
   $('monBody').innerHTML = `<div class="pd">
     <section class="card a-date"><h2>ช่วงเดือนที่แจ้ง</h2>
-      <div class="drange mrange"><label><span>ตั้งแต่</span><select id="monFrom" aria-label="ตั้งแต่เดือน">${monOpts(state.monFrom, 'แรกสุด')}</select></label><label><span>ถึง</span><select id="monTo" aria-label="ถึงเดือน">${monOpts(state.monTo, 'ล่าสุด')}</select></label></div>
+      <div class="mrange"><span>ตั้งแต่</span>${mSel('monFM', 'ตั้งแต่เดือน', fromP)}${ySel('monFY', 'ตั้งแต่ปี', fromP, 'แรกสุด')}<span>ถึง</span>${mSel('monTM', 'ถึงเดือน', toP)}${ySel('monTY', 'ถึงปี', toP, 'ล่าสุด')}</div>
       <div class="dquick"><button class="link" data-mrange="1">เดือนนี้</button><button class="link" data-mrange="3">3 เดือน</button><button class="link" data-mrange="y">ปีนี้</button><button class="link" data-mrange="">ทั้งหมด</button></div></section>
     <section class="card pk a-k1"><h2 class="kt">งานในสาย (ยังไม่เสร็จ)</h2><b class="kv">${fmt(open.length)} <small>งาน</small></b><p class="ks"><span class="kpi-badge ${hotN ? 'warn' : 'neutral'}">${hotN ? BOLT + 'ด่วน ' + fmt(hotN) : 'ปกติ'}</span> จากทั้งหมด ${fmt(total)} งาน</p>
       <p class="ks kcmp">${delta(open.length - openAgo, ' งาน', true, fmt)} เทียบ 30 วันก่อน (${fmt(openAgo)} งาน)</p></section>
@@ -3109,11 +3111,13 @@ function renderMonitor(force) {
 }
 // date range: pick dates or a quick range
 $('monitorView').addEventListener('change', e => {
-  if (e.target.id !== 'monFrom' && e.target.id !== 'monTo') return;
-  const v = e.target.value, last = m => { const [y, mo] = m.split('-').map(Number); return dateIn(new Date(y, mo, 0)); };
-  // "from" = the 1st of that month, "to" = its last day; picked the wrong way round = swapped
-  if (e.target.id === 'monFrom') state.monFrom = v ? v + '-01' : ''; else state.monTo = v ? last(v) : '';
-  if (state.monFrom && state.monTo && state.monFrom > state.monTo) [state.monFrom, state.monTo] = [state.monTo.slice(0, 8) + '01', last(state.monFrom.slice(0, 7))];
+  if (!/^mon[FT][MY]$/.test(e.target.id)) return;
+  // a year just picked starts at Jan ("from") / Dec ("to"); no year = that end is open
+  const fy = +$('monFY').value, ty = +$('monTY').value;
+  const fm = e.target.id === 'monFY' && !state.monFrom ? 1 : +$('monFM').value, tm = e.target.id === 'monTY' && !state.monTo ? 12 : +$('monTM').value;
+  state.monFrom = fy ? dateIn(new Date(fy, fm - 1, 1)) : '';
+  state.monTo = ty ? dateIn(new Date(ty, tm, 0)) : '';
+  if (state.monFrom && state.monTo && state.monFrom > state.monTo) { const a = state.monFrom, b = state.monTo; state.monFrom = b.slice(0, 8) + '01'; state.monTo = dateIn(new Date(+a.slice(0, 4), +a.slice(5, 7), 0)); }
   e.target.blur();
   renderMonitor(true);
 });
@@ -3123,6 +3127,7 @@ $('monitorView').addEventListener('click', e => {
   const d = new Date(), k = b.dataset.mrange;
   state.monTo = k ? dateIn(new Date(d.getFullYear(), d.getMonth() + 1, 0)) : '';
   state.monFrom = !k ? '' : k === 'y' ? d.getFullYear() + '-01-01' : dateIn(new Date(d.getFullYear(), d.getMonth() - (+k - 1), 1));
+  if (k === 'y') state.monTo = d.getFullYear() + '-12-31';
   renderMonitor(true);
 });
 

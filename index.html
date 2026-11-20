@@ -1304,6 +1304,16 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
+.ldtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#fff;padding:3px;margin:0 0 14px}
+.ldtabs button{font:inherit;font-weight:600;border:0;background:none;padding:7px 16px;border-radius:999px;cursor:pointer;color:var(--ink-2)}.ldtabs button[aria-pressed="true"]{background:var(--navy,#1B3F96);color:#fff}
+.ptform{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:end}.ptform label{display:grid;gap:4px;font-size:13px;color:var(--muted)}.ptform label.w{grid-column:span 4}
+.ptform input,.ptform select,.ptbar input,.ptbar select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-width:0}
+.ptbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}.ptbar input{flex:1 1 260px}
+.pttbl td{white-space:nowrap}.pttbl input{width:84px;font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;text-align:right}
+.pttbl .ptact{display:flex;gap:6px}.pttbl .ptact .btn{padding:5px 12px}
+.ptsrc{font-size:12px;font-weight:600;border-radius:999px;padding:2px 8px;background:#F0F2F6;color:var(--muted)}.ptsrc.web{background:#E8F0FE;color:#1B3F96}.ptsrc.none{background:#FFF0F0;color:#C4141B}
+.ptadd{margin-bottom:16px}.pmsg{color:#C4141B;margin:6px 0 0;min-height:1em}
+@media (max-width:900px){.ptform{grid-template-columns:1fr 1fr}.ptform label.w{grid-column:1/-1}}
 .lwvt{color:#6B4FA3;font-weight:600}.lwt .lwvt{display:block;font-size:13px}.lwt .lwall{display:block;font-size:13px;color:var(--muted)}.lwp>small.lwvt{display:block;font-size:12.5px;font-weight:500}.lwp>small.lwvt b{font-weight:700}
 .lwmh small.lwvt{font-size:13px;font-weight:500;margin-left:10px}
 .lmteam tr.vend td{background:#F6F3FB;color:#4B3B6B}.lst.vend{background:#EFE8FA;color:#5B3B8C}
@@ -1911,6 +1921,7 @@ body.sheet-open{overflow:hidden}
 <section class="mon fin" id="loadView" hidden aria-labelledby="loadTitle">
   <span id="load" class="sr"></span>
   <div class="head"><h1 id="loadTitle">ภาระงานตามแผน</h1><p class="sub" id="loadSub"></p></div>
+  <div class="ldtabs" role="group" aria-label="มุมมอง"><button type="button" data-loadtab="load" aria-pressed="true">ภาระงาน</button><button type="button" data-loadtab="time" aria-pressed="false">เวลามาตรฐาน</button></div>
   <div id="loadBody"></div>
 </section>
 <section class="mon pmv" id="pmView" hidden aria-labelledby="pmTitle">
@@ -2022,7 +2033,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.33';
+const APP_VER = '0.0.0.34';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -3559,7 +3570,7 @@ function loadLive(W) {
   years.forEach(y => pmItems(y).forEach(x => {
     const k = months.indexOf(x.y + '-' + String(x.m).padStart(2, '0'));
     if (k < 0) return;
-    const th = U(x.o.JobTheme), mm = W.std[U(x.o.MachineID) + '|' + th] ?? W.stdType[U(x.o.MachineType) + '|' + th];
+    const th = U(x.o.JobTheme), mm = pmStdMin(x.o, W);
     if (mm == null) miss++;
     pmJobs++;
     rows.push([k, th, /STOP/i.test(x.o.MachineState) ? 'MC-STOPPED' : 'MC-OPERATED', x.pic, /vendor/i.test(x.o.Owner) ? 'VENDOR' : 'MT1800', mm || 0, 1, U(x.o.TeamCode), x.st]);
@@ -3571,6 +3582,83 @@ function loadLive(W) {
 // Machine-running jobs (MC-OPERATED) are done Mon–Fri, machine-stop jobs (MC-STOPPED) on Sat–Sun, each against the people we have on those days:
 // the whole team, or one team M1–M6 (its own jobs by TeamCode, its own size). The older dashboard below is kept unused (LOAD_OFF) to reuse its parts.
 const LOAD_OFF = true;
+// ---------- เวลามาตรฐาน (M_PMTime): saved on the web, over the master plan (workload.js) ----------
+const PT_THEMES = ['PM MONTHLY', 'PM BI-MONTHLY', 'PM QUARTERLY', 'PM SEMI-ANNUALLY', 'PM ANNUALLY'];
+function pmTimeMaps() {
+  const rows = Array.isArray(state.pmTimes) ? state.pmTimes : [];
+  if (state.pmTimeMaps && state.pmTimeMaps.src === rows) return state.pmTimeMaps;
+  const m = {}, t = {};
+  rows.forEach(o => { const k = upper(o.JobTheme), v = +o.ManMin; if (!(v >= 0)) return; if (o.MachineID) m[upper(o.MachineID) + '|' + k] = { v, o }; else if (o.MachineType) t[upper(o.MachineType) + '|' + k] = { v, o }; });
+  return (state.pmTimeMaps = { src: rows, m, t });
+}
+// man-minutes of one PM job and where they came from
+function pmStdOf(o, W) {
+  const mp = pmTimeMaps(), th = upper(o.JobTheme), id = upper(o.MachineID) + '|' + th, ty = upper(o.MachineType) + '|' + th;
+  if (mp.m[id]) return { v: mp.m[id].v, src: 'web', row: mp.m[id].o };
+  if (W && W.std[id] != null) return { v: W.std[id], src: 'plan' };
+  if (mp.t[ty]) return { v: mp.t[ty].v, src: 'webtype', row: mp.t[ty].o };
+  if (W && W.stdType[ty] != null) return { v: W.stdType[ty], src: 'type' };
+  return { v: null, src: '' };
+}
+const pmStdMin = (o, W) => pmStdOf(o, W).v;
+function loadPMTimes(force) {
+  if (!force && state.pmTimes !== undefined) return;
+  state.pmTimes = 'loading';
+  api({ op: 'pmTimes' }).then(r => { state.pmTimes = r.rows || []; }).catch(e => { state.pmTimes = []; state.pmTimesErr = e.handled ? '' : friendly(e); })
+    .then(() => { if (state.view === 'load') renderLoad(); });
+}
+const PT_SRC = { web: ['แก้จากเว็บ', 'web'], webtype: ['ตามประเภท (เว็บ)', 'web'], plan: ['Master plan', 'plan'], type: ['ตามประเภท (Master plan)', 'type'], '': ['ไม่มีเวลา', 'none'] };
+function renderPMTimes() {
+  const W = window.WORKLOAD, box = $('loadBody');
+  $('loadSub').textContent = 'คน × นาที ต่องาน PM หนึ่งครั้ง · ที่แก้ในหน้านี้ใช้แทนเวลาจาก Master plan · ใช้คำนวณหน้าภาระงาน';
+  if (state.pmTimes === 'loading' || state.pmTimes === undefined) { loadPMTimes(); box.innerHTML = '<p class="loading">กำลังโหลดเวลามาตรฐาน…</p>'; return; }
+  const items = Object.keys(pmv.data).flatMap(y => pmItems(+y));
+  if (!items.length && !pmv.wlErr) { const y = new Date().getFullYear(); loadPMYear(y); }
+  const known = {}; items.forEach(x => { known[upper(x.o.MachineID)] = x.o; });
+  const dl = (id, vals) => `<datalist id="${id}">${uniq(vals.filter(Boolean)).sort(natural).map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
+  box.innerHTML = `<div class="pmc ptadd"><h3>เพิ่มเครื่องจักร / ตั้งเวลา</h3><p class="sub">ใส่เลขเครื่องเพื่อตั้งเวลาเฉพาะเครื่อง หรือเว้นว่างแล้วใส่ประเภทเครื่องเพื่อใช้กับทุกเครื่องของประเภทนั้น (เครื่องที่ไม่มีเวลาเฉพาะ) · เพิ่มงานลงแผนได้ที่ แผน PM → ลงทะเบียนงาน PM</p>
+    <div class="ptform"><label>เลขเครื่อง<input name="ptM" list="ptMl" autocomplete="off" spellcheck="false" placeholder="CH-1-1"></label><label>ประเภทเครื่อง<input name="ptT" list="ptTl" autocomplete="off" placeholder="WATER CHILLER (AIR COOLED)"></label>
+    <label>ประเภท PM<select name="ptJ">${PT_THEMES.map(t => `<option>${t}</option>`).join('')}</select></label><label>คน<input name="ptP" type="number" min="1" max="50" value="1"></label><label>นาที / ครั้ง<input name="ptN" type="number" min="1" max="100000" placeholder="60"></label>
+    <label class="w">หมายเหตุ<input name="ptR" maxlength="500" autocomplete="off"></label><button type="button" class="btn solid" data-ptadd>บันทึก</button></div><p class="pmsg" id="ptMsg" role="alert"></p></div>
+    ${dl('ptMl', Object.keys(known))}${dl('ptTl', items.map(x => x.o.MachineType).concat(W ? Object.keys(W.stdType).map(k => k.split('|')[0]) : []))}
+    <div class="pmc"><div class="ptbar"><input type="search" id="ptQ" placeholder="ค้นหาเลขเครื่อง ประเภท…" value="${esc(state.ptQ || '')}" autocomplete="off"><select id="ptF">${[['', 'ทุกงาน'], ['none', 'ไม่มีเวลามาตรฐาน'], ['web', 'แก้จากเว็บ']].map(([v, l]) => `<option value="${v}"${(state.ptF || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select><span id="ptCount" class="sub"></span></div><div id="ptList"></div></div>`;
+  renderPMTimeList();
+}
+function renderPMTimeList() {
+  const W = window.WORKLOAD, q = upper(state.ptQ || ''), fl = state.ptF || '';
+  const by = {};
+  Object.keys(pmv.data).flatMap(y => pmItems(+y)).forEach(x => {
+    const k = upper(x.o.MachineID) + '|' + upper(x.o.JobTheme), r = by[k] = by[k] || { o: x.o, n: 0 };
+    r.n++;
+  });
+  // saved rows for machines not in the loaded plan (a machine added here before its jobs)
+  (Array.isArray(state.pmTimes) ? state.pmTimes : []).forEach(o => { const k = o.MachineID ? upper(o.MachineID) + '|' + upper(o.JobTheme) : '~' + upper(o.MachineType) + '|' + upper(o.JobTheme); if (!by[k]) by[k] = { o: { MachineID: o.MachineID, MachineType: o.MachineType, JobTheme: o.JobTheme }, n: 0, typeRow: !o.MachineID }; });
+  let list = Object.values(by).map(r => Object.assign(r, { s: r.typeRow ? { v: +pmTimeMaps().t[upper(r.o.MachineType) + '|' + upper(r.o.JobTheme)].v, src: 'webtype', row: pmTimeMaps().t[upper(r.o.MachineType) + '|' + upper(r.o.JobTheme)].o } : pmStdOf(r.o, W) }));
+  list = list.filter(r => (!q || [r.o.MachineID, r.o.MachineType, r.o.JobTheme].some(v => upper(v).includes(q))) && (!fl || (fl === 'none' ? r.s.v == null : PT_SRC[r.s.src][1] === 'web')))
+    .sort((a, b) => ((b.s.v == null) - (a.s.v == null)) || natural(a.o.MachineID || '~' + a.o.MachineType, b.o.MachineID || '~' + b.o.MachineType) || natural(a.o.JobTheme, b.o.JobTheme));
+  const shown = list.slice(0, 300), f0 = v => Math.round(v).toLocaleString();
+  $('ptCount').textContent = `${f0(list.length)} รายการ${list.length > shown.length ? ' · แสดง 300 แรก ค้นหาเพื่อให้แคบลง' : ''}`;
+  $('ptList').innerHTML = shown.length ? `<div class="tscroll"><table class="lmteam pttbl"><thead><tr><th>เครื่อง</th><th>ประเภทเครื่อง</th><th>PM</th><th class="num">งานในแผน</th><th class="num">ตอนนี้ (man-min)</th><th>ที่มา</th><th class="num">คน</th><th class="num">นาที</th><th></th></tr></thead><tbody>${shown.map(r => {
+    const own = r.s.src === 'web' || (r.typeRow && r.s.row), row = own ? r.s.row : null, k = esc(JSON.stringify({ MachineID: r.typeRow ? '' : r.o.MachineID || '', MachineType: r.o.MachineType || '', JobTheme: r.o.JobTheme || '' }));
+    return `<tr data-pt="${k}"><td>${r.typeRow ? '<i>ทุกเครื่องของประเภท</i>' : esc(r.o.MachineID)}</td><td>${esc(r.o.MachineType || '—')}</td><td>${esc(pmTheme(r.o.JobTheme))}</td><td class="num">${r.n || '—'}</td>
+      <td class="num">${r.s.v == null ? '<span class="pmbad">ไม่มี</span>' : f0(r.s.v)}</td><td><span class="ptsrc ${PT_SRC[r.s.src][1]}">${PT_SRC[r.s.src][0]}</span></td>
+      <td class="num"><input type="number" min="1" max="50" data-ptp value="${row ? esc(row.Manpower) : ''}" placeholder="1" aria-label="คน"></td><td class="num"><input type="number" min="1" max="100000" data-ptn value="${row ? esc(row.Minutes) : ''}" placeholder="${r.s.v == null ? 'นาที' : f0(r.s.v)}" aria-label="นาที"></td>
+      <td class="ptact"><button type="button" class="btn" data-ptsave>บันทึก</button>${own ? '<button type="button" class="btn pmdel" data-ptdel title="ลบ กลับไปใช้เวลาจาก Master plan">ลบ</button>' : ''}</td></tr>`; }).join('')}</tbody></table></div>`
+    : '<p class="mempty">ไม่มีรายการ</p>';
+}
+async function pmTimeSave(row, del, msgEl) {
+  const msg = t => { if (msgEl) msgEl.textContent = t; else if (t) toast(t); };
+  try {
+    const r = await api(Object.assign({ op: 'pmTimeSave', row }, del ? { del: true } : {}));
+    const key = o => [upper(o.MachineID), o.MachineID ? '' : upper(o.MachineType), upper(o.JobTheme)].join('|');
+    const rows = (Array.isArray(state.pmTimes) ? state.pmTimes : []).filter(o => key(o) !== key(row));
+    if (!del) rows.push(r.row);
+    state.pmTimes = rows;
+    toast(del ? 'ลบเวลามาตรฐานแล้ว · ใช้เวลาจาก Master plan' : 'บันทึก ' + (r.row.MachineID || r.row.MachineType) + ' · ' + pmTheme(r.row.JobTheme) + ' = ' + r.row.ManMin + ' man-min แล้ว');
+    msg('');
+    return true;
+  } catch (e) { if (!e.handled) msg(friendly(e)); return false; }
+}
 function renderLoadMonths() {
   const W = window.WORKLOAD, box = $('loadBody');
   if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลเวลามาตรฐาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
@@ -3674,6 +3762,10 @@ function renderLoadMonths() {
     <p class="fnote">ชั่วโมงงาน = งาน PM ในแผน × เวลามาตรฐานของงานนั้น (คน × นาที ÷ 60) + CHECK DAILY · งานเครื่องเดิน (MC-OPERATED) ทำ จ.–ศ. · งานหยุดเครื่อง (MC-STOPPED) ทำ ส.–อา. · กำลังคน = จำนวนวันตามปฏิทิน × คน × ${hpd} ชม. (ไม่หักวันนักขัตฤกษ์ วันลา และงานซ่อม) · ทีมดูจาก TeamCode ในแผน PM · ขอบสี: เขียว ใช้ไม่ถึง 85%, ส้ม 85–100%, แดง เกิน${LV.miss ? ` · ${LV.miss} งานไม่มีเวลามาตรฐาน นับ 0 ชม.` : ''}</p>`;
 }
 function renderLoad() {
+  document.querySelectorAll('[data-loadtab]').forEach(b => b.setAttribute('aria-pressed', String((state.loadTab || 'load') === b.dataset.loadtab)));
+  loadPMTimes();   // saved standard times, once
+  if (state.loadTab === 'time') { $('loadTitle').textContent = 'เวลามาตรฐานงาน PM'; renderPMTimes(); return; }
+  $('loadTitle').textContent = 'ภาระงานตามแผน';
   if (LOAD_OFF) { renderLoadMonths(); return; }
   const W = window.WORKLOAD, box = $('loadBody');
   if (!W) { $('loadSub').textContent = ''; box.innerHTML = '<p class="mempty">ยังไม่มีข้อมูลแผนงาน: สร้าง workload.js ด้วย node tools/workload.js แล้ววางไว้ข้าง index.html</p>'; return; }
@@ -3837,6 +3929,24 @@ function renderLoad() {
     + `<p class="fnote">เวลามาตรฐานต่องาน (นาที × คน) จากไฟล์ ${esc(W.source)}${LV.miss ? ` · ${LV.miss} งาน PM ไม่มีเวลามาตรฐานในไฟล์ จึงนับ 0 ชม.` : ''}${left ? ' · งานค้างจากเดือนก่อนนับรวมในเดือนนี้' : ''}</p>`;
 }
 $('loadView').addEventListener('click', e => {
+  const tb = e.target.closest('[data-loadtab]'); if (tb) { state.loadTab = tb.dataset.loadtab; renderLoad(); return; }
+  if (e.target.closest('[data-ptadd]')) {
+    const v = n => ($('loadBody').querySelector(`[name="${n}"]`) || {}).value || '';
+    if (!v('ptM').trim() && !v('ptT').trim()) { $('ptMsg').textContent = 'ใส่เลขเครื่อง หรือประเภทเครื่อง'; return; }
+    const known = Object.keys(pmv.data).flatMap(y => pmItems(+y)).find(x => upper(x.o.MachineID) === upper(v('ptM').trim()));
+    pmTimeSave({ MachineID: v('ptM').trim(), MachineType: v('ptT').trim() || (known ? known.o.MachineType : ''), JobTheme: v('ptJ'), Manpower: +v('ptP'), Minutes: +v('ptN'), Note: v('ptR').trim() }, false, $('ptMsg')).then(ok => { if (ok) renderPMTimes(); });
+    return;
+  }
+  const ps = e.target.closest('[data-ptsave], [data-ptdel]');
+  if (ps) {
+    const tr = ps.closest('tr'), row = JSON.parse(tr.dataset.pt), del = ps.hasAttribute('data-ptdel');
+    if (del && !confirm('ลบเวลามาตรฐานที่ตั้งจากเว็บของ ' + (row.MachineID || row.MachineType) + ' · ' + pmTheme(row.JobTheme) + '?\nจะกลับไปใช้เวลาจาก Master plan')) return;
+    Object.assign(row, { Manpower: +(tr.querySelector('[data-ptp]').value || 1), Minutes: +tr.querySelector('[data-ptn]').value });
+    if (!del && !row.Minutes) { toast('ใส่จำนวนนาที'); tr.querySelector('[data-ptn]').focus(); return; }
+    ps.disabled = true;
+    pmTimeSave(row, del).then(() => renderPMTimeList());
+    return;
+  }
   const b = e.target.closest('[data-loadby]'); if (b) { state.loadBy = b.dataset.loadby; renderLoad(); return; }
   const lf = e.target.closest('[data-loadleft]'); if (lf) { state.loadLeft = !!lf.dataset.loadleft; renderLoad(); return; }
   const lm = e.target.closest('[data-loadmonth]'); if (lm) { const v = +lm.dataset.loadmonth; state.loadMonth = v === state.loadMonth ? -1 : v; renderLoad(); if (state.loadMonth >= 0) $('loadBody').querySelector('.lmdet')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
@@ -3847,7 +3957,9 @@ $('loadView').addEventListener('click', e => {
   const t = e.target.closest('[data-loadteam]'); if (t) { state.loadTeam = state.loadTeam === t.dataset.loadteam ? '' : t.dataset.loadteam; renderLoad(); $('loadView').scrollIntoView({ block: 'start' }); }
 });
 $('loadView').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.ltm, .lmo, tr[data-loadteam]')) { e.preventDefault(); e.target.click(); } });
+$('loadView').addEventListener('input', e => { if (e.target.id === 'ptQ') { state.ptQ = e.target.value; renderPMTimeList(); } });
 $('loadView').addEventListener('change', e => {
+  if (e.target.id === 'ptF') { state.ptF = e.target.value; renderPMTimeList(); return; }
   const lp = e.target.dataset && e.target.dataset.lper;
   if (lp) { if (e.target.value) { state[lp === 'from' ? 'loadFrom' : 'loadTo'] = e.target.value; state.loadMonth = -1; renderLoad(); } return; }
   const ts = e.target.dataset && e.target.dataset.tsize;
@@ -6548,6 +6660,18 @@ async function demoApi(p) {
       demo.pm.filter(sees).forEach(x => { years[x.PlanYear] = (years[x.PlanYear] || 0) + 1; });
       return { ok: true, year, years, cols: COLS, rows: demo.pm.filter(x => sees(x) && +x.PlanYear === year).map(x => COLS.map(c => x[c] ?? '')),
         technicians: u.role === 'customer' ? [] : Object.values(demo.users).filter(t => t.role === 'technician').map(t => t.name) };
+    }
+    if (p.op === 'pmTimes') { if (u.role !== 'admin') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' }; return { ok: true, rows: (demo.pmTimes || []).slice() }; }
+    if (p.op === 'pmTimeSave') {
+      if (u.role !== 'admin') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' };
+      const r = p.row || {}, mc = String(r.MachineID || '').trim().toUpperCase(), ty = String(r.MachineType || '').trim().toUpperCase(), th = String(r.JobTheme || '').trim().toUpperCase();
+      if (!mc && !ty) return { error: 'กรุณาใส่เลขเครื่อง หรือประเภทเครื่อง' };
+      const key = o => [o.MachineID, o.MachineID ? '' : o.MachineType, o.JobTheme].join('|'), k = key({ MachineID: mc, MachineType: ty, JobTheme: th });
+      demo.pmTimes = (demo.pmTimes || []).filter(o => key(o) !== k);
+      if (p.del) return { ok: true, deleted: true };
+      if (!(r.Manpower >= 1) || !(r.Minutes >= 1)) return { error: 'ใส่คนและนาทีให้ถูกต้อง' };
+      const row = { MachineID: mc, MachineType: ty, JobTheme: th, Manpower: String(r.Manpower), Minutes: String(Math.round(r.Minutes)), ManMin: String(r.Manpower * Math.round(r.Minutes)), Note: r.Note || '', UpdatedBy: u.name, UpdatedAt: '' };
+      demo.pmTimes.push(row); return { ok: true, row };
     }
     if (p.op === 'pmBulk') {
       if (u.role !== 'admin') return { error: 'บัญชีนี้ไม่มีสิทธิ์ทำรายการนี้' };

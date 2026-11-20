@@ -1306,10 +1306,10 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 #pmTabs{display:none!important}
 .ldtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#fff;padding:3px;margin:0 0 14px}
 .ldtabs button{font:inherit;font-weight:600;border:0;background:none;padding:7px 16px;border-radius:999px;cursor:pointer;color:var(--ink-2)}.ldtabs button[aria-pressed="true"]{background:var(--navy,#1B3F96);color:#fff}
-.ptform{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:end}.ptform label{display:grid;gap:4px;font-size:13px;color:var(--muted)}.ptform label.w{grid-column:span 4}
+.ptform{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:end}.ptform label{display:grid;gap:4px;font-size:13px;color:var(--muted)}.ptform label.w{grid-column:span 4}.ptform label.w2{grid-column:span 2}
 .ptform input,.ptform select,.ptbar input,.ptbar select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-width:0}
 .ptbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}.ptbar input{flex:1 1 260px}
-.pttbl td{white-space:nowrap}.pttbl input{width:84px;font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;text-align:right}
+.pttbl{table-layout:fixed;width:100%}.pttbl td,.pttbl th{white-space:normal;overflow-wrap:anywhere;vertical-align:middle}.pttbl td.num{white-space:nowrap}.pttbl th small{font-weight:500;color:var(--muted)}.pttbl .ptact{flex-wrap:wrap}.pttbl input{width:100%;max-width:90px;box-sizing:border-box;font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;text-align:right}
 .pttbl .ptact{display:flex;gap:6px}.pttbl .ptact .btn{padding:5px 12px}
 .ptsrc{font-size:12px;font-weight:600;border-radius:999px;padding:2px 8px;background:#F0F2F6;color:var(--muted)}.ptsrc.web{background:#E8F0FE;color:#1B3F96}.ptsrc.none{background:#FFF0F0;color:#C4141B}
 .ptadd{margin-bottom:16px}.pmsg{color:#C4141B;margin:6px 0 0;min-height:1em}
@@ -2033,7 +2033,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.34';
+const APP_VER = '0.0.0.35';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -3595,8 +3595,8 @@ function pmTimeMaps() {
 function pmStdOf(o, W) {
   const mp = pmTimeMaps(), th = upper(o.JobTheme), id = upper(o.MachineID) + '|' + th, ty = upper(o.MachineType) + '|' + th;
   if (mp.m[id]) return { v: mp.m[id].v, src: 'web', row: mp.m[id].o };
+  if (mp.t[ty]) return { v: mp.t[ty].v, src: 'webtype', row: mp.t[ty].o };   // a type time set on the web covers every machine of it
   if (W && W.std[id] != null) return { v: W.std[id], src: 'plan' };
-  if (mp.t[ty]) return { v: mp.t[ty].v, src: 'webtype', row: mp.t[ty].o };
   if (W && W.stdType[ty] != null) return { v: W.stdType[ty], src: 'type' };
   return { v: null, src: '' };
 }
@@ -3607,43 +3607,44 @@ function loadPMTimes(force) {
   api({ op: 'pmTimes' }).then(r => { state.pmTimes = r.rows || []; }).catch(e => { state.pmTimes = []; state.pmTimesErr = e.handled ? '' : friendly(e); })
     .then(() => { if (state.view === 'load') renderLoad(); });
 }
-const PT_SRC = { web: ['แก้จากเว็บ', 'web'], webtype: ['ตามประเภท (เว็บ)', 'web'], plan: ['Master plan', 'plan'], type: ['ตามประเภท (Master plan)', 'type'], '': ['ไม่มีเวลา', 'none'] };
 function renderPMTimes() {
   const W = window.WORKLOAD, box = $('loadBody');
-  $('loadSub').textContent = 'คน × นาที ต่องาน PM หนึ่งครั้ง · ที่แก้ในหน้านี้ใช้แทนเวลาจาก Master plan · ใช้คำนวณหน้าภาระงาน';
+  $('loadSub').textContent = 'คน × นาที ต่องาน PM หนึ่งครั้ง ตามประเภทเครื่อง · ค่าเริ่มจาก Excel Master plan · ที่บันทึกในหน้านี้ใช้แทน และใช้คำนวณหน้าภาระงาน';
   if (state.pmTimes === 'loading' || state.pmTimes === undefined) { loadPMTimes(); box.innerHTML = '<p class="loading">กำลังโหลดเวลามาตรฐาน…</p>'; return; }
   const items = Object.keys(pmv.data).flatMap(y => pmItems(+y));
-  if (!items.length && !pmv.wlErr) { const y = new Date().getFullYear(); loadPMYear(y); }
-  const known = {}; items.forEach(x => { known[upper(x.o.MachineID)] = x.o; });
-  const dl = (id, vals) => `<datalist id="${id}">${uniq(vals.filter(Boolean)).sort(natural).map(v => `<option value="${esc(v)}">`).join('')}</datalist>`;
-  box.innerHTML = `<div class="pmc ptadd"><h3>เพิ่มเครื่องจักร / ตั้งเวลา</h3><p class="sub">ใส่เลขเครื่องเพื่อตั้งเวลาเฉพาะเครื่อง หรือเว้นว่างแล้วใส่ประเภทเครื่องเพื่อใช้กับทุกเครื่องของประเภทนั้น (เครื่องที่ไม่มีเวลาเฉพาะ) · เพิ่มงานลงแผนได้ที่ แผน PM → ลงทะเบียนงาน PM</p>
-    <div class="ptform"><label>เลขเครื่อง<input name="ptM" list="ptMl" autocomplete="off" spellcheck="false" placeholder="CH-1-1"></label><label>ประเภทเครื่อง<input name="ptT" list="ptTl" autocomplete="off" placeholder="WATER CHILLER (AIR COOLED)"></label>
+  if (!items.length && !pmv.wlErr) loadPMYear(new Date().getFullYear());
+  const types = uniq(items.map(x => x.o.MachineType).concat(W ? Object.keys(W.stdType).map(k => k.split('|')[0]) : []).filter(Boolean)).sort(natural);
+  box.innerHTML = `<div class="pmc ptadd"><h3>เพิ่มประเภทเครื่อง / ตั้งเวลา</h3><p class="sub">ใช้กับทุกเครื่องของประเภทนั้น · เพิ่มงานลงแผนได้ที่ แผน PM → ลงทะเบียนงาน PM</p>
+    <div class="ptform"><label class="w2">ประเภทเครื่อง<input name="ptT" list="ptTl" autocomplete="off" placeholder="WATER CHILLER (AIR COOLED)"></label>
     <label>ประเภท PM<select name="ptJ">${PT_THEMES.map(t => `<option>${t}</option>`).join('')}</select></label><label>คน<input name="ptP" type="number" min="1" max="50" value="1"></label><label>นาที / ครั้ง<input name="ptN" type="number" min="1" max="100000" placeholder="60"></label>
     <label class="w">หมายเหตุ<input name="ptR" maxlength="500" autocomplete="off"></label><button type="button" class="btn solid" data-ptadd>บันทึก</button></div><p class="pmsg" id="ptMsg" role="alert"></p></div>
-    ${dl('ptMl', Object.keys(known))}${dl('ptTl', items.map(x => x.o.MachineType).concat(W ? Object.keys(W.stdType).map(k => k.split('|')[0]) : []))}
-    <div class="pmc"><div class="ptbar"><input type="search" id="ptQ" placeholder="ค้นหาเลขเครื่อง ประเภท…" value="${esc(state.ptQ || '')}" autocomplete="off"><select id="ptF">${[['', 'ทุกงาน'], ['none', 'ไม่มีเวลามาตรฐาน'], ['web', 'แก้จากเว็บ']].map(([v, l]) => `<option value="${v}"${(state.ptF || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select><span id="ptCount" class="sub"></span></div><div id="ptList"></div></div>`;
+    <datalist id="ptTl">${types.map(v => `<option value="${esc(v)}">`).join('')}</datalist>
+    <div class="pmc"><div class="ptbar"><input type="search" id="ptQ" placeholder="ค้นหาประเภทเครื่อง…" value="${esc(state.ptQ || '')}" autocomplete="off"><select id="ptF">${[['', 'ทุกประเภท'], ['none', 'ยังไม่มีเวลาครบ'], ['web', 'ตั้งจากเว็บ']].map(([v, l]) => `<option value="${v}"${(state.ptF || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select><span id="ptCount" class="sub"></span></div><div id="ptList"></div></div>`;
   renderPMTimeList();
 }
 function renderPMTimeList() {
-  const W = window.WORKLOAD, q = upper(state.ptQ || ''), fl = state.ptF || '';
+  const W = window.WORKLOAD, q = upper(state.ptQ || ''), fl = state.ptF || '', mp = pmTimeMaps(), f0 = v => Math.round(v).toLocaleString();
   const by = {};
   Object.keys(pmv.data).flatMap(y => pmItems(+y)).forEach(x => {
-    const k = upper(x.o.MachineID) + '|' + upper(x.o.JobTheme), r = by[k] = by[k] || { o: x.o, n: 0 };
-    r.n++;
+    const ty = upper(x.o.MachineType) || '(ไม่มีประเภท)', th = upper(x.o.JobTheme), k = ty + '|' + th;
+    const r = by[k] = by[k] || { ty, th, jobs: 0, mc: new Set(), timed: new Set() };
+    r.jobs++; r.mc.add(upper(x.o.MachineID)); if (pmStdOf(x.o, W).v != null) r.timed.add(upper(x.o.MachineID));
   });
-  // saved rows for machines not in the loaded plan (a machine added here before its jobs)
-  (Array.isArray(state.pmTimes) ? state.pmTimes : []).forEach(o => { const k = o.MachineID ? upper(o.MachineID) + '|' + upper(o.JobTheme) : '~' + upper(o.MachineType) + '|' + upper(o.JobTheme); if (!by[k]) by[k] = { o: { MachineID: o.MachineID, MachineType: o.MachineType, JobTheme: o.JobTheme }, n: 0, typeRow: !o.MachineID }; });
-  let list = Object.values(by).map(r => Object.assign(r, { s: r.typeRow ? { v: +pmTimeMaps().t[upper(r.o.MachineType) + '|' + upper(r.o.JobTheme)].v, src: 'webtype', row: pmTimeMaps().t[upper(r.o.MachineType) + '|' + upper(r.o.JobTheme)].o } : pmStdOf(r.o, W) }));
-  list = list.filter(r => (!q || [r.o.MachineID, r.o.MachineType, r.o.JobTheme].some(v => upper(v).includes(q))) && (!fl || (fl === 'none' ? r.s.v == null : PT_SRC[r.s.src][1] === 'web')))
-    .sort((a, b) => ((b.s.v == null) - (a.s.v == null)) || natural(a.o.MachineID || '~' + a.o.MachineType, b.o.MachineID || '~' + b.o.MachineType) || natural(a.o.JobTheme, b.o.JobTheme));
-  const shown = list.slice(0, 300), f0 = v => Math.round(v).toLocaleString();
-  $('ptCount').textContent = `${f0(list.length)} รายการ${list.length > shown.length ? ' · แสดง 300 แรก ค้นหาเพื่อให้แคบลง' : ''}`;
-  $('ptList').innerHTML = shown.length ? `<div class="tscroll"><table class="lmteam pttbl"><thead><tr><th>เครื่อง</th><th>ประเภทเครื่อง</th><th>PM</th><th class="num">งานในแผน</th><th class="num">ตอนนี้ (man-min)</th><th>ที่มา</th><th class="num">คน</th><th class="num">นาที</th><th></th></tr></thead><tbody>${shown.map(r => {
-    const own = r.s.src === 'web' || (r.typeRow && r.s.row), row = own ? r.s.row : null, k = esc(JSON.stringify({ MachineID: r.typeRow ? '' : r.o.MachineID || '', MachineType: r.o.MachineType || '', JobTheme: r.o.JobTheme || '' }));
-    return `<tr data-pt="${k}"><td>${r.typeRow ? '<i>ทุกเครื่องของประเภท</i>' : esc(r.o.MachineID)}</td><td>${esc(r.o.MachineType || '—')}</td><td>${esc(pmTheme(r.o.JobTheme))}</td><td class="num">${r.n || '—'}</td>
-      <td class="num">${r.s.v == null ? '<span class="pmbad">ไม่มี</span>' : f0(r.s.v)}</td><td><span class="ptsrc ${PT_SRC[r.s.src][1]}">${PT_SRC[r.s.src][0]}</span></td>
-      <td class="num"><input type="number" min="1" max="50" data-ptp value="${row ? esc(row.Manpower) : ''}" placeholder="1" aria-label="คน"></td><td class="num"><input type="number" min="1" max="100000" data-ptn value="${row ? esc(row.Minutes) : ''}" placeholder="${r.s.v == null ? 'นาที' : f0(r.s.v)}" aria-label="นาที"></td>
-      <td class="ptact"><button type="button" class="btn" data-ptsave>บันทึก</button>${own ? '<button type="button" class="btn pmdel" data-ptdel title="ลบ กลับไปใช้เวลาจาก Master plan">ลบ</button>' : ''}</td></tr>`; }).join('')}</tbody></table></div>`
+  Object.keys(mp.t).forEach(k => { if (!by[k]) { const [ty, th] = k.split('|'); by[k] = { ty, th, jobs: 0, mc: new Set(), timed: new Set() }; } });   // a type set here before its jobs
+  let list = Object.entries(by).map(([k, r]) => {
+    const web = mp.t[k], plan = W && W.stdType[k], ex = W && W.stdTypeMP && W.stdTypeMP[k];
+    return Object.assign(r, { k, web, now: web ? web.v : plan != null ? plan : null, src: web ? 'web' : plan != null ? 'plan' : r.timed.size ? 'mach' : '', men: web ? web.o.Manpower : ex ? ex[0] : '', min: web ? web.o.Minutes : ex ? ex[1] : '' });
+  });
+  list = list.filter(r => (!q || r.ty.includes(q) || r.th.includes(q)) && (!fl || (fl === 'web' ? r.src === 'web' : r.src !== 'web' && r.timed.size < r.mc.size)))
+    .sort((a, b) => ((a.src === '') - (b.src === '')) * -1 || natural(a.ty, b.ty) || natural(a.th, b.th));
+  const SRC = { web: ['ตั้งจากเว็บ', 'web'], plan: ['Excel ตามประเภท', 'plan'], mach: ['Excel บางเครื่อง', 'type'], '': ['ไม่มีเวลา', 'none'] };
+  $('ptCount').textContent = f0(list.length) + ' ประเภท × PM';
+  $('ptList').innerHTML = list.length ? `<div class="tscroll"><table class="lmteam pttbl"><colgroup><col style="width:22%"><col style="width:10%"><col style="width:7%"><col style="width:8%"><col style="width:9%"><col style="width:12%"><col style="width:8%"><col style="width:9%"><col style="width:15%"></colgroup>
+    <thead><tr><th>ประเภทเครื่อง</th><th>PM</th><th class="num">เครื่อง</th><th class="num">มีเวลาแล้ว</th><th class="num">ตอนนี้<br><small>man-min</small></th><th>ที่มา</th><th class="num">คน</th><th class="num">นาที</th><th></th></tr></thead><tbody>${list.map(r => `<tr data-pt="${esc(JSON.stringify({ MachineID: '', MachineType: r.ty, JobTheme: r.th }))}">
+      <td class="tw">${esc(r.ty)}</td><td>${esc(pmTheme(r.th))}</td><td class="num">${r.mc.size || '—'}</td><td class="num${r.mc.size && r.timed.size < r.mc.size ? ' pmbad' : ''}">${r.mc.size ? r.timed.size + '/' + r.mc.size : '—'}</td>
+      <td class="num">${r.now == null ? '<span class="pmbad">ไม่มี</span>' : f0(r.now)}</td><td><span class="ptsrc ${SRC[r.src][1]}">${SRC[r.src][0]}</span></td>
+      <td class="num"><input type="number" min="1" max="50" data-ptp value="${esc(r.men)}" placeholder="1" aria-label="คน"></td><td class="num"><input type="number" min="1" max="100000" data-ptn value="${esc(r.min)}" placeholder="นาที" aria-label="นาที"></td>
+      <td class="ptact"><button type="button" class="btn" data-ptsave>บันทึก</button>${r.web ? '<button type="button" class="btn pmdel" data-ptdel title="ลบ กลับไปใช้เวลาจาก Excel">ลบ</button>' : ''}</td></tr>`).join('')}</tbody></table></div>`
     : '<p class="mempty">ไม่มีรายการ</p>';
 }
 async function pmTimeSave(row, del, msgEl) {
@@ -3932,15 +3933,14 @@ $('loadView').addEventListener('click', e => {
   const tb = e.target.closest('[data-loadtab]'); if (tb) { state.loadTab = tb.dataset.loadtab; renderLoad(); return; }
   if (e.target.closest('[data-ptadd]')) {
     const v = n => ($('loadBody').querySelector(`[name="${n}"]`) || {}).value || '';
-    if (!v('ptM').trim() && !v('ptT').trim()) { $('ptMsg').textContent = 'ใส่เลขเครื่อง หรือประเภทเครื่อง'; return; }
-    const known = Object.keys(pmv.data).flatMap(y => pmItems(+y)).find(x => upper(x.o.MachineID) === upper(v('ptM').trim()));
-    pmTimeSave({ MachineID: v('ptM').trim(), MachineType: v('ptT').trim() || (known ? known.o.MachineType : ''), JobTheme: v('ptJ'), Manpower: +v('ptP'), Minutes: +v('ptN'), Note: v('ptR').trim() }, false, $('ptMsg')).then(ok => { if (ok) renderPMTimes(); });
+    if (!v('ptT').trim()) { $('ptMsg').textContent = 'ใส่ประเภทเครื่อง'; return; }
+    pmTimeSave({ MachineID: '', MachineType: v('ptT').trim(), JobTheme: v('ptJ'), Manpower: +v('ptP'), Minutes: +v('ptN'), Note: v('ptR').trim() }, false, $('ptMsg')).then(ok => { if (ok) renderPMTimes(); });
     return;
   }
   const ps = e.target.closest('[data-ptsave], [data-ptdel]');
   if (ps) {
     const tr = ps.closest('tr'), row = JSON.parse(tr.dataset.pt), del = ps.hasAttribute('data-ptdel');
-    if (del && !confirm('ลบเวลามาตรฐานที่ตั้งจากเว็บของ ' + (row.MachineID || row.MachineType) + ' · ' + pmTheme(row.JobTheme) + '?\nจะกลับไปใช้เวลาจาก Master plan')) return;
+    if (del && !confirm('ลบเวลาที่ตั้งจากเว็บของ ' + (row.MachineID || row.MachineType) + ' · ' + pmTheme(row.JobTheme) + '?\nจะกลับไปใช้เวลาจาก Excel')) return;
     Object.assign(row, { Manpower: +(tr.querySelector('[data-ptp]').value || 1), Minutes: +tr.querySelector('[data-ptn]').value });
     if (!del && !row.Minutes) { toast('ใส่จำนวนนาที'); tr.querySelector('[data-ptn]').focus(); return; }
     ps.disabled = true;

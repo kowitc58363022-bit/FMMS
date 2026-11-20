@@ -1304,6 +1304,8 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
+.thumb .tpdf{display:grid;place-content:center;justify-items:center;width:96px;height:72px;border-radius:8px;background:#FFF0F0;color:#C4141B;text-align:center;overflow:hidden}.thumb .tpdf b{font-size:16px}.thumb .tpdf small{font-size:10px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7A4048}
+.ptile .ppdf{display:inline-block;font-size:15px;font-weight:800;color:#C4141B;background:#FFF0F0;border-radius:6px;padding:2px 8px}
 .ldtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#fff;padding:3px;margin:0 0 14px}
 .ldtabs button{font:inherit;font-weight:600;border:0;background:none;padding:7px 16px;border-radius:999px;cursor:pointer;color:var(--ink-2)}.ldtabs button[aria-pressed="true"]{background:var(--navy,#1B3F96);color:#fff}
 .ptform{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:end}.ptform label{display:grid;gap:4px;font-size:13px;color:var(--muted)}.ptform label.w{grid-column:span 4}.ptform label.w2{grid-column:span 2}
@@ -1874,11 +1876,11 @@ body.sheet-open{overflow:hidden}
         <p class="ferr" id="rqDueErr"></p>
       </div>
       <div class="rqf">
-        <div class="rql"><span class="num">7</span><span id="rqPhotoLbl">รูปภาพ <small class="en">Photos</small></span><span class="opt">(ไม่บังคับ สูงสุด 5 รูป)</span></div>
+        <div class="rql"><span class="num">7</span><span id="rqPhotoLbl">รูปภาพ <small class="en">Photos</small></span><span class="opt">(ไม่บังคับ รูปหรือ PDF สูงสุด 5 ไฟล์)</span></div>
         <label class="drop" id="rqDrop">
-          <input type="file" id="rqFiles" class="sr" accept="image/jpeg,image/png,image/webp" multiple aria-labelledby="rqPhotoLbl" aria-describedby="rqFilesErr">
+          <input type="file" id="rqFiles" class="sr" accept="image/jpeg,image/png,image/webp,application/pdf" multiple aria-labelledby="rqPhotoLbl" aria-describedby="rqFilesErr">
           <span class="dico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg></span>
-          <b class="d-desk">คลิกเพื่อแนบรูป หรือลากรูปมาวาง</b><b class="d-touch">แตะเพื่อถ่ายรูป หรือเลือกรูปในเครื่อง</b><small>JPG, PNG จากกล้องหรือในเครื่อง</small>
+          <b class="d-desk">คลิกเพื่อแนบรูปหรือ PDF หรือลากไฟล์มาวาง</b><b class="d-touch">แตะเพื่อถ่ายรูป หรือเลือกรูปในเครื่อง</b><small>รูป JPG, PNG จากกล้องหรือในเครื่อง หรือไฟล์ PDF (ไม่เกิน 8 MB)</small>
         </label>
         <div class="thumbs" id="rqThumbs"></div><p class="ferr" id="rqFilesErr"></p>
       </div>
@@ -2033,7 +2035,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.35';
+const APP_VER = '0.0.0.36';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -4385,15 +4387,17 @@ function shrink(file) {
 async function addPhotos(files) {
   $('rqFilesErr').textContent = '';
   for (const file of files) {
-    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { $('rqFilesErr').textContent = 'แนบได้เฉพาะไฟล์ JPG, PNG หรือ WebP'; continue; }
-    if (state.rqPhotos.length >= CONFIG.MAX_PHOTOS) { $('rqFilesErr').textContent = `แนบได้สูงสุด ${CONFIG.MAX_PHOTOS} รูป`; break; }
-    try { state.rqPhotos.push(await shrink(file)); } catch (e) { $('rqFilesErr').textContent = e.message; }
+    const pdf = file.type === 'application/pdf';
+    if (!pdf && !/^image\/(jpeg|png|webp)$/.test(file.type)) { $('rqFilesErr').textContent = 'แนบได้เฉพาะรูป JPG, PNG, WebP หรือ PDF'; continue; }
+    if (pdf && file.size > 8 * 1024 * 1024) { $('rqFilesErr').textContent = file.name + ' ใหญ่เกิน 8 MB'; continue; }
+    if (state.rqPhotos.length >= CONFIG.MAX_PHOTOS) { $('rqFilesErr').textContent = `แนบได้สูงสุด ${CONFIG.MAX_PHOTOS} ไฟล์`; break; }
+    try { state.rqPhotos.push(pdf ? await readDataUrl(file) : await shrink(file)); (state.rqNames = state.rqNames || [])[state.rqPhotos.length - 1] = file.name; } catch (e) { $('rqFilesErr').textContent = e.message; }
   }
   renderThumbs();
 }
 function renderThumbs() {
   $('rqThumbs').innerHTML = state.rqPhotos.map((src, i) =>
-    `<div class="thumb"><img src="${src}" alt="รูปที่ ${i + 1}" width="96" height="72"><button type="button" data-rm="${i}" aria-label="ลบรูปที่ ${i + 1}">×</button></div>`).join('');
+    `<div class="thumb">${/^data:application\/pdf/.test(src) ? `<span class="tpdf"><b>PDF</b><small>${esc((state.rqNames || [])[i] || 'ไฟล์ ' + (i + 1))}</small></span>` : `<img src="${src}" alt="รูปที่ ${i + 1}" width="96" height="72">`}<button type="button" data-rm="${i}" aria-label="ลบไฟล์ที่ ${i + 1}">×</button></div>`).join('');
   $('rqDrop').classList.toggle('full', state.rqPhotos.length >= CONFIG.MAX_PHOTOS);
 }
 
@@ -4499,7 +4503,7 @@ $('rqDrop').addEventListener('dragleave', () => $('rqDrop').classList.remove('ov
 $('rqDrop').addEventListener('drop', e => { e.preventDefault(); $('rqDrop').classList.remove('over'); addPhotos([...e.dataTransfer.files]); });
 $('rqThumbs').addEventListener('click', e => {
   const b = e.target.closest('[data-rm]');
-  if (b) { state.rqPhotos.splice(+b.dataset.rm, 1); renderThumbs(); $('rqFiles').focus(); }
+  if (b) { state.rqPhotos.splice(+b.dataset.rm, 1); (state.rqNames || []).splice(+b.dataset.rm, 1); renderThumbs(); $('rqFiles').focus(); }
 });
 $('rqNew').addEventListener('click', () => {
   state.rqSent = null;
@@ -6096,6 +6100,7 @@ $('actForm').addEventListener('submit', async e => {
 const personKey = v => String(v || '').trim().replace(/^(mrs|mr|miss|ms|นางสาว|นาย|นาง)\.?\s*/i, '').replace(/[^A-Za-z0-9\u0E00-\u0E7F]/g, '').toUpperCase();
 const samePerson = (a, b) => { const k = personKey(b); return k !== '' && personKey(a) === k; };
 // a photo from the old AppSheet app ("T_RMJob_Images/x.jpg"): not in this system's Drive, so it is shown as such and never requested
+const isPdfRef = r => /drive\.google\.com\/file\/d\//.test(String(r || ''));
 const isLegacyRef = r => !/[?&]id=[\w-]+|\/d\/[\w-]+|^[\w-]{20,}$/.test(String(r || ''));
 const LEGACY_TIP = 'รูปจากระบบเดิม (AppSheet) — ไฟล์ไม่ได้อยู่ใน Drive ของระบบนี้ จึงเปิดดูไม่ได้';
 const splitRefs = v => (Array.isArray(v) ? v : String(v || '').split(/\n+/)).map(s => String(s).trim()).filter(Boolean);
@@ -6115,7 +6120,7 @@ function photoGallery(job, refs, label, caps, empty) {
   const oldHtml = old.length ? old.map(() => `<span class="ptile legacy" title="${LEGACY_TIP}"><span><svg style="width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-cam"/></svg></span><small>ระบบเดิม</small></span>`).join('') : '';
   if (!refs.length) return old.length ? `<div class="pgal">${oldHtml}</div>` : `<p class="pnone">${empty || 'ไม่มีรูป'}</p>`;
   const data = photoData(job, refs, label, caps);
-  return `<div class="pgal">${refs.map((u, i) => `<button type="button" class="ptile" ${data} data-pi="${i}" data-ref="${esc(u)}"${photoCache[u] ? ` style="background-image:url('${photoCache[u]}')"` : ''}><span><svg style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-cam"/></svg></span><small>${esc(caps ? caps[i] : 'รูป ' + (i + 1))}</small></button>`).join('')}${oldHtml}</div>`;
+  return `<div class="pgal">${refs.map((u, i) => `<button type="button" class="ptile" ${data} data-pi="${i}" data-ref="${esc(u)}"${photoCache[u] && !isPdfRef(u) ? ` style="background-image:url('${photoCache[u]}')"` : ''}${isPdfRef(u) ? ' data-pdf="1"' : ''}><span>${isPdfRef(u) ? '<b class="ppdf">PDF</b>' : '<svg style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-cam"/></svg>'}</span><small>${esc(caps ? caps[i] : (isPdfRef(u) ? 'PDF ' : 'รูป ') + (i + 1))}</small></button>`).join('')}${oldHtml}</div>`;
 }
 // ---------- photos: one loader for the tiles and the popup ----------
 // order: this page (photoCache) → this device (IndexedDB, photos never change) → Apps Script, a whole job per call.
@@ -6142,10 +6147,11 @@ const photoDb = (() => {
   };
 })();
 function paintPhoto(ref, url) {
+  if (isPdfRef(ref)) return;
   document.querySelectorAll('.ptile').forEach(x => { if (x.dataset.ref === ref) { x.style.backgroundImage = `url('${url}')`; x.classList.add('loaded'); } });
 }
-function loadPhotos(job, refs) {
-  refs = [...new Set(refs)].filter(r => r && !isLegacyRef(r) && !photoCache[r] && !photoWait[r]);
+function loadPhotos(job, refs, withPdf) {
+  refs = [...new Set(refs)].filter(r => r && !isLegacyRef(r) && !photoCache[r] && !photoWait[r] && (withPdf || !isPdfRef(r)));
   if (!refs.length) return;
   const d = {};
   refs.forEach(r => { let res, rej; const pr = new Promise((a, b) => { res = a; rej = b; }); pr.catch(() => {}); pr.res = res; pr.rej = rej; photoWait[r] = d[r] = pr; });
@@ -6171,7 +6177,7 @@ function loadPhotos(job, refs) {
 }
 function getPhoto(job, ref) {
   if (photoCache[ref]) return Promise.resolve(photoCache[ref]);
-  if (!photoWait[ref]) loadPhotos(job, [ref]);
+  if (!photoWait[ref]) loadPhotos(job, [ref], true);
   return photoWait[ref];
 }
 let lb = { job: '', refs: [], i: 0, label: '', caps: null };
@@ -6188,6 +6194,7 @@ async function showPhoto() {
   $('lbImg').hidden = true;
   $('lbMsg').hidden = false;
   $('lbMsg').textContent = 'กำลังโหลดรูป…';
+  if (isPdfRef(ref)) { $('lbMsg').innerHTML = 'ไฟล์ PDF <button type="button" class="btn solid" data-lbpdf>เปิด PDF</button>'; return; }
   try {
     const url = await getPhoto(job, ref);
     if (lb.refs[lb.i] !== ref) return;   // moved on while loading
@@ -6203,7 +6210,16 @@ const stepPhoto = d => { lb.i = (lb.i + d + lb.refs.length) % lb.refs.length; sh
 $('imgDlg').addEventListener('toggle', () => { if ($('imgDlg').open && lb.refs.length > 1) loadPhotos(lb.job, lb.refs); });
 $('lbPrev').addEventListener('click', () => stepPhoto(-1));
 $('lbNext').addEventListener('click', () => stepPhoto(1));
-$('imgDlg').addEventListener('click', e => { if (e.target === $('imgDlg') || e.target.closest('[data-lbclose]')) $('imgDlg').close(); });
+$('imgDlg').addEventListener('click', e => { if (e.target === $('imgDlg') || e.target.closest('[data-lbclose]')) $('imgDlg').close(); if (e.target.closest('[data-lbpdf]')) openPdfRef(lb.job, lb.refs[lb.i]); });
+// a PDF of a job: read through Apps Script (the same check as photos), shown in a new tab
+async function openPdfRef(job, ref) {
+  const w = window.open('', '_blank');   // now, while the tap still counts (pop-up blockers)
+  try {
+    if (DEMO) throw new Error('โหมดตัวอย่าง: ไม่มีไฟล์จริงให้เปิด');
+    const url = URL.createObjectURL(await (await fetch(await getPhoto(job, ref))).blob());
+    if (w) w.location.href = url; else location.href = url;
+  } catch (e) { if (w) w.close(); if (!e.handled) toast(friendly(e)); }
+}
 $('imgDlg').addEventListener('keydown', e => { if (e.key === 'ArrowLeft') stepPhoto(-1); if (e.key === 'ArrowRight') stepPhoto(1); });
 function demoPhoto(ref, i) {
   const name = esc(String(ref).split('/').pop());
@@ -6934,6 +6950,7 @@ function jobClick(e) {
     syncUrl(); render(); return;
   }
   const ph = e.target.closest('[data-refs]');
+  if (ph && ph.dataset.pdf) { try { openPdfRef(ph.dataset.job, ph.dataset.ref); } catch {} return; }
   if (ph) { try { openPhotos(ph.dataset.job, JSON.parse(ph.dataset.refs), ph.dataset.pi, ph.dataset.label, ph.dataset.caps ? JSON.parse(ph.dataset.caps) : null); } catch {} return; }
   const cp = e.target.closest('[data-copy]');
   if (cp) { copyLink(cp.dataset.copy); return; }

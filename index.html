@@ -1346,6 +1346,9 @@ body.tvmode .shell{margin-left:0!important}
 .tvc .tvp{color:var(--ink-2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tvc small{color:var(--muted);font-size:.85em}
 .tvc.p1{border-left:6px solid #E31B23}
+.tvc.isnew{background:#EEF4FF;border-color:#9DB8EE;box-shadow:0 0 0 2px #C9D8F7}
+.tvnewb{display:inline-block;font-size:.7em;font-weight:800;letter-spacing:.04em;color:#fff;background:#1E6FE8;border-radius:6px;padding:.1em .45em;vertical-align:.15em;animation:tvblink 1.6s ease-in-out infinite}
+@keyframes tvblink{50%{opacity:.45}}@media (prefers-reduced-motion:reduce){.tvnewb{animation:none}}
 .tvc em.bad{font-style:normal;color:#C4141B;font-weight:700}
 .tvtag{justify-self:start;font-size:.75em;font-weight:700;color:#fff;background:#E31B23;border-radius:999px;padding:.05em .6em}
 .tvtag.rev{background:#8E44AD}.tvc em.warn{font-style:normal;color:#B35C00;font-weight:700}
@@ -1354,9 +1357,9 @@ body.tvmode .shell{margin-left:0!important}
 .tvv.dash .tvkpi{grid-template-columns:repeat(6,minmax(0,1fr))}
 .tvbtn{white-space:nowrap}.tvbtn[hidden]{display:none}.tvhead h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.tvhead>*:not(h1){flex-shrink:0}
 .tvd{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);gap:1vw;min-height:0;height:100%}
-.tvp{border:1px solid var(--line);border-radius:12px;background:#F7F9FC;padding:.7em 1em;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.tvp.wide{grid-column:span 2}
-.tvp h2{margin:0 0 .4em;font-size:1.2em;color:var(--ink)}.tvp h2 small{font-weight:500;color:var(--muted);font-size:.75em}
+.tvpn{border:1px solid var(--line);border-radius:12px;background:#F7F9FC;padding:.7em 1em;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tvpn.wide{grid-column:span 2}
+.tvpn h2{margin:0 0 .4em;font-size:1.2em;color:var(--ink)}.tvpn h2 small{font-weight:500;color:var(--muted);font-size:.75em}
 .tvbars{flex:1;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.6em;min-height:0}
 .tvbars>div{display:flex;flex-direction:column;align-items:center;min-height:0}
 .tvbars .v{font-size:.8em;color:var(--muted);white-space:nowrap}
@@ -2019,7 +2022,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.32';
+const APP_VER = '0.0.0.33';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2736,7 +2739,7 @@ const AGE_BUCKETS = [{ max: 7, name: '≤ 7 วัน', color: '#2EAA62' }, { ma
 // ---------- จอทีวี (#tv) ----------
 // page 2 (dashboard) is built but not switched on yet: rotate off, buttons hidden (TV_DASH = true to show them)
 const TV_DASH = false;
-const tvv = { fac: '', scroll: {}, seen: null, sound: false, ctx: null, page: 'jobs', rotate: false };
+const tvv = { fac: '', scroll: {}, seen: null, sound: false, ctx: null, page: 'jobs', rotate: false, arrived: new Map() };
 if (TV_DASH) try { tvv.rotate = store.get('ct_tvRot') !== '0'; if (store.get('ct_tvPage') === 'dash') tvv.page = 'dash'; $('tvPage').hidden = $('tvRot').hidden = false; } catch {}
 try { tvv.fac = new URLSearchParams(location.search).get('tvfac') || store.get('ct_tvFac') || ''; } catch {}
 const tvP1 = r => isHot(r) || /^\s*A\b/i.test(String(r.Rank || ''));
@@ -2761,6 +2764,7 @@ function renderTV() {
   if (!tvv.seen) tvv.seen = new Set(ids);   // first load: what is there now is not new
   else {
     const fresh = open.filter(x => !tvv.seen.has(String(x.r[c.id] || '').trim()));
+    fresh.forEach(x => tvv.arrived.set(String(x.r[c.id] || '').trim(), Date.now()));
     ids.forEach(id => tvv.seen.add(id));
     if (fresh.length) tvAlert(fresh.map(x => ({ m: String(x.r[K.m] || x.r[c.id]), prob: String(x.r[c.title] || ''), fac: K.fac ? String(x.r[K.fac] || '') : '', p1: x.p1 })));
   }
@@ -2778,7 +2782,8 @@ function renderTV() {
     const m = String(x.r[K.m] || '').trim(), prob = String(x.r[c.title] || '').trim(), fac = K.fac ? String(x.r[K.fac] || '').trim() : '';
     const left = x.due ? Math.round((x.due - today) / DAY) : null;
     const when = x.late ? `<em class="bad">เกิน ${lateDays(x)} วัน</em>` : x.due ? (left <= 0 ? '<em class="warn">ครบวันนี้</em>' : left <= 7 ? `<em class="warn">อีก ${left} วัน</em>` : 'ครบ ' + dShort(x.due)) : x.rep ? 'แจ้ง ' + dShort(x.rep) : '';
-    return `<div class="tvc${x.p1 ? ' p1' : ''}${x.late ? ' late' : ''}">${tag ? `<span class="tvtag${cls ? ' ' + cls : ''}">${tag}</span>` : ''}<b>${esc(m || x.r[c.id])}</b><span class="tvp">${esc(prob)}</span>
+    const isNew = (x.rep && x.rep >= today) || Date.now() - (tvv.arrived.get(String(x.r[c.id] || '').trim()) || 0) < DAY;
+    return `<div class="tvc${x.p1 ? ' p1' : ''}${x.late ? ' late' : ''}${isNew ? ' isnew' : ''}">${tag ? `<span class="tvtag${cls ? ' ' + cls : ''}">${tag}</span>` : ''}<b>${esc(m || x.r[c.id])}${isNew ? ' <span class="tvnewb">NEW</span>' : ''}</b><span class="tvp">${esc(prob)}</span>
       <small>${esc([tvv.fac ? '' : fac, x.tech || 'ยังไม่มีช่าง'].filter(Boolean).join(' · '))}${when ? ' · ' + when : ''}</small></div>`;
   };
   const lane = (key, name, color, L, none) => `<div class="tvlane" style="--sc:${color}"><h2>${esc(name)} <span>${L.length}</span></h2><div class="tvlist" data-lane="${key}">${L.map(x => card(x, x.stage === 'review' && key === 'work' ? 'รอตรวจรับ' : '', 'rev')).join('') || `<p class="tvnone">${none}</p>`}</div></div>`;
@@ -2876,11 +2881,11 @@ function renderTVDash(jobs, open, K, c, now, today, facs) {
   const repeat = tally(d30, x => String(x.r[K.m] || '').trim()).filter(x => x[1] > 1).slice(0, 6).map(x => [x[0], x[1], ' ครั้ง']);
   const sysK = findCol(CONFIG.SYSTEM_COLUMN);
   $('tvMain').innerHTML = `<div class="tvd">
-    <div class="tvp wide"><h2>แจ้งเข้า vs ปิดงาน · 12 เดือน</h2>${chart}</div>
-    <div class="tvp"><h2>สถานะโรงงาน <small>งานค้าง</small></h2><div class="tvfs">${facTiles}</div><p class="tvleg"><i class="g"></i>ไม่มีค้าง <i class="a"></i>มีค้าง <i class="r"></i>P1 / เกินกำหนด</p></div>
-    <div class="tvp"><h2>เครื่องเสียซ้ำ <small>30 วัน</small></h2>${topList(repeat, 'ไม่มีเครื่องที่เสียซ้ำ')}</div>
-    <div class="tvp"><h2>ปิดงานเดือนนี้ <small>ตามช่าง</small></h2>${topList(tally(finM, x => x.tech).slice(0, 6), 'ยังไม่มีงานปิดเดือนนี้')}</div>
-    <div class="tvp"><h2>งานแจ้งเดือนนี้ <small>ตามระบบ</small></h2>${topList(sysK ? tally(repM, x => String(x.r[sysK] || '').trim()).slice(0, 6) : [], 'ยังไม่มีงานแจ้งเดือนนี้')}</div>
+    <div class="tvpn wide"><h2>แจ้งเข้า vs ปิดงาน · 12 เดือน</h2>${chart}</div>
+    <div class="tvpn"><h2>สถานะโรงงาน <small>งานค้าง</small></h2><div class="tvfs">${facTiles}</div><p class="tvleg"><i class="g"></i>ไม่มีค้าง <i class="a"></i>มีค้าง <i class="r"></i>P1 / เกินกำหนด</p></div>
+    <div class="tvpn"><h2>เครื่องเสียซ้ำ <small>30 วัน</small></h2>${topList(repeat, 'ไม่มีเครื่องที่เสียซ้ำ')}</div>
+    <div class="tvpn"><h2>ปิดงานเดือนนี้ <small>ตามช่าง</small></h2>${topList(tally(finM, x => x.tech).slice(0, 6), 'ยังไม่มีงานปิดเดือนนี้')}</div>
+    <div class="tvpn"><h2>งานแจ้งเดือนนี้ <small>ตามระบบ</small></h2>${topList(sysK ? tally(repM, x => String(x.r[sysK] || '').trim()).slice(0, 6) : [], 'ยังไม่มีงานแจ้งเดือนนี้')}</div>
   </div>`;
   $('tvTick').innerHTML = '';
   $('tvSync').textContent = state.lastOk ? 'อัปเดต ' + state.lastOk.toTimeString().slice(0, 5) + (state.ok === false ? ' · เชื่อมต่อไม่ได้' : '') : '';

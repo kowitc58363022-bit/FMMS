@@ -1333,6 +1333,8 @@ body.tvmode .shell{margin-left:0!important}
 .tvk{border:1px solid var(--line);border-radius:14px;padding:.6em 1em;background:#F7F9FC}
 .tvk span{display:block;color:var(--muted);font-weight:600}.tvk b{font-size:2.6em;line-height:1.1;color:var(--ink)}
 .tvk.bad b{color:#C4141B}.tvk.ok b{color:#1E9152}
+.tvk{display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:.6em}.tvk>span{grid-column:1/-1}
+.tvplus{font-style:normal;font-weight:700;font-size:1.15em;color:#1B3F96;background:#EAF0FB;border-radius:999px;padding:.05em .6em;justify-self:start}.tvk.ok .tvplus{color:#1E7A45;background:#E6F6EC}.tvplus.zero{color:var(--muted);background:#F0F2F6}
 .tvmain{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.15fr);gap:1vw;min-height:0}
 .tvlane{display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);border-top:5px solid var(--sc);border-radius:12px;background:#F7F9FC;overflow:hidden}
 .tvlane h2{margin:0;padding:.5em .8em;font-size:1.25em;display:flex;justify-content:space-between;color:var(--ink)}
@@ -2017,7 +2019,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.31';
+const APP_VER = '0.0.0.32';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -2767,9 +2769,10 @@ function renderTV() {
   $('tvPage').textContent = tvv.page === 'dash' ? 'หน้า: Dashboard' : 'หน้า: งาน';
   if (tvv.page === 'dash') { renderTVDash(jobs, open, K, c, now, today, facs); return; }
   const lateDays = x => x.due ? Math.max(1, Math.ceil((today - x.due) / DAY)) : 0;
-  const k = (label, n, cls) => `<div class="tvk${cls ? ' ' + cls : ''}"><span>${label}</span><b>${fmt(n)}</b></div>`;
-  $('tvKpi').innerHTML = k('งานในสาย', open.length) + k('P1 ด่วน', open.filter(x => x.p1).length, open.some(x => x.p1) ? 'bad' : '')
-    + k('เกินกำหนด', open.filter(x => x.late).length, open.some(x => x.late) ? 'bad' : '') + k('รอตรวจรับ', open.filter(x => x.stage === 'review').length) + k('เสร็จวันนี้', doneToday.length, doneToday.length ? 'ok' : '');
+  const k = (label, n, cls, plus, plusLabel) => `<div class="tvk${cls ? ' ' + cls : ''}"><span>${label}</span><b>${fmt(n)}</b>${plusLabel ? `<em class="tvplus${plus ? '' : ' zero'}">+${fmt(plus)} ${plusLabel}</em>` : ''}</div>`;
+  const newToday = jobs.filter(x => x.rep && x.rep >= today).length, doneAll = jobs.filter(x => x.stage === 'done').length;
+  $('tvKpi').innerHTML = k('กำลังซ่อม', open.length, '', newToday, 'งานวันนี้') + k('P1 ด่วน', open.filter(x => x.p1).length, open.some(x => x.p1) ? 'bad' : '')
+    + k('เกินกำหนด', open.filter(x => x.late).length, open.some(x => x.late) ? 'bad' : '') + k('รอตรวจรับ', open.filter(x => x.stage === 'review').length) + k('เสร็จทั้งหมด', doneAll, 'ok', doneToday.length, 'เสร็จวันนี้');
   const ord = (a, b) => (b.p1 - a.p1) || (b.late - a.late) || ((a.due || a.rep || 0) - (b.due || b.rep || 0));
   const card = (x, tag, cls) => {
     const m = String(x.r[K.m] || '').trim(), prob = String(x.r[c.title] || '').trim(), fac = K.fac ? String(x.r[K.fac] || '').trim() : '';

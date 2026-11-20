@@ -1304,6 +1304,7 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
+.adone .atime{font-size:.9em;font-weight:600;color:#2E7D4F;white-space:nowrap}
 .thumb .tpdf{display:grid;place-content:center;justify-items:center;width:96px;height:72px;border-radius:8px;background:#FFF0F0;color:#C4141B;text-align:center;overflow:hidden}.thumb .tpdf b{font-size:16px}.thumb .tpdf small{font-size:10px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7A4048}
 .ptile .ppdf{display:inline-block;font-size:15px;font-weight:800;color:#C4141B;background:#FFF0F0;border-radius:6px;padding:2px 8px}
 .ldtabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#fff;padding:3px;margin:0 0 14px}
@@ -2035,7 +2036,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.36';
+const APP_VER = '0.0.0.37';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -5873,13 +5874,16 @@ function actionTableHtml(r, id) {
   const canTick = (isTechR() || isEngR()) && !isDone(statusOf(r));
   if (!items.length) return `<p class="mempty">ยังไม่มี Action${isWork(statusOf(r)) ? ' — ต้องเพิ่มอย่างน้อย 1 รายการก่อนส่งงาน' : ''}</p>`;
   const day = v => esc(dWhen(String(v || '').split(' ')[0])) || '—';
+  // the time it was ticked: on FinishDateTime when it has one, else the history entry "Action <id> เสร็จแล้ว"
+  const hm = v => { const m = String(v || '').match(/(\d{1,2}):(\d{2})/); return m && !(+m[1] === 0 && +m[2] === 0) ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  const doneAt = a => hm(a.finish) || hm((logOf(id).filter(x => x.type === 'actionDone' && String(x.detail || '').startsWith('Action ' + a.id + ' ')).pop() || {}).time);
   return `<div class="atbl"><div class="atwrap"><table><thead><tr><th>#</th><th>ประเภท</th><th>ทำอะไร</th><th>PIC</th><th>Due date</th><th>ทำแล้วหรือยัง</th><th>สถานะ</th>${seeCost() ? '<th class="num">Cost</th>' : ''}</tr></thead><tbody>${items.map((a, i) => {
     const st = itemStatus(a);
     return `<tr class="ar-${esc(String(a.type || '').toLowerCase())}"><td>${i + 1}</td><td><span class="atype t-${esc(String(a.type || '').toLowerCase())}">${esc(TYPE_LABEL(a.type))}</span>${canFixAction(statusOf(r)) && a.id ? `<span class="afix"><button class="link aedit" data-aedit="${esc(a.id)}" data-id="${esc(id)}" aria-label="แก้ไข Action ${i + 1}">แก้ไข</button> <button class="link aedit adel" data-adel="${esc(a.id)}" data-id="${esc(id)}" aria-label="ลบ Action ${i + 1}">ลบ</button></span>` : ''}</td>
       <td class="atext">${stepsHtml(a.detail)}${a.remark && a.remark !== a.detail ? `<small>หมายเหตุ: ${esc(a.remark)}</small>` : ''}${role() === 'technician' && canTick && a.id ? `<button type="button" class="link aremark" data-aremark="${esc(a.id)}" data-id="${esc(id)}">${a.remark && a.remark !== a.detail ? 'แก้หมายเหตุ' : '+ เพิ่มหมายเหตุ'}</button>` : ''}${(a.photos || []).length ? `<small class="aphotos">${photoBtns(id, a.photos, 'รูปภาพหลังทำ Action #' + (i + 1))}</small>` : ''}</td>
       <td>${esc(a.picOther || a.pic)}</td>
       <td${st === 'Overdue' ? ' class="alate"' : ''}>${day(a.due)}</td>
-      <td>${a.finish ? '<span class="adone">✓ ทำแล้ว ' + day(a.finish) + '</span>' : `<span class="anot">ยังไม่ทำ</span>${canTick && a.id ? ` <button class="link" data-adone="${esc(a.id)}" data-id="${esc(id)}">กดเมื่อเสร็จ</button>` : ''}`}</td>
+      <td>${a.finish ? '<span class="adone">✓ ทำแล้ว ' + day(a.finish) + (doneAt(a) ? ' <small class="atime">' + doneAt(a) + ' น.</small>' : '') + '</span>' : `<span class="anot">ยังไม่ทำ</span>${canTick && a.id ? ` <button class="link" data-adone="${esc(a.id)}" data-id="${esc(id)}">กดเมื่อเสร็จ</button>` : ''}`}</td>
       <td><span class="ast s-${st.toLowerCase().replace(/\s+/g, '')}">${esc(st)}</span></td>
       ${seeCost() ? `<td class="num">${a.cost !== '' && a.cost != null ? esc(a.cost) : ''}</td>` : ''}</tr>`;
   }).join('')}</tbody></table></div>${afterPhotos(id, items)}</div>`;
@@ -6839,7 +6843,7 @@ async function demoApi(p) {
     err = need(['technician', 'engineer']) || (!a && 'ไม่พบ Action ' + p.actionId);
     if (!err) {
       const m = String(p.finish || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      a.finish = m ? `${+m[3]}/${+m[2]}/${m[1]}` : demoNow().split(' ')[0]; a.status = 'Complete';
+      a.finish = m ? `${+m[3]}/${+m[2]}/${m[1]}` : demoNow(); a.status = 'Complete';
       const shots = (p.photos || []).map((_, k) => 'web/' + r.JobID + '_' + a.id + '_done_' + (k + 1) + '.jpg');
       a.photos = (a.photos || []).concat(shots);
       log(r.JobID, 'actionDone', 'Action ' + a.id + ' เสร็จแล้ว · ' + a.detail + (shots.length ? ' · รูปหลังทำ ' + shots.length + ' รูป' : ''), shots);

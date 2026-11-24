@@ -1304,7 +1304,6 @@ body.cal-side #calView{margin-right:min(720px,55vw)}
 @media (max-width:900px){.fwcard{grid-template-columns:minmax(0,1fr)}.fwcard .d{text-align:left}.fwcard .b{flex-direction:row;flex-wrap:wrap}}
 /* ---------- แผน PM ---------- */
 #pmTabs{display:none!important}
-.pmeditgo{display:flex;justify-content:flex-end;margin:-4px 0 6px}
 .adone .atime{font-size:.9em;font-weight:600;color:#2E7D4F;white-space:nowrap}
 .thumb .tpdf{display:grid;place-content:center;justify-items:center;width:96px;height:72px;border-radius:8px;background:#FFF0F0;color:#C4141B;text-align:center;overflow:hidden}.thumb .tpdf b{font-size:16px}.thumb .tpdf small{font-size:10px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7A4048}
 .ptile .ppdf{display:inline-block;font-size:15px;font-weight:800;color:#C4141B;background:#FFF0F0;border-radius:6px;padding:2px 8px}
@@ -2037,7 +2036,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.39';
+const APP_VER = '0.0.0.40';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -5346,15 +5345,14 @@ function openPM(id) {
   }
   if (tech && x.st !== 'done') {
     const TH = ['PM MONTHLY', 'PM BI-MONTHLY', 'PM QUARTERLY', 'PM SEMI-ANNUALLY', 'PM ANNUALLY'], cur = upper(o.JobTheme);
-    f += `<div class="pmsec pm-edit" id="pmEditSec"><details><summary>แก้ไขแผน (ประเภท PM · วันนัด${eng ? ' · เดือน · ปี · เครื่องจักร' : ''})</summary><div class="pmsec" style="border:0;padding-top:6px">
+    f += `<div class="pmsec pm-edit" id="pmEditSec"><h3>แก้ไขแผน (ประเภท PM · วันนัด${eng ? ' · เดือน · ปี · เครื่องจักร' : ''})</h3><div class="pmsec" style="border:0;padding-top:6px">
         <label>ประเภท PM<select name="eJobTheme">${(TH.includes(cur) ? TH : [cur].concat(TH)).map(t => `<option value="${esc(t)}"${t === cur ? ' selected' : ''}>${esc(pmTheme(t))}</option>`).join('')}</select></label>
         <label>วันนัด<input type="date" name="ePlanDate" value="${x.plan ? isoDay(x.plan) : ''}"></label>
         ${eng ? `<label>เดือน<select name="ePlanMonth">${PM_MONTHS.map((mm, i) => `<option value="${mm}"${i + 1 === x.m ? ' selected' : ''}>${MON3[i]}</option>`).join('')}</select></label>
         <label>ปี<input name="ePlanYear" inputmode="numeric" maxlength="4" value="${esc(o.PlanYear)}"></label>
         <label>เครื่องจักร<select name="eMachineState"><option value="MC-OPERATED"${x.stop ? '' : ' selected'}>เดินเครื่องได้</option><option value="MC-STOPPED"${x.stop ? ' selected' : ''}>ต้องหยุดเครื่อง</option></select></label>` : ''}
-        <div class="btns"><button type="button" class="btn" data-pmdo="edit">บันทึกการแก้ไข</button></div></div></details></div>`;
+        <div class="btns"><button type="button" class="btn" data-pmdo="edit">บันทึกการแก้ไข</button></div></div></div>`;
   }
-  if (tech && x.st !== 'done') f = f.replace('<dl class="pmdl">', '<div class="pmeditgo"><button type="button" class="btn" data-pmeditgo>✎ แก้ไขแผน</button></div><dl class="pmdl">');
   $('pmDlgTitle').textContent = o.MachineID + ' · PM ' + x.theme;
   $('pmDlgSub').innerHTML = `${esc([o.MachineType, o.FactoryID].filter(Boolean).join(' · '))} · <span class="pst ${x.st}">${PM_ST[x.st]}</span>`;
   $('pmDlgBody').innerHTML = f;
@@ -5613,7 +5611,6 @@ $('pmDlg').addEventListener('click', e => {
   if (e.target.closest('[data-pmview]') && pmv.rec) { try { localStorage.setItem('insp.view', pmv.rec); } catch {} window.open(CONFIG.INSPECTION_URL + '#/pdf/__view', '_blank'); return; }
   const rm = e.target.closest('[data-pmrm]'); if (rm) { pmv.files.splice(+rm.dataset.pmrm, 1); pmFileList(); return; }
   const d = e.target.closest('[data-pmdo]'); if (d && !d.disabled) pmDo(d.dataset.pmdo);
-  if (e.target.closest('[data-pmeditgo]')) { const s = $('pmEditSec'); if (s) { s.querySelector('details').open = true; s.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }
 });
 $('pmDlg').addEventListener('change', async e => {
   if (e.target.name === 'ePlanDate' && e.target.value) { const b = $('pmDlgBody'), [y, m] = e.target.value.split('-'); b.querySelector('[name="ePlanMonth"]').value = PM_MONTHS[+m - 1]; b.querySelector('[name="ePlanYear"]').value = y; }

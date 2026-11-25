@@ -2036,7 +2036,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.40';
+const APP_VER = '0.0.0.41';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -5614,6 +5614,12 @@ $('pmDlg').addEventListener('click', e => {
 });
 $('pmDlg').addEventListener('change', async e => {
   if (e.target.name === 'ePlanDate' && e.target.value) { const b = $('pmDlgBody'), [y, m] = e.target.value.split('-'); b.querySelector('[name="ePlanMonth"]').value = PM_MONTHS[+m - 1]; b.querySelector('[name="ePlanYear"]').value = y; }
+  // month / year moved: the plan day goes to the same day of that month (last day if shorter), shown before saving
+  if ((e.target.name === 'ePlanMonth' || e.target.name === 'ePlanYear') && e.target.closest('#pmDlgBody')) {
+    const b = $('pmDlgBody'), d = b.querySelector('[name="ePlanDate"]'), m = PM_MONTHS.indexOf(b.querySelector('[name="ePlanMonth"]').value), y = +b.querySelector('[name="ePlanYear"]').value;
+    if (d && d.value && m >= 0 && y > 2000) { const day = Math.min(+d.value.slice(8, 10), new Date(y, m + 1, 0).getDate()); d.value = isoDay(new Date(y, m, day)); }
+    return;
+  }
   if (e.target.id !== 'pmFiles') return;
   $('pmMsg').textContent = '';
   for (const file of e.target.files) {

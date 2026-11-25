@@ -197,6 +197,8 @@
     .box { position: relative; display: flex; align-items: baseline; height: 50px; padding: 0 10px; border-radius: 10px; background: var(--card); border: 1.5px solid #D5DCE4; }
     .box input { flex: 1; min-width: 0; width: 100%; height: 100%; border: none; background: transparent; font-size: var(--fs-1); font-weight: 600; font-variant-numeric: tabular-nums; }
     .box input:focus { outline: none; }
+    /* a phone's number pad has no minus key: ± flips the sign of a value that can be negative */
+    .cell-top .pm-sign { flex-shrink: 0; margin-left: auto; min-width: 30px; height: 22px; padding: 0 6px; border: 1px solid #D5DCE4; border-radius: 6px; background: #F2F4F7; font-size: var(--fs-2); font-weight: 700; line-height: 1; color: var(--label); }
     .box em { flex-shrink: 0; align-self: center; padding-left: 4px; font-style: normal; font-size: var(--fs-2); color: var(--label-2); }
     .box:focus-within { border-color: var(--accent); background: var(--card); }
     /* A passing value stays a plain white box (only its ✓ is green); colour is kept for what needs a second look */
@@ -207,6 +209,7 @@
     .cell[data-st="ng"] .box input, .cell[data-st="ng"] .mark { color: var(--ng); }
     .cells.c4 .box { height: 46px; padding: 0 6px; }
     .cells.c4 .box input { font-size: var(--fs-1); text-align: center; }
+    .cells.c4 .cell:has(.pm-sign) .box em { display: none; }   /* 4 narrow boxes: the unit is in the heading, the number needs the room */
 
     .calc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     /* Calculated results: one light blue for every machine, apart from the spec box and the grey typed boxes; status colours win */
@@ -1008,8 +1011,8 @@
     const st = judge(item, c.k, vals[c.k], vals, S.h);
     const neg = item.neg || c.neg;
     return `<label class="cell" data-st="${st}">
-      <span class="cell-top"><span${/^(ก่อน|หลัง)ทำงาน$/.test(c.l) ? ` class="ba ${c.l[0] === 'ก' ? 'pre' : 'post'}"` : ''}>${esc(c.l)}</span><i class="mark" aria-hidden="true">${st ? VERDICT[st].g : ''}</i></span>
-      <span class="box"><input data-it="${esc(item.id)}" data-k="${esc(c.k)}" value="${esc(vals[c.k] || '')}" inputmode="${neg ? 'text' : 'decimal'}" enterkeyhint="next" autocomplete="off" aria-label="${esc(item.label)} ${esc(c.l)}" aria-describedby="sp-${esc(item.id)}">${c.u ? `<em>${esc(c.u)}</em>` : ''}</span>
+      <span class="cell-top"><span${/^(ก่อน|หลัง)ทำงาน$/.test(c.l) ? ` class="ba ${c.l[0] === 'ก' ? 'pre' : 'post'}"` : ''}>${esc(c.l)}</span><i class="mark" aria-hidden="true">${st ? VERDICT[st].g : ''}</i>${neg ? '<button type="button" class="pm-sign" data-sign aria-label="สลับค่าบวก/ลบ">±</button>' : ''}</span>
+      <span class="box"><input data-it="${esc(item.id)}" data-k="${esc(c.k)}" value="${esc(vals[c.k] || '')}" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="${esc(item.label)} ${esc(c.l)}" aria-describedby="sp-${esc(item.id)}">${c.u ? `<em>${esc(c.u)}</em>` : ''}</span>
     </label>`;
   }
 
@@ -1284,7 +1287,9 @@
         box.classList.remove('missing');
         const note = box.querySelector('textarea');
         note.hidden = !NEEDS_WHY(el.value);
-        if (NEEDS_WHY(el.value) && !note.value) note.focus();
+        // ไม่ได้ทำ: "ไม่มี" filled in, selected so typing replaces it
+        if (el.value === 'skip' && !note.value.trim()) { note.value = S.tn[id] = 'ไม่มี'; note.focus(); note.select(); }
+        else if (NEEDS_WHY(el.value) && !note.value) note.focus();
       } else if (el.name.startsWith('r_')) {
         const id = el.name.slice(2);
         (S.rr[id] = S.rr[id] || {}).r = el.value;
@@ -1443,7 +1448,9 @@
     if (!pmOnline()) return;
     const mine = form, before = JSON.stringify(S);
     let r; try { r = await pmCall({ op: 'pmChecklist' }); } catch (e) { return; }   // offline: keep what this phone has
-    if (form !== mine || JSON.stringify(S) !== before || !r.web || !r.web.record) return;
+    if (form !== mine || JSON.stringify(S) !== before) return;
+    // nothing saved in the system (never, or the job was reset): the values on this phone stay, but are not "saved" any more
+    if (!r.web || !r.web.record) { if (S.savedAt) { delete S.savedAt; saveDraft(); renderForm(); } return; }
     let rec; try { rec = JSON.parse(r.web.record); } catch (e) { return; }
     if (!rec || !rec.h || rec.form !== form.id || (S.editedAt && S.editedAt > String(rec.savedAt || ''))) return;
     S = stateOf(rec); S.savedAt = rec.savedAt || r.web.at || ''; saveDraft(); renderForm();
@@ -1467,8 +1474,8 @@
       // the job's row as it is after this save (Code.gs sends it back): the plan page puts it on its kept copy of the plan at once
       if (data.pmRow) { try { localStorage.setItem('pm_row_saved', JSON.stringify({ at: Date.now(), row: data.pmRow })); } catch (e) { /* the plan page reads it */ } }
       say('ok', `บันทึกผลเข้างาน PM ${esc(rec.pm)} แล้ว · กลับไปหน้างาน PM แนบรูปถ้ามี แล้วกด "ส่งให้วิศวะอนุมัติ"${PMLINK.back ? ` · กำลังกลับไปหน้างาน PM…<a class="btn-block primary" href="${esc(PMLINK.back)}">กลับไปหน้างาน PM</a>` : ''}`);
-      // the plan page opens this job by itself (pm_inspect_sent), ready for photos and the send button
-      // opened as a new tab: close it, the plan tab underneath opens the job (storage event); a tab the browser will not close goes back itself
+      // the plan page opens this job by itself (pm_inspect_sent), ready for photos and the send button.
+      // Opened as a new tab: close it, the plan tab underneath opens the job (storage event); a tab the browser will not close goes back itself
       if (PMLINK.back) { window.close(); setTimeout(() => { location.href = PMLINK.back; }, 300); }
     } catch (e) {
       say('ng', `ส่งเข้าแผน PM ไม่สำเร็จ: ${esc(e instanceof TypeError ? 'เชื่อมต่อระบบไม่ได้ ตรวจอินเทอร์เน็ต' : e.message)} · ผลยังอยู่ในมือถือ${retry}`);
@@ -1963,7 +1970,18 @@
     goNext(e.target);
   });
   $('app').addEventListener('change', onInput);
+  // ± keeps the keyboard open (no focus move) and flips the leading minus, then saves like typing does
+  $('app').addEventListener('pointerdown', (e) => { if (e.target.closest('[data-sign]')) e.preventDefault(); });
   $('app').addEventListener('click', (e) => {
+    const sg = e.target.closest('[data-sign]');
+    if (sg) {
+      e.preventDefault();
+      const inp = sg.closest('.cell').querySelector('input');
+      inp.value = inp.value.startsWith('-') ? inp.value.slice(1) : '-' + inp.value;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.focus();
+      return;
+    }
     if (e.target.id === 'resetForm') askReset();
     const rs = e.target.closest('[data-resend]');
     if (rs) { const rec = store.get(HIST, []).find(x => x.id === rs.dataset.resend); if (rec) sendPM(rec, rs.closest('.pmsend')); return; }

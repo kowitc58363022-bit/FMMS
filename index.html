@@ -2036,7 +2036,7 @@ body.sheet-open{overflow:hidden}
 <script src="workload.js"></script>
 <script>
 // เวอร์ชันเว็บ (แสดงใต้โลโก้): เพิ่มทีละ 1 ทุกครั้งที่อัปโหลดขึ้น GitHub เช่น 0.0.0.0 → 0.0.0.1 จะได้รู้ว่าเว็บอัปเดตแล้ว
-const APP_VER = '0.0.0.41';
+const APP_VER = '0.0.0.42';
 document.querySelectorAll('.appver').forEach(e => { e.textContent = 'v' + APP_VER; });
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzltyiurIvglNRQOUUfW9J2KvD_1gYmzV8i7IVfKZQn6T1rlPbe5Gprjz7nKMEI4qk3/exec',  // URL ของ Apps Script web app (ลงท้ายด้วย /exec) — เว้นว่าง = โหมดตัวอย่าง
@@ -5332,6 +5332,12 @@ function openPM(id) {
         <div class="full"><label class="abtn"><svg class="ico-inline"><use href="#i-cam"/></svg>แนบไฟล์หรือรูป (PDF หรือรูป ไม่บังคับ สูงสุด ${CONFIG.MAX_PHOTOS} ไฟล์)<input type="file" id="pmFiles" accept="application/pdf,image/jpeg,image/png,image/webp" multiple hidden></label><div class="pmflist" id="pmFileList"></div></div>
         <label class="full">หมายเหตุ<textarea name="remark" rows="2" maxlength="2000" placeholder="ไม่บังคับ เช่น เกจวัดอุณหภูมิเสีย">${esc(o.Remark && !/^ส่งกลับ:/.test(o.Remark) ? o.Remark : '')}</textarea></label>
         <div class="btns"><button type="button" class="btn solid" data-pmdo="submit">ส่งให้วิศวะอนุมัติ</button>${CONFIG.PM_ONLY ? "" : '<button type="button" class="btn" data-pmdo="report">พบปัญหา · แจ้งซ่อม</button>'}</div></div>`;
+  }
+  // sent but not approved yet: the technician can still correct the Inspection results (the job stays waiting for approval)
+  if (tech && x.st === 'review') {
+    const fm = pmForm(x);
+    if (fm) f += `<div class="pmsec"><h3>แก้ผล Inspection</h3><div class="full pminsp"><a class="btn" href="${esc(pmInspUrl(x, fm))}"${PM_TAB}>แก้ผลที่บันทึก ${esc(fm.form.id)} · รอบ ${esc(fm.period)}</a>
+      <p>กรอกผิด แก้แล้วกด "บันทึกผล" อีกครั้ง งานยังรออนุมัติ วิศวะเห็นผลล่าสุด</p></div></div>`;
   }
   // the day a job is done: engineers (any job not done) and the job's own technician (until it is sent); empty = no day yet
   if ((eng && x.st !== 'done') || work) f += `<div class="pmsec pm-sched"><h3>นัดวันทำ</h3><label>วันที่<input type="date" name="pdate" value="${x.plan ? isoDay(x.plan) : ''}"></label><div class="btns" style="grid-column:auto;align-self:end"><button type="button" class="btn" data-pmdo="schedule">${x.plan ? 'เปลี่ยนวันนัด' : 'บันทึกวันนัด'}</button></div></div>`;
